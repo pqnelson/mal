@@ -1,0 +1,145 @@
+==12400== Memcheck, a memory error detector
+==12400== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==12400== Using Valgrind-3.14.0 and LibVEX; rerun with -h for copyright info
+==12400== Command: ./a.out
+==12400== 
+==12400== Invalid free() / delete / delete[] / realloc()
+==12400==    at 0x48369AB: free (vg_replace_malloc.c:530)
+==12400==    by 0x10A6E4: scanner_free (scanner.c:116)
+==12400==    by 0x10B33C: read_str (reader.c:34)
+==12400==    by 0x10A089: main (mal.c:249)
+==12400==  Address 0x1fff0001f0 is on thread 1's stack
+==12400==  in frame #3, created by main (mal.c:247)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10D04E: env_set (env.c:112)
+==12400==    by 0x109E94: initial_env (mal.c:201)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10D04E: env_set (env.c:112)
+==12400==    by 0x109EAB: initial_env (mal.c:202)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10D04E: env_set (env.c:112)
+==12400==    by 0x109EC2: initial_env (mal.c:203)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10D04E: env_set (env.c:112)
+==12400==    by 0x109ED9: initial_env (mal.c:204)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10D04E: env_set (env.c:112)
+==12400==    by 0x109EF0: initial_env (mal.c:205)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Conditional jump or move depends on uninitialised value(s)
+==12400==    at 0x10CD60: env_free (env.c:59)
+==12400==    by 0x10A0EC: main (mal.c:255)
+==12400==  Uninitialised value was created by a heap allocation
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCD2: env_new (env.c:47)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== Invalid free() / delete / delete[] / realloc()
+==12400==    at 0x48369AB: free (vg_replace_malloc.c:530)
+==12400==    by 0x10BE93: symbol_free (types.c:114)
+==12400==    by 0x10BB9F: val_free (types.c:30)
+==12400==    by 0x10BCD7: ref_dec (types.c:60)
+==12400==    by 0x10CC6F: entry_free (env.c:31)
+==12400==    by 0x10CD52: env_free (env.c:61)
+==12400==    by 0x10A0EC: main (mal.c:255)
+==12400==  Address 0x10e216 is in a r-- mapped file /home/alex/lisp/mal/step2/a.out segment
+==12400== 
+==12400== 
+==12400== HEAP SUMMARY:
+==12400==     in use at exit: 464 bytes in 12 blocks
+==12400==   total heap usage: 35 allocs, 29 frees, 5,194 bytes allocated
+==12400== 
+==12400== 32 bytes in 1 blocks are definitely lost in loss record 2 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10C81E: native_fun_new (types.c:375)
+==12400==    by 0x109DB6: initial_env (mal.c:187)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== 32 bytes in 1 blocks are definitely lost in loss record 3 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10C81E: native_fun_new (types.c:375)
+==12400==    by 0x109E10: initial_env (mal.c:193)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== 32 bytes in 1 blocks are definitely lost in loss record 4 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10C81E: native_fun_new (types.c:375)
+==12400==    by 0x109E3D: initial_env (mal.c:196)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== 32 bytes in 1 blocks are definitely lost in loss record 5 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10C81E: native_fun_new (types.c:375)
+==12400==    by 0x109E6A: initial_env (mal.c:199)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== 160 (32 direct, 128 indirect) bytes in 1 blocks are definitely lost in loss record 9 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10CCA2: env_new (env.c:44)
+==12400==    by 0x109D98: initial_env (mal.c:185)
+==12400==    by 0x10A097: main (mal.c:250)
+==12400== 
+==12400== 176 (32 direct, 144 indirect) bytes in 1 blocks are definitely lost in loss record 10 of 10
+==12400==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==12400==    by 0x10A119: alloc (memory.c:27)
+==12400==    by 0x10BCFC: cons (types.c:64)
+==12400==    by 0x109BC0: eval_ast (mal.c:144)
+==12400==    by 0x109D1E: EVAL (mal.c:176)
+==12400==    by 0x10A0AE: main (mal.c:251)
+==12400== 
+==12400== LEAK SUMMARY:
+==12400==    definitely lost: 192 bytes in 6 blocks
+==12400==    indirectly lost: 272 bytes in 6 blocks
+==12400==      possibly lost: 0 bytes in 0 blocks
+==12400==    still reachable: 0 bytes in 0 blocks
+==12400==         suppressed: 0 bytes in 0 blocks
+==12400== 
+==12400== For counts of detected and suppressed errors, rerun with: -v
+==12400== ERROR SUMMARY: 33 errors from 14 contexts (suppressed: 0 from 0)

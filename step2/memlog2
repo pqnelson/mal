@@ -1,0 +1,173 @@
+==13002== Memcheck, a memory error detector
+==13002== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==13002== Using Valgrind-3.14.0 and LibVEX; rerun with -h for copyright info
+==13002== Command: ./a.out
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1D4: env_set (env.c:112)
+==13002==    by 0x109E94: initial_env (mal.c:201)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1FF: env_set (env.c:114)
+==13002==    by 0x109E94: initial_env (mal.c:201)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1D4: env_set (env.c:112)
+==13002==    by 0x109EAB: initial_env (mal.c:202)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1FF: env_set (env.c:114)
+==13002==    by 0x109EAB: initial_env (mal.c:202)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1D4: env_set (env.c:112)
+==13002==    by 0x109EC2: initial_env (mal.c:203)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1FF: env_set (env.c:114)
+==13002==    by 0x109EC2: initial_env (mal.c:203)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1D4: env_set (env.c:112)
+==13002==    by 0x109ED9: initial_env (mal.c:204)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1FF: env_set (env.c:114)
+==13002==    by 0x109ED9: initial_env (mal.c:204)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1D4: env_set (env.c:112)
+==13002==    by 0x109EF0: initial_env (mal.c:205)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== Conditional jump or move depends on uninitialised value(s)
+==13002==    at 0x10D1FF: env_set (env.c:114)
+==13002==    by 0x109EF0: initial_env (mal.c:205)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002==  Uninitialised value was created by a heap allocation
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10CE91: env_new (env.c:47)
+==13002==    by 0x109D98: initial_env (mal.c:185)
+==13002==    by 0x10A04A: repl (mal.c:238)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+read_atom() error: unknown token type 6, lexeme = ''
+==13002== 
+==13002== Process terminating with default action of signal 6 (SIGABRT)
+==13002==    at 0x488B7BB: raise (raise.c:51)
+==13002==    by 0x4876534: abort (abort.c:79)
+==13002==    by 0x10B908: read_atom (reader.c:107)
+==13002==    by 0x10B408: read_scanner (reader.c:23)
+==13002==    by 0x10B450: read_str (reader.c:33)
+==13002==    by 0x109FAD: READ (mal.c:219)
+==13002==    by 0x109FC5: rep (mal.c:223)
+==13002==    by 0x10A05A: repl (mal.c:240)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== HEAP SUMMARY:
+==13002==     in use at exit: 944 bytes in 25 blocks
+==13002==   total heap usage: 40 allocs, 15 frees, 9,618 bytes allocated
+==13002== 
+==13002== 144 (32 direct, 112 indirect) bytes in 1 blocks are definitely lost in loss record 23 of 23
+==13002==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==13002==    by 0x10A232: alloc (memory.c:27)
+==13002==    by 0x10BE86: cons (types.c:67)
+==13002==    by 0x109BC0: eval_ast (mal.c:144)
+==13002==    by 0x109D1E: EVAL (mal.c:176)
+==13002==    by 0x109FE9: rep (mal.c:226)
+==13002==    by 0x10A05A: repl (mal.c:240)
+==13002==    by 0x10A07D: main (mal.c:248)
+==13002== 
+==13002== LEAK SUMMARY:
+==13002==    definitely lost: 32 bytes in 1 blocks
+==13002==    indirectly lost: 112 bytes in 4 blocks
+==13002==      possibly lost: 0 bytes in 0 blocks
+==13002==    still reachable: 800 bytes in 20 blocks
+==13002==         suppressed: 0 bytes in 0 blocks
+==13002== Reachable blocks (those to which a pointer was found) are not shown.
+==13002== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==13002== 
+==13002== For counts of detected and suppressed errors, rerun with: -v
+==13002== ERROR SUMMARY: 11 errors from 11 contexts (suppressed: 0 from 0)
