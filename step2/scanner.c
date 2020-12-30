@@ -110,10 +110,10 @@ Scanner* scanner_new(char *src) {
 }
 
 void scanner_free(Scanner *scanner) {
-    printf("TRACE: trying to free scanner\n");
+    TRACE("trying to free scanner\n");
     if (NULL == scanner) return;
     
-    if (NULL != scanner->start) free(scanner->start);
+    // if (NULL != scanner->start) free(scanner->start);
 
     if (NULL != scanner->current_token) {
         token_free(scanner->current_token);
@@ -213,9 +213,9 @@ static Token* number(Scanner *scanner) {
     assert(!isdigit(scanner->position[length]));
     TokenType type = (has_seen_decimal_point ? TOKEN_FLOAT : TOKEN_INTEGER);
     Token *result = token_new(type, scanner->position, scanner->line, length);
-    printf("Scanner::number() position[length] = '%c'\n",
+    debug("Scanner::number() position[length] = '%c'\n",
            scanner->position[length]);
-    printf("Scanner::number() lexeme = '%.*s'\n",
+    debug("Scanner::number() lexeme = '%.*s'\n",
            (int)length, scanner->position);
     scanner->current_token = result;
     return result;
@@ -246,7 +246,7 @@ static Token* scan_string(Scanner *scanner) {
         }
     }
     length++;
-    printf("string_token given:\t%.*s\n", (int)length, scanner->position);
+    debug("string_token given:\t%.*s\n", (int)length, scanner->position);
     return string_token(scanner, length, line);
 }
 
@@ -282,11 +282,11 @@ Token* scanner_peek(Scanner *scanner) {
     //@ assert !isspace(scanner->position[0]);
     switch (scanner->position[0]) {
     case '(':
-        printf("\nTRACE: found left parentheses\n");
+        TRACE("found left parentheses\n");
         scanner->current_token = left_paren(scanner);
         return scanner->current_token;
     case ')':
-        printf("\nTRACE: found right parentheses\n");
+        TRACE("found right parentheses\n");
         scanner->current_token = right_paren(scanner);
         return scanner->current_token;
     case '"':
@@ -295,9 +295,9 @@ Token* scanner_peek(Scanner *scanner) {
     default:
         break;
     }
-    printf("\nTRACE: lexeme start '%s'\n", scanner->position);
+    TRACE("lexeme start '%s'\n", scanner->position);
     if (isNumber(scanner)) {
-        printf("Found number?\n");
+        WARN("Found number?\n");
         return number(scanner);
     }
     length = length_of_token(scanner);

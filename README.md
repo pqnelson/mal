@@ -30,7 +30,7 @@ steps in [making a Lisp](https://github.com/kanaka/mal).
       arithmetic.
   - [X] Add basic refcount memory management.
   - [X] Basic environment data structure.
-  - [ ] Evaluator.
+  - [X] Evaluator.
 - [ ] Step 3: add an environment (so we can support definitions in the
   future). This includes `(let ...)` and `(def! ...)` special forms
   (which updates the environment).

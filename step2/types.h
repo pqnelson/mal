@@ -29,9 +29,9 @@ typedef struct LispVal {
     long refcount;
 } LispVal;
 
-void val_free(LispVal *value);
+void val_free(LispVal **value);
 void ref_inc(LispVal *value);
-void ref_dec(LispVal *value);
+void ref_dec(LispVal **value);
 
 typedef struct LispCons {
     LispType type;
@@ -41,7 +41,7 @@ typedef struct LispCons {
 } LispCons;
 
 LispCons* cons(LispVal *car, LispVal *cdr);
-void cons_free(LispCons *cons_cell);
+void cons_free(LispCons **cons_cell);
 LispVal* nth(LispCons *cell, int n);
 
 typedef long hash_t;
@@ -56,7 +56,7 @@ typedef struct LispSymbol {
 extern const LispSymbol t;
 
 LispSymbol* symbol_new(char *name);
-void symbol_free(LispSymbol *symbol);
+void symbol_free(LispSymbol **symbol);
 hash_t symbol_hashCode(LispSymbol *symbol);
 bool symbol_equals(LispSymbol *this, LispSymbol *other);
 
@@ -70,7 +70,7 @@ typedef struct LispInt {
 } LispInt;
 
 LispInt* int_new(long long value);
-void int_free(LispInt *integer);
+void int_free(LispInt **integer);
 
 typedef struct LispFloat {
     LispType type;
@@ -79,7 +79,7 @@ typedef struct LispFloat {
 } LispFloat;
 
 LispFloat* float_new(double value);
-void float_free(LispFloat *real);
+void float_free(LispFloat **real);
 LispFloat* float_NaN();
 
 typedef struct String {
@@ -90,7 +90,7 @@ typedef struct String {
 } String;
 
 String* string_new(char *buffer, size_t length);
-void string_free(String *string);
+void string_free(String **string);
 
 LispVal* plus(LispVal *this, LispVal *other);
 LispVal* minus(LispVal *this, LispVal *other);
@@ -136,6 +136,6 @@ typedef struct CFunction {
 } CFunction;
 
 CFunction* native_fun_new(int arity);
-void native_fun_free(CFunction *fun);
+void native_fun_free(CFunction **fun);
 
 #endif /* TYPES_H */

@@ -29,6 +29,9 @@ void print_value(FILE *stream, LispVal *value) {
     case TYPE_STRING:
         print_string(stream, (String *)value);
         break;
+    case TYPE_FUNCTION_C:
+        print_cfunc(stream, (CFunction *)value);
+        break;
     default:
         fprintf(stderr, "ERROR: cannot determine type for %d\n",
                 value->type);
@@ -52,7 +55,7 @@ void print_string(FILE *stream, String *string) {
 
 
 void print_list(FILE *stream, LispCons *list) {
-    if (NULL == list || ((NULL == list->car) && (NULL == list->cdr))) {
+    if (NULL == list || (false && (NULL == list->car) && (NULL == list->cdr))) {
         print_nil(stream);
     } else {
         LispCons *iter = list;
@@ -83,5 +86,17 @@ void print_symbol(FILE *stream, LispSymbol *symbol) {
         print_nil(stream);
     } else {
         fprintf(stream, "%s", symbol->name);
+    }
+}
+
+
+void print_cfunc(FILE *stream, CFunction *fun) {
+    if (NULL == fun) {
+        print_nil(stream);
+    } else {
+        fprintf(stream, "#native_function<%p, arity=%d, refcount=%ld>",
+                (void*)fun,
+                fun->arity,
+                fun->refcount);
     }
 }

@@ -13,4 +13,6 @@
  */
 void* alloc(size_t size);
 
+void* array_alloc(size_t array_size, size_t element_size);
+
 #endif /* MEMORY_H */

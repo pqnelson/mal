@@ -7,43 +7,36 @@
 #include "types.h"
 #include "printer.h"
 
-void val_free(LispVal *value) {
-    if (NULL == value) return;
-    if ((LispVal *)&nil == value) return;
-    if ((LispVal *)&t == value) return;
-    /*
-    printf("DEBUG  val_free on: ");
-    print_value(stdout, value);
-    char *types[] = {"cons", "symbol", "int", "float", "string"};
-    printf(" [type: %s, refcount: %d]\n", types[value->type], value->refcount);
-    
-    printf("\n");
-    */
-    assert((value->refcount) >= 0);
-    value->refcount--;
-    if ((value->refcount) > 0) return;
-    switch (value->type) {
+void val_free(LispVal **value) {
+    if (NULL == value || NULL == *value) return;
+    if ((LispVal *)&nil == *value) return;
+    if ((LispVal *)&t == *value) return;
+
+    assert(((*value)->refcount) >= 0);
+    (*value)->refcount--;
+    if (((*value)->refcount) > 0) return;
+    switch ((*value)->type) {
     case TYPE_CONS:
-        cons_free((LispCons *)value);
+        cons_free((LispCons **)value);
         break;
     case TYPE_SYMBOL:
-        symbol_free((LispSymbol *)value);
+        symbol_free((LispSymbol **)value);
         break;
     case TYPE_INT:
-        int_free((LispInt *)value);
+        int_free((LispInt **)value);
         break;
     case TYPE_FLOAT:
-        float_free((LispFloat *)value);
+        float_free((LispFloat **)value);
         break;
     case TYPE_STRING:
-        string_free((String *)value);
+        string_free((String **)value);
         break;
     case TYPE_FUNCTION_C:
-        native_fun_free((CFunction *)value);
+        native_fun_free((CFunction **)value);
         break;
     default:
         eprintf("Uhh...don't know how to handle type %d\n",
-                (value->type));
+                ((*value)->type));
     }
 }
 
@@ -55,11 +48,11 @@ void ref_inc(LispVal *value) {
     value->refcount++;
 }
 
-void ref_dec(LispVal *value) {
-    if (NULL == value) return;
-    if ((LispVal *)&nil == value) return;
-    if ((LispVal *)&t == value) return;
-    assert((value->refcount) > 0);
+void ref_dec(LispVal **value) {
+    if (NULL == value || NULL == *value) return;
+    if ((LispVal *)&nil == *value) return;
+    if ((LispVal *)&t == *value) return;
+    assert(((*value)->refcount) > 0);
     val_free(value);
 }
 
@@ -69,22 +62,24 @@ LispCons* cons(LispVal *car, LispVal *cdr) {
     if (NULL == cell) abort();
     
     cell->type = TYPE_CONS;
-    cell->refcount = 0;
+    cell->refcount = 1;
     cell->car = car;
     cell->cdr = cdr;
     ref_inc(car);
     ref_inc(cdr);
+    debug("cons(car<%p>, cdr<%p>) at %p\n",
+          (void*)car, (void*)cdr, (void*)cell);
     return cell;
 }
 
-void cons_free(LispCons *cons_cell) {
-    if (NULL == cons_cell) return;
-    if (&nil == cons_cell) return; // never free nil
-    
-    ref_dec(cons_cell->car);
-    ref_dec(cons_cell->cdr);
-    free(cons_cell);
-    cons_cell = NULL;
+void cons_free(LispCons **cons_cell) {
+    if (NULL == cons_cell || NULL == *cons_cell) return;
+    if (&nil == *cons_cell) return; // never free nil
+
+    ref_dec(&((*cons_cell)->car));
+    ref_dec(&((*cons_cell)->cdr));
+    free(*cons_cell);
+    *cons_cell = NULL;
 }
 
 LispVal* nth(LispCons *cell, int n) {
@@ -106,18 +101,21 @@ const LispSymbol t = {.type = TYPE_SYMBOL, .name = "t"};
 LispSymbol* symbol_new(char *name) {
     LispSymbol *symbol = alloc(sizeof(*symbol));
     symbol->type = TYPE_SYMBOL;
-    symbol->refcount = 0;
+    symbol->refcount = 1;
     symbol->name = name;
     symbol->hash = 0;
+    debug("symbol(%s)<%p>\n", name, (void*)symbol);
     return symbol;
 }
 
-void symbol_free(LispSymbol *symbol) {
-    if (NULL == symbol) return;
-    if (&t == symbol) return; // do NOT free "t"
-    free(symbol->name);
-    free(symbol);
-    symbol = NULL;
+void symbol_free(LispSymbol **symbol) {
+    if (NULL == symbol || NULL == *symbol) return;
+    if (&t == *symbol) return; // do NOT free "t"
+    debug("Trying to free symbol<%p>[name='%s', refcount=%ld]\n",
+          (void*)*symbol, (*symbol)->name, (*symbol)->refcount);
+    if ((*symbol)->name) free((*symbol)->name);
+    free(*symbol);
+    *symbol = NULL;
 }
 
 /**
@@ -158,15 +156,18 @@ LispInt* int_new(long long value) {
     if (NULL == integer) abort();
         
     integer->type = TYPE_INT;
-    integer->refcount = 0;
+    integer->refcount = 1;
     integer->value = value;
 
+    debug("int<%p>\n", (void*)integer);
     return integer;
 }
 
-void int_free(LispInt *integer) {
-    if (NULL == integer) return;
-    free(integer);
+void int_free(LispInt **integer) {
+    if (NULL == integer || NULL == *integer) return;
+    debug("Freeing int<%p>(%lld)\n", (void*)*integer, (*integer)->value);
+    free(*integer);
+    *integer = NULL;
 }
 
 LispVal* int_plus(LispInt *this, LispVal *other) {
@@ -181,9 +182,9 @@ LispVal* int_plus(LispInt *this, LispVal *other) {
             // ERROR
         }
     }
-    printf("int_plus() HUH cannot understand LHS: ");
-    print_value(stdout, other);
-    printf("\n");
+    eprintf("int_plus() HUH cannot understand LHS: ");
+    print_value(stderr, other);
+    eprintf("\n");
     // ERROR
     return (LispVal *)float_NaN();
 }
@@ -208,7 +209,7 @@ LispVal* int_times(LispInt *this, LispVal *other) {
     if ((NULL != this) && (NULL != other)) {
         if (TYPE_INT == other->type) {
             long long product = (this->value) * ((LispInt *)other)->value;
-            return (LispVal *)float_new(product);
+            return (LispVal *)int_new(product);
         } else if (TYPE_FLOAT == other->type) {
             double product = (this->value) * ((LispFloat *)other)->value;
             return (LispVal *)float_new(product);
@@ -223,7 +224,7 @@ LispVal* int_div(LispInt *this, LispVal *other) {
     if ((NULL != this) && (NULL != other)) {
         if (TYPE_INT == other->type) {
             long long quotient = (this->value) / ((LispInt *)other)->value;
-            return (LispVal *)float_new(quotient);
+            return (LispVal *)int_new(quotient);
         } else if (TYPE_FLOAT == other->type) {
             double quotient = (this->value) / ((LispFloat *)other)->value;
             return (LispVal *)float_new(quotient);
@@ -237,15 +238,17 @@ LispFloat* float_new(double value) {
     LispFloat *real = alloc(sizeof(*real));
     if (NULL == real) abort();
     real->type = TYPE_FLOAT;
-    real->refcount = 0;
+    real->refcount = 1;
     real->value = value;
+    TRACE("float<%p>\n", (void*)real);
     return real;
 }
 
-void float_free(LispFloat *real) {
+void float_free(LispFloat **real) {
     printf("float_free called\n");
-    if (NULL == real) return;
-    free(real);
+    if (NULL == real || NULL == *real) return;
+    free(*real);
+    *real = NULL;
 }
 
 LispFloat* float_NaN() {
@@ -321,60 +324,88 @@ String* string_new(char *buffer, size_t length) {
     memcpy(string->chars, buffer, length);
     string->chars[length] = '\0';
 
-    string->refcount = 0;
+    string->refcount = 1;
     string->length = length;
     string->type = TYPE_STRING;
-    
+    TRACE("string<%p>\n", (void*)string);
     return string;
 }
 
-void string_free(String *string) {
-    if (NULL == string) return;
+void string_free(String **string) {
+    if (NULL == string || NULL == *string) return;
 
-    if (NULL != string->chars) free(string->chars);
+    if (NULL != (*string)->chars) free((*string)->chars);
 
-    free(string);
+    free(*string);
+    *string = NULL;
 }
 
 LispVal* plus(LispVal *this, LispVal *other) {
-    if (NULL == this) return (LispVal *)float_NaN();
+    LispVal *result = NULL;
+    if (NULL == this) result = (LispVal *)float_NaN();
     if (TYPE_INT == this->type)
-        return int_plus((LispInt *)this, other);
+        result = int_plus((LispInt *)this, other);
     if (TYPE_FLOAT == this->type)
-        return float_plus((LispFloat *)this, other);
-    
-    return (LispVal *)float_NaN();
+        result = float_plus((LispFloat *)this, other);
+
+    if (NULL != result) {
+        ref_dec(&this);
+        ref_dec(&other);
+    } else {
+        result = (LispVal *)float_NaN();
+    }
+    return result;
 }
 
 LispVal* minus(LispVal *this, LispVal *other) {
-    if (NULL == this) return (LispVal *)float_NaN();
+    LispVal *result = NULL;
+    if (NULL == this) result = (LispVal *)float_NaN();
     if (TYPE_INT == this->type)
-        return int_minus((LispInt *)this, other);
+        result = int_minus((LispInt *)this, other);
     if (TYPE_FLOAT == this->type)
-        return float_minus((LispFloat *)this, other);
-    
-    return (LispVal *)float_NaN();
+        result = float_minus((LispFloat *)this, other);
+
+    if (NULL != result) {
+        ref_dec(&this);
+        ref_dec(&other);
+    } else {
+        result = (LispVal *)float_NaN();
+    }
+    return result;
 }
 
-
 LispVal* times(LispVal *this, LispVal *other) {
-    if (NULL == this) return (LispVal *)float_NaN();
+    LispVal *result = NULL;
+    if (NULL == this) result = (LispVal *)float_NaN();
     if (TYPE_INT == this->type)
-        return int_times((LispInt *)this, other);
+        result = int_times((LispInt *)this, other);
     if (TYPE_FLOAT == this->type)
-        return float_times((LispFloat *)this, other);
-    
-    return (LispVal *)float_NaN();
+        result = float_times((LispFloat *)this, other);
+
+    if (NULL != result) {
+        ref_dec(&this);
+        ref_dec(&other);
+    } else {
+        result = (LispVal *)float_NaN();
+    }
+    return result;
 }
 
 LispVal* divide(LispVal *this, LispVal *other) {
-    if (NULL == this) return (LispVal *)float_NaN();
+    LispVal *result = NULL;
+    if (NULL == this) result = (LispVal *)float_NaN();
     if (TYPE_INT == this->type)
-        return int_div((LispInt *)this, other);
+        result = int_div((LispInt *)this, other);
     if (TYPE_FLOAT == this->type)
-        return float_div((LispFloat *)this, other);
-    
-    return (LispVal *)float_NaN();
+        result = float_div((LispFloat *)this, other);
+
+    if (NULL != result) {
+        ref_dec(&this);
+        ref_dec(&other);
+    } else {
+        result = (LispVal *)float_NaN();
+    }
+    return result;
 }
 
 
@@ -383,10 +414,12 @@ CFunction* native_fun_new(int arity) {
     if (NULL == fun) abort();
     fun->type = TYPE_FUNCTION_C;
     fun->arity = arity;
-    fun->refcount = 0;
+    fun->refcount = 1;
+    debug("fun<%p>\n", (void*)fun);
     return fun;
 }
-void native_fun_free(CFunction *fun) {
-    if (NULL == fun) return;
-    free(fun);
+void native_fun_free(CFunction **fun) {
+    if (NULL == fun || NULL == *fun) return;
+    free(*fun);
+    *fun = NULL;
 }

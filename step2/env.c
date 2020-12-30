@@ -6,6 +6,7 @@
 #include "types.h"
 #include "env.h"
 #include "memory.h"
+#include "printer.h"
 
 #define ENV_CAPACITY_FACTOR 0.75
 
@@ -18,8 +19,6 @@ typedef struct Entry {
 Entry* entry_new(LispSymbol *key, LispVal *value) {
     Entry* entry = alloc(sizeof(*entry));
     if (NULL == entry) abort();
-    ref_inc((LispVal *)key);
-    ref_inc((LispVal *)value);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -28,9 +27,13 @@ Entry* entry_new(LispSymbol *key, LispVal *value) {
 
 void entry_free(Entry *entry) {
     if (NULL == entry) return;
-    ref_dec((LispVal *)entry->key);
-    ref_dec((LispVal *)entry->value);
+    ref_dec((LispVal **)&(entry->key));
+    ref_dec((LispVal **)&(entry->value));
     free(entry);
+}
+
+Entry** alloc_table(size_t table_size) {
+    return array_alloc(table_size, sizeof(struct Entry*));
 }
 
 struct Env {
@@ -44,7 +47,11 @@ Env* env_new() {
     Env *env = alloc(sizeof(*env));
     if (NULL == env) abort();
     env->capacity = 16;
-    env->table = alloc((env->capacity)*(sizeof(struct Entry*)));
+    env->table = alloc_table(env->capacity);
+    if (NULL == env->table) {
+        free(env);
+        abort();
+    }
     env->outer = NULL;
     env->size = 0;
     return env;
@@ -62,6 +69,9 @@ void env_free(Env *env) {
             row = next;
         }
     }
+
+    free(env->table);
+    free(env);
 }
 
 static size_t indexFor(hash_t hash, size_t length) {
@@ -93,7 +103,7 @@ static void transfer(Entry **old_table, Entry **new_table, size_t length, size_t
 void env_resize(Env *env, size_t new_capacity) {
     if ((env->capacity) >= new_capacity) return;
 
-    Entry** new_table = alloc(new_capacity * sizeof(struct Entry*));
+    Entry** new_table = alloc_table(new_capacity);
     if (NULL == new_table) abort();
     
     transfer(env->table, new_table, env->capacity, new_capacity);
@@ -109,8 +119,6 @@ void env_set(Env *env, LispSymbol *key, LispVal *value) {
     hash_t h = symbol_hashCode(key);
     size_t index = indexFor(h, env->capacity);
     Entry *entry = env->table[index];
-    printf("env_set() entry==null? %s \n",
-           (NULL == entry ? "true" : "false"));
     if (NULL == entry) {
         Entry *new_entry = entry_new(key, value);
         new_entry->next = entry;
@@ -124,7 +132,7 @@ void env_set(Env *env, LispSymbol *key, LispVal *value) {
         Entry *e = entry;
         while (e != NULL) {
             if (symbol_equals(key, e->key)) {
-                ref_dec(e->value);
+                ref_dec(&(e->value));
                 e->value = value;
                 ref_inc(value);
                 return;

@@ -87,6 +87,7 @@ static String* string(Scanner **scanner) {
 }
 
 static LispVal* read_atom(Scanner **scanner) {
+    assert (NULL != scanner);
     assert (NULL != *scanner);
     assert (!token_is_l_paren(scanner_peek(*scanner)));
     assert (!token_is_r_paren(scanner_peek(*scanner)));
@@ -100,6 +101,8 @@ static LispVal* read_atom(Scanner **scanner) {
         return (LispVal *)real(scanner);
     case TOKEN_STRING:
         return (LispVal *)string(scanner);
+    case TOKEN_EOF:
+        return NULL;
     /* Other atoms read here */
     default:
         eprintf("read_atom() error: unknown token type %d, lexeme = '%.*s'\n",
@@ -133,7 +136,7 @@ static void guard_against_runaways(Scanner **scanner,
         int length = min(ERROR_MESSAGE_CONTEXT_SIZE, delta);
         eprintf("\t'%.*s%s'\n", length, start, (length < delta ? "..." : ""));
         eprintf("Freeing memory, bailing out.\n");
-        cons_free(result);
+        while (result->refcount > 0) ref_dec((LispVal **)&result);
         scanner_free(*scanner);
         *scanner = NULL;
         // if (is_in_repl()) return;
@@ -171,14 +174,14 @@ static LispCons* read_list(Scanner **scanner) {
     
     // default case
     current = result = make_cons(scanner);
-    // ref_inc((LispVal *)current);
-    while (!token_is_r_paren(scanner_peek(*scanner))) {
+    while ((NULL != scanner_peek(*scanner)) &&
+           !token_is_r_paren(scanner_peek(*scanner)) &&
+           !token_is_eof(scanner_peek(*scanner))) {
         guard_against_runaways(scanner, start_line, result, start);
 
         LispCons *next = make_cons(scanner);
         current->cdr = (LispVal *)next;
         current = next;
-        ref_inc((LispVal *)next);
         
         assert (NULL == current->cdr);
     }

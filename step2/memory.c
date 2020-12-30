@@ -33,3 +33,12 @@ void* alloc(size_t size) {
     }
 }
 
+void* array_alloc(size_t array_size, size_t element_size) {
+    if (0 == element_size || 0 == array_size) return NULL;
+    void *block = calloc(element_size, array_size);
+    if (NULL == block) {
+        eprintf("Tried to allocate array of length %lu with element size %lu but failed.\n",
+                array_size, element_size);
+    }
+    return block;
+}
