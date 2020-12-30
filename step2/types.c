@@ -76,8 +76,8 @@ void cons_free(LispCons **cons_cell) {
     if (NULL == cons_cell || NULL == *cons_cell) return;
     if (&nil == *cons_cell) return; // never free nil
 
-    ref_dec(&((*cons_cell)->car));
-    ref_dec(&((*cons_cell)->cdr));
+    if((*cons_cell)->car) ref_dec(&((*cons_cell)->car));
+    if((*cons_cell)->cdr) ref_dec(&((*cons_cell)->cdr));
     free(*cons_cell);
     *cons_cell = NULL;
 }

@@ -26,15 +26,37 @@ steps in [making a Lisp](https://github.com/kanaka/mal).
   - [X] Step 1-3: support booleans (at least `t` as a special
         symbol). It suffices to have a global constant symbol `t`,
         but honest booleans may be better.
-- [ ] Step 2: basic evaluator for Lisp expressions, just for
+- [X] Step 2: basic evaluator for Lisp expressions, just for
       arithmetic.
   - [X] Add basic refcount memory management.
   - [X] Basic environment data structure.
   - [X] Evaluator.
+
+At this point (after step 2) there is a divergence depending upon
+the concrete syntax (and the semantics) of the Lisp being
+implemented. Common Lisp has a different syntax and semantics than
+Scheme, and both dialects differ from Clojure in syntax and
+semantics. Consequently, I have started new subdirectories for the
+following steps within a given dialect.
+
 - [ ] Step 3: add an environment (so we can support definitions in the
-  future). This includes `(let ...)` and `(def! ...)` special forms
+  future). This includes `(let* ...)` and `(def! ...)` special forms
   (which updates the environment).
+  - [ ] Add definitions
+  - [ ] Add `let*`-expressions
 - [ ] Step 4: Basic special forms (`if`, `fn`, `do`).
+  - [ ] `if`
+  - [ ] `fn*`
+    - Create a new environment (pointing to the outer `env`)
+    - When called, bind the parameters to the arguments passed
+  - [ ] `do` (evaluate all arguments of `do` sequentially,
+        returning the result from the last expression)
+  - [ ] Add primitive functions
+    - [ ] `list?` predicate
+    - [ ] `prn` prints its argument to the screen
+    - [ ] `empty?` tests if its argument is a list and empty
+    - [ ] `count` returns the length of its argument
+    - [ ] `=` compares its arguments
 - [ ] Step 5: Tail call optimization.
 - [ ] Step 6: Add an `eval` function, `slurp` for reading a file into a
   string, etc.

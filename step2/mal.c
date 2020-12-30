@@ -104,12 +104,21 @@ int parsing_tests() {
 }
 
 
+/**
+ * Apply a function to a list of arguments.
+ * 
+ * Note: this is also used as a Lisp primitive function
+ * @c{apply*}. Consequently, when it consumes the function
+ * and arguments, it decrements the refcount for those 
+ * objects.
+ */
 LispVal* apply(LispVal *fn, LispVal *args) {
     assert(NULL != fn);
     assert((TYPE_FUNCTION_C == fn->type) ||
            (TYPE_FUNCTION_LISP == fn->type));
     assert((NULL == args) || (TYPE_CONS == args->type));
     if (TYPE_FUNCTION_LISP == fn->type) {
+        // TODO: implement this in step 3 or 4
         return (LispVal *)&nil;
     } else {
         LispVal *result = NULL;
@@ -130,6 +139,7 @@ LispVal* apply(LispVal *fn, LispVal *args) {
             eprintf("Unsupported arity %d\n", f->arity);
             abort();
         }
+        // consume the arguments, yum yum
         ref_dec(&fn);
         ref_dec(&args);
         return result;
@@ -296,7 +306,6 @@ int eval_test1() {
     print_value(stdout, expr); printf("\n");
 
     ref_dec(&expr);
-    if (NULL != ast && ast->refcount > 0) ref_dec(&ast);
     env_free(env);
     return 0;
 }
@@ -311,7 +320,6 @@ int eval_test2() {
     print_value(stdout, expr); printf("\n");
 
     ref_dec(&expr);
-    if (NULL != ast && ast->refcount > 0) ref_dec(&ast);
     env_free(env);
     return 0;
 }
