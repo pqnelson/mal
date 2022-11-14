@@ -1,0 +1,76 @@
+<!--
+  Right now, this is just a text area with a "compile" button to
+  initiate compilation. But I am curious about the degree of
+  interactivity we can achieve.
+  -->
+<html>
+  <head>
+    <title>Make a Lisp</title>
+    <link rel="stylesheet" type="text/css" href="mal.css" />
+        <script type="text/javascript" src="reader.js"></script>
+        <script type="text/javascript" src="step1.js"></script>
+
+  </head>
+<body>
+<h1>Make a Lisp</h1>
+
+<p>
+The idea is to have an input field and a preview div below it, I think,
+and have some javascript hook them up together. This approach is based
+on <a href="https://github.com/showdownjs/showdown">showdown.js</a> and
+<a href="https://code.google.com/archive/p/pagedown/wikis/PageDown.wiki">PageDown</a>.
+</p>
+<p>
+As far as I can tell, there are three classes to PageDown:
+</p>
+<ol>
+  <li><code>Markdown.Editor</code> which will listen to a textarea and
+    update a preview regularly. The main methods seem to
+    be <code>run()</code> to get it started,
+    and <code>refreshPreview()</code> to update the preview area. There
+    are some private nested classes:
+    <ol>
+      <li><code>PreviewManager</code> which adds event listeners to
+        elements, and refreshes the preview area. Curiously, the events
+        it listens for are: keypress, keydown, input, and then there
+        are some custom ones (onpaste and ondrop).</li>
+
+      <li><code>CommandManager</code></li>
+
+      <li><code>UndoManager</code></li>
+
+      <li><code>UIManager</code></li>
+    </ol>
+  </li>
+  <li><code>Markdown.Converter</code> which converts a string of
+    Markdown text into HTML</li>
+  <li><code>Markdown.Sanitizer</code> which makes sure there's no
+    malicious code</li>
+</ol>
+<p>
+I think that's the basic design if we want something similar?
+</p>
+<p>
+We can look at <a href="https://github.com/clojure/clojurescript/tags?after=r1450">primordial</a> CLJS for inspiration
+(e.g., <a href="https://github.com/clojure/clojurescript/tree/v0.0">v0.0</a>
+initial commit,
+or <a href="https://github.com/clojure/clojurescript/tree/r927">first noninitial commit</a>).
+</p>
+<textarea id="input" cols="92" rows="15">
+</textarea>
+ <button onclick="compileLisp()">Compile!</button>
+ <div id="output">
+   <h1>Output:</h1>
+   <div id="preview">
+   </div>
+ </div>
+
+<script type="text/javascript">
+  var inputElement = document.getElementById("input");
+  var outputElement = document.getElementById("preview");
+  function compileLisp() {
+    malCompile(inputElement,outputElement);
+  }
+</script>
+</body>
+</html>
