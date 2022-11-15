@@ -168,3 +168,71 @@ function is_keyword(obj) {
 function is_list(obj) {
   return Array.isArray(obj);
 }
+
+function is_true(obj) {
+  return true === obj;
+}
+
+function is_false(obj) {
+  return false === obj;
+}
+
+function is_string(obj) {
+  return 'string' === typeof(obj);
+}
+
+function is_number(obj) {
+  return 'number' === typeof(obj);
+}
+
+function is_function(obj) {
+  return ('function' === typeof(obj));
+}
+
+/**
+ * Produce a string representation of the type for the object.
+ */
+function obj_type(obj) {
+  if (is_symbol(obj)) { return 'symbol'; }
+  else if (is_keyword(obj)) { return 'object'; }
+  else if (is_list(obj)) { return 'list'; }
+  else if (is_null(obj)) { return 'nil'; }
+  else if (is_true(obj)) { return 'boolean'; }
+  else if (is_false(obj)) { return 'boolean'; }
+  else {
+    switch(typeof(obj)) {
+    case 'number': return 'number';
+    case 'function': return 'function';
+    case 'string': return 'string';
+    default:
+      throw new Error("Unknown type '"+typeof(obj)+"'");
+    }
+  }
+}
+
+/**
+ * Checks if two objects are equal.
+ *
+ * @see "Equal Rights for Functional Objects, or, the More Things Change, The More They Are the Same" by Henry Baker
+ * @param {*} lhs - The left-hand side of the equality test.
+ * @param {*} rhs - The right-hand side of the equality test.
+ * @returns True iff the two objects are "the same".
+ */
+ function egal(lhs, rhs) {
+  if (is_list(lhs) && is_list(rhs)) {
+    if (lhs.length !== rhs.length) return false;
+    for (var i=0; i < lhs.length; i++) {
+      if (!egal(lhs[i], rhs[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (is_symbol(lhs) && is_symbol(rhs)) {
+    return lhs.eq(rhs);
+  }
+  if (is_keyword(lhs) && is_keyword(rhs)) {
+    return lhs.eq(rhs);
+  }
+  return lhs==rhs;
+}
