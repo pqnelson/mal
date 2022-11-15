@@ -169,6 +169,80 @@ function is_list(obj) {
   return Array.isArray(obj);
 }
 
+/**
+ * Checks if two objects are equal.
+ *
+ * @see "Equal Rights for Functional Objects, or, the More Things Change, The More They Are the Same" by Henry Baker
+ * @param {*} lhs - The left-hand side of the equality test.
+ * @param {*} rhs - The right-hand side of the equality test.
+ * @returns True iff the two objects are "the same".
+ */
+ function egal(lhs, rhs) {
+  if (is_list(lhs) && is_list(rhs)) {
+    if (lhs.length !== rhs.length) return false;
+    for (var i=0; i < lhs.length; i++) {
+      if (!egal(lhs[i], rhs[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (is_symbol(lhs) && is_symbol(rhs)) {
+    return lhs.eq(rhs);
+  }
+  if (is_keyword(lhs) && is_keyword(rhs)) {
+    return lhs.eq(rhs);
+  }
+  return lhs==rhs;
+}
+
+/**
+ * Interpreted function (as opposed to 'compiled' or 'native' function).
+ *
+ * @param Eval - The Eval function from our REPL
+ * @param Env - The Environment constructor.
+ * @param ast - The S-expression for the function's body.
+ * @param env - The environment when we constructed our function.
+ * @param params - The formal parameters to the function.
+ * @constructor
+ */
+function Fun(Eval, Env, ast, env, params) {
+  var fn = function() {
+    // This is insane
+    // @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments}
+    return Eval(ast, new Env(env, params, arguments));
+  }
+  fn.__meta__ = null;
+  fn.__ast__ = ast;
+  fn.__gen_env__ = function(args) {
+    console.log("params = ", pr_str(params, true));
+    return new Env(env, params, args); };
+  return fn;
+}
+
+/**
+ * A poor man's atom.
+ *
+ * @param value - Optional initial value, defaults to NULL.
+ * @constructor
+ */
+function Atom(value) {
+  this.value = value || null;
+}
+
+function is_atom(obj) {
+  return (obj instanceof Atom);
+}
+
+Atom.prototype.deref = function() { return this.value; };
+Atom.prototype.reset = function(new_value) {
+  this.value = new_value;
+  return new_value;
+};
+Atom.prototype.type = function() { return 'atom'; };
+
+
+
 function is_true(obj) {
   return true === obj;
 }
@@ -199,6 +273,7 @@ function obj_type(obj) {
   else if (is_null(obj)) { return 'nil'; }
   else if (is_true(obj)) { return 'boolean'; }
   else if (is_false(obj)) { return 'boolean'; }
+  else if (is_atom(obj)) { return 'atom'; }
   else {
     switch(typeof(obj)) {
     case 'number': return 'number';
@@ -208,43 +283,4 @@ function obj_type(obj) {
       throw new Error("Unknown type '"+typeof(obj)+"'");
     }
   }
-}
-
-/**
- * Checks if two objects are equal.
- *
- * @see "Equal Rights for Functional Objects, or, the More Things Change, The More They Are the Same" by Henry Baker
- * @param {*} lhs - The left-hand side of the equality test.
- * @param {*} rhs - The right-hand side of the equality test.
- * @returns True iff the two objects are "the same".
- */
- function egal(lhs, rhs) {
-  if (is_list(lhs) && is_list(rhs)) {
-    if (lhs.length !== rhs.length) return false;
-    for (var i=0; i < lhs.length; i++) {
-      if (!egal(lhs[i], rhs[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-  if (is_symbol(lhs) && is_symbol(rhs)) {
-    return lhs.eq(rhs);
-  }
-  if (is_keyword(lhs) && is_keyword(rhs)) {
-    return lhs.eq(rhs);
-  }
-  return lhs==rhs;
-}
-
-function Fun(Eval, Env, ast, env, params) {
-  var fn = function() {
-    // This is insane
-    // @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments}
-    return Eval(ast, new Env(env, params, arguments));
-  }
-  fn.__meta__ = null;
-  fn.__ast__ = ast;
-  fn.__gen_env__ = function(args) { return new Env(env, params, args); };
-  return fn;
 }
