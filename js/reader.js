@@ -51,7 +51,7 @@ function read_atom(reader) {
   var token = reader.next();
   if (token.match(/^-?[0-9]+$/)) { // integer
     return parseInt(token, 10);
-  } else if (token.match(/^-?[0-9]*\.?[0-9]*[eE]?[0-9]*$/)) { // float
+  } else if (token.match(/^(-?[0-9]+\.?[0-9]*[eE]?[0-9]*|-?[0-9]*\.?[0-9]+[eE]?[0-9]*)$/)) { // float
     return parseFloat(token);
   } else if (token.match(/^"(?:\\.|[^\\"])*"$/)) { // string
     return token.slice(1, token.length - 1);
@@ -120,7 +120,26 @@ Reader.prototype.readForm = function() {
  */
 function read_str(str) {
   var tokens = tokenize(str);
-  console.log(tokens);
   var reader = new Reader(tokens);
   return reader.readForm();
 }
+
+
+register_suite(new TestSuite("Reader Tests", [
+  test_case("- is a symbol, not a float", function () {
+    var result = read_str("-");
+    return (is_symbol(result));
+  }),
+  test_case("+ is a symbol, not a float", function () {
+    var result = read_str("+");
+    return (is_symbol(result));
+  }),
+  test_case("* is a symbol", function () {
+    var result = read_str("*");
+    return (is_symbol(result));
+  }),
+  test_case("/ is a symbol", function () {
+    var result = read_str("/");
+    return (is_symbol(result));
+  })
+]));

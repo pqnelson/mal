@@ -18,7 +18,7 @@ function pr_str(obj, prettyprint) {
   default:
     if (null === obj) {
       return "nil";
-    } else if (Array.isArray(obj)) {
+    } else if (is_list(obj)) {
       var result = obj.map(function(e) { return pr_str(e, prettyprint); });
       return "("+result.join(' ')+")";
     } else {

@@ -103,3 +103,66 @@ register_suite(new TestSuite("MalSymbol Tests", [
 function is_null(obj) {
   return null === obj;
 }
+
+/**
+ * Keywords are unique symbols prefixed by a colon.
+ *
+ * We can encode them as strings prefixed by unicode '\u029e'
+ * [inverted 'k'] but using the Flyweight design pattern, we can use '=='
+ * comparison to check if they refer to the same object.
+ */
+
+var FlyWeightFactory = (function () {
+  var table = {};
+
+  function Keyword(name) {
+    this.name = name;
+  }
+  Keyword.prototype.toString = function() { return ":"+(this.name); };
+  Keyword.prototype.type = function() { return 'keyword'; };
+  Keyword.prototype.eq = function(rhs) { return this==rhs; };
+  Keyword.prototype.isAtom = function(rhs) { return true; };
+
+  return {
+    get: function (name) {
+      if (!table[name]) {
+        table[name] =
+          new Keyword(name);
+      }
+      return table[name];
+    },
+
+    getCount: function () {
+      var count = 0;
+      for (var f in table) count++;
+      return count;
+    },
+
+    is_kw: function(obj) {
+      return (obj instanceof Keyword);
+    }
+  };
+})();
+
+/**
+ * Constructor for a new keyword.
+ *
+ * Guarantees the keyword is at most unique.
+ *
+ * @param {string} name - The name of the keyword.
+ * @returns New Keyword instance.
+ */
+function keyword(name) {
+  return FlyWeightFactory.get(name);
+}
+
+function is_keyword(obj) {
+  return FlyWeightFactory.is_kw(obj);
+}
+
+/**
+ * Predicate testing if an object is a list.
+ */
+function is_list(obj) {
+  return Array.isArray(obj);
+}
