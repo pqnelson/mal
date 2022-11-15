@@ -97,6 +97,12 @@ function repl() {
   }
 }
 
+
+/* HACK: wrap the input in an implicit 'do' */
+function wrapDo(str) {
+  return "(do "+str+")";
+}
+
 function malCompile(inputElement, outputContainer) {
-  outputContainer.innerHTML = rep(inputElement.value);
+  outputContainer.innerHTML = rep(wrapDo(inputElement.value));
 }

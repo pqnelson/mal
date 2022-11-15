@@ -29,7 +29,7 @@ Env.prototype.set = function(key, value) {
 
 Env.prototype.find = function(key) {
   if (!is_symbol(key)) {
-    throw new Error("env.find key must be given a symbol");
+    throw new Error("env.find key must be given a symbol, given "+obj_type(key));
   }
   if (key.getName() in this.bindings) { return this; }
   else if (this.outer) { return this.outer.find(key); }
@@ -38,7 +38,7 @@ Env.prototype.find = function(key) {
 
 Env.prototype.get = function(key) {
   if (!is_symbol(key)) {
-    throw new Error("env.get key must be given a symbol");
+    throw new Error("env.get key must be given a symbol, given "+obj_type(key));
   }
   var env = this.find(key);
   if (!env) { throw new Error('"'+key.toString()+'" not found in environment'); }

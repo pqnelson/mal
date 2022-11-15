@@ -109,6 +109,9 @@ Reader.prototype.readForm = function() {
   case ')': throw new Error("unexpected ')'");
   case '(': return read_list(this, "(", ")");
 
+  case ']': throw new Error("unexpected ']'");
+  case '[': return read_list(this, "[", "]");
+
   default: return read_atom(this);
   }
 };
