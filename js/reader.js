@@ -105,6 +105,10 @@ Reader.prototype.readForm = function() {
   var token = this.peek();
   switch (token) {
   case ';': return null;
+    
+  case "'":
+    this.next();
+    return [new MalSymbol("quote"), this.readForm()];
 
   case ')': throw new Error("unexpected ')'");
   case '(': return read_list(this, "(", ")");
