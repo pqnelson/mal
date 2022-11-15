@@ -38,7 +38,7 @@ function Reader(tokens) {
 }
 
 Reader.prototype.peek = function() { return this.tokens[this.position]; };
-Reader.prototype.next = function() { return this.tokens[this.position]; };
+Reader.prototype.next = function() { return this.tokens[this.position++]; };
 
 /**
  * Function to read the atom and determine what it is.
@@ -67,7 +67,7 @@ function read_atom(reader) {
     // We can lookup a Javascript variable by
     // `window[token]`.
     // @see {@link https://stackoverflow.com/q/1920867}
-    return token;
+    return new MalSymbol(token);
   }
 }
 
@@ -91,7 +91,7 @@ function read_list(reader, start, end) {
     if (!token) {
       throw new Error("expected '"+end+"', found EOF");
     }
-    ast.push(read_form(reader));
+    ast.push(reader.readForm());
   }
   reader.next();
   return ast;
@@ -107,7 +107,7 @@ Reader.prototype.readForm = function() {
   case ';': return null;
 
   case ')': throw new Error("unexpected ')'");
-  case '(': return read_list(this);
+  case '(': return read_list(this, "(", ")");
 
   default: return read_atom(this);
   }
@@ -119,6 +119,8 @@ Reader.prototype.readForm = function() {
  * @param {string} str - the string we are reading.
  */
 function read_str(str) {
-  var reader = new Reader(tokenize(str));
+  var tokens = tokenize(str);
+  console.log(tokens);
+  var reader = new Reader(tokens);
   return reader.readForm();
 }

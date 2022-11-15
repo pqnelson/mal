@@ -3,10 +3,16 @@
   initiate compilation. But I am curious about the degree of
   interactivity we can achieve.
   -->
+<!DOCTYPE html>
 <html>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <head>
     <title>Make a Lisp</title>
     <link rel="stylesheet" type="text/css" href="mal.css" />
+        <script  type="text/javascript" src="test-framework.js"></script>
+        <script type="text/javascript" src="types.js"></script>
+        <script type="text/javascript" src="printer.js"></script>
         <script type="text/javascript" src="reader.js"></script>
         <script type="text/javascript" src="step1.js"></script>
 
@@ -71,6 +77,7 @@ or <a href="https://github.com/clojure/clojurescript/tree/r927">first noninitial
   function compileLisp() {
     malCompile(inputElement,outputElement);
   }
+  run_tests();
 </script>
 </body>
 </html>

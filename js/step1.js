@@ -1,5 +1,5 @@
 function READ(str) {
-  return str;
+  return read_str(str);
 }
 
 function EVAL(ast, env) {
@@ -7,7 +7,7 @@ function EVAL(ast, env) {
 }
 
 function PRINT(exp) {
-  return exp;
+  return pr_str(exp, true);
 }
 
 function rep(str) {
