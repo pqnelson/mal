@@ -236,3 +236,15 @@ function obj_type(obj) {
   }
   return lhs==rhs;
 }
+
+function Fun(Eval, Env, ast, env, params) {
+  var fn = function() {
+    // This is insane
+    // @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments}
+    return Eval(ast, new Env(env, params, arguments));
+  }
+  fn.__meta__ = null;
+  fn.__ast__ = ast;
+  fn.__gen_env__ = function(args) { return new Env(env, params, args); };
+  return fn;
+}

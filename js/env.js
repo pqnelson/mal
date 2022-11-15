@@ -1,8 +1,22 @@
 
 
-function Env(outer) {
+function Env(outer, keys, values) {
   this.outer = outer || null;
   this.bindings = {};
+
+  // If creating a new environment for a function closure.
+  if (keys && values) {
+    const variadic_separator = "&";
+    for (var i=0; i < keys.length; i++) {
+      if (keys[i].getName() === variadic_separator) {
+        this.bindings[keys[i+1].getName()] = Array.prototype.slice.call(values,i);
+        break;
+      } else {
+        this.bindings[keys[i].getName()] = values[i];
+      }
+    }
+  }
+  return this;
 }
 
 Env.prototype.set = function(key, value) {
