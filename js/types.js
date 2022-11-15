@@ -163,6 +163,13 @@ function is_keyword(obj) {
 }
 
 /**
+ * Create a list from arguments.
+ */
+function list() {
+  return Array.prototype.slice.call(arguments, 0);
+}
+
+/**
  * Predicate testing if an object is a list.
  */
 function is_list(obj) {
@@ -216,8 +223,22 @@ function Fun(Eval, Env, ast, env, params) {
   fn.__ast__ = ast;
   fn.__gen_env__ = function(args) {
     console.log("params = ", pr_str(params, true));
-    return new Env(env, params, args); };
+    return new Env(env, params, args);
+  };
+  fn._ismacro_ = false;
   return fn;
+}
+
+function is_function(obj) {
+  return ('function' === typeof(obj));
+}
+
+function is_macro(obj) {
+  return (is_function(obj) && !!obj._ismacro_);
+}
+
+function is_fn(obj) {
+  return (is_function(obj) && !obj._ismacro_);
 }
 
 /**
@@ -225,6 +246,7 @@ function Fun(Eval, Env, ast, env, params) {
  *
  * @param value - Optional initial value, defaults to NULL.
  * @constructor
+ * @see {@link https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Atom.java}
  */
 function Atom(value) {
   this.value = value || null;
@@ -257,10 +279,6 @@ function is_string(obj) {
 
 function is_number(obj) {
   return 'number' === typeof(obj);
-}
-
-function is_function(obj) {
-  return ('function' === typeof(obj));
 }
 
 /**

@@ -39,6 +39,25 @@ function concat_with_arguments(coll) {
   return coll.concat.apply(coll, arguments.slice(1));
 }
 
+function first(coll) {
+  if (is_list(coll)) {
+    return (coll.length > 0 ? coll[0] : null);
+  }
+  throw new Error("first expects a list, received "+obj_type(coll));
+}
+
+function rest(coll) {
+  if (is_list(coll)) {
+    return (coll.length > 0 ? coll.slirce(1) : []);
+  }
+  throw new Error("rest expects a list, received "+obj_type(coll));
+}
+
+function nth(coll, idx) {
+  if (idx < coll.length) { return coll[idx]; }
+  else { throw new Error("nth: index "+idx+" out of range, max"+ " "+coll.length); }
+}
+
 function deref(atm) { return atm.deref(); };
 
 function reset_BANG(atm, val) { return atm.reset(val); }
@@ -71,6 +90,9 @@ var ns = {
   'deref': deref,
   'reset!': reset_BANG,
   'swap!': swap_BANG,
+
+  'list?': is_list,
+  'list': list,
 
   'pr-str': print_str,
   'str': str,
