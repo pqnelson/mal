@@ -105,11 +105,20 @@ Reader.prototype.readForm = function() {
   var token = this.peek();
   switch (token) {
   case ';': return null;
-    
+  // Minimal reader macros
   case "'":
     this.next();
     return [new MalSymbol("quote"), this.readForm()];
-
+  case "`":
+    this.next();
+    return [new MalSymbol("quasiquote"), this.readForm()];
+  case "~":
+    this.next();
+    return [new MalSymbol("unquote"), this.readForm()];
+  case "~@":
+    this.next();
+    return [new MalSymbol("splice-unquote"), this.readForm()];
+  // Lists
   case ')': throw new Error("unexpected ')'");
   case '(': return read_list(this, "(", ")");
 

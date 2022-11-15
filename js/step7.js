@@ -12,6 +12,39 @@ function eval_ast(ast, env) {
   }
 }
 
+
+// This unimaginative name is taken from Appendix C of Guy Steele's
+// "Common Lisp the Language".
+function qq_process(acc, e) {
+  if (is_list(e) && e.length && is_symbol(e[0]) && e[0].getName() === "splice") {
+    return [new MalSymbol("concat"), e[1], acc];
+  } else {
+    return [new MalSymbol("cons"), quasiquote(e), acc];
+  }
+}
+
+/**
+ * Quasiquote processing.
+ *
+ * Also called "backtick" among Lispers.
+ *
+ * @see Appendix C of "Common Lisp The Language" for an alternate
+ * algorithm.
+ */
+function quasiquote(ast) {
+  const unquote = new MalSymbol("unquote");
+  const quote = new MalSymbol("quote");
+  if (is_list(ast) && 0 < ast.length && egal(ast[0],unquote)) {
+    return ast[1];
+  } else if (is_list(ast)) {
+    return ast.reduceRight(qq_process, []);
+  } else if (is_symbol(ast)) {
+    return [quote, ast];
+  } else {
+    return ast;
+  }
+}
+
 function _eval(ast, env) {
   while(true) {
     if (!is_list(ast)) {
@@ -58,6 +91,11 @@ function _eval(ast, env) {
       return Fun(EVAL, Env, ast[2], env, ast[1]);
     case "quote":
       return ast[1];
+    case "quasiquoteexpand":
+      return quasiquote(ast[1]);
+    case "quasiquote":
+      ast = quasiquote(ast[1]);
+      break;
     default:
       var e = eval_ast(ast, env);
       console.log("e = ", pr_str(e, true));
