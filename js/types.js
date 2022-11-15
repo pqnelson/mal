@@ -37,6 +37,8 @@ function is_symbol(obj) {
   return (obj instanceof MalSymbol);
 }
 
+MalSymbol.prototype.getName = function() { return this.name; };
+
 MalSymbol.prototype.isAtom = function() { return true; };
 
 MalSymbol.prototype.type = function() { return "symbol"; };

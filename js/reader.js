@@ -116,6 +116,9 @@ Reader.prototype.readForm = function() {
 /**
  * Public facing `read` function.
  *
+ * A bug: if `str` is multiple forms, e.g. "(def! foo 42)\n(- foo 33)"
+ * then it will just evaluate the first form.
+ *
  * @param {string} str - the string we are reading.
  */
 function read_str(str) {
