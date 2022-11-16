@@ -319,7 +319,7 @@ function obj_type(obj) {
     case 'function': return 'function';
     case 'string': return 'string';
     default:
-      if (obj.type) { return obj.type(); }
+      if (function_QMARK_(obj.type)) { return obj.type(); }
       throw new Error("Unknown type '"+typeof(obj)+"'");
     }
   }
