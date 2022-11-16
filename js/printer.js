@@ -1,9 +1,11 @@
 /**
  * Print an arbitrary lisp object as a string.
  *
+ * Defaults to the toString method for the object.
+ *
  * @param {*} obj - A lisp object.
- * @param {boolean} prettyprint - Pretty print the strings.
- * @return String representation of the object.
+ * @param {boolean=} prettyprint - Pretty print the strings.
+ * @return {string} String representation of the object.
  */
 function pr_str(obj, prettyprint) {
   switch (typeof(obj)) {

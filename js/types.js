@@ -39,8 +39,6 @@ function symbol_QMARK_(obj) {
 
 MalSymbol.prototype.getName = function() { return this.name; };
 
-MalSymbol.prototype.isAtom = function() { return true; };
-
 MalSymbol.prototype.type = function() { return "symbol"; };
 
 /**
@@ -53,7 +51,7 @@ MalSymbol.prototype.type = function() { return "symbol"; };
  */
 MalSymbol.prototype.eq = function(rhs) {
   if (symbol_QMARK_(rhs)) {
-    return (this.name === rhs.name);
+    return (this.getName() === rhs.getName());
   } else {
     return false;
   }
@@ -65,36 +63,8 @@ MalSymbol.prototype.eq = function(rhs) {
  * @return {string} - The identifier as a string.
  */
 MalSymbol.prototype.toString = function() {
-  return this.name;
+  return this.getName();
 };
-
-
-register_suite(new TestSuite("MalSymbol Tests", [
-  test_case("equality fails on numbers", function () {
-    const symbol = new MalSymbol("foobar");
-    return !(symbol.eq(42));
-  }),
-  test_case("equality works on the same symbol", function () {
-    const symbol = new MalSymbol("foobar");
-    return (symbol.eq(symbol));
-  }),
-  test_case("equality works on the different symbol objects with the same name", function () {
-    const symbol = new MalSymbol("foobar");
-    const symb = new MalSymbol("foobar");
-    return (symbol.eq(symb));
-  }),
-  test_case("symbols are atoms", function() {
-    const symbol = new MalSymbol("foobar");
-    return symbol.isAtom();
-  }),
-  test_case("symbols are symbols", function() {
-    const symbol = new MalSymbol("foobar");
-    return symbol_QMARK_(symbol);
-  }),
-  test_case("numbers are not symbols", function() {
-    return !symbol_QMARK_(42);
-  })
-]));
 
 /**
  * Predicate testing if an object is null or not.
@@ -122,8 +92,7 @@ var FlyWeightFactory = (function () {
   }
   Keyword.prototype.toString = function() { return ":"+(this.name); };
   Keyword.prototype.type = function() { return 'keyword'; };
-  Keyword.prototype.eq = function(rhs) { return this==rhs; };
-  Keyword.prototype.isAtom = function(rhs) { return true; };
+  Keyword.prototype.eq = function(rhs) { return this===rhs; };
 
   return {
     get: function (name) {
@@ -218,10 +187,10 @@ function Fun(Eval, Env, ast, env, params) {
     // This is insane
     // @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments}
     return Eval(ast, new Env(env, params, arguments));
-  }
+  };
   fn.__meta__ = null;
   fn.__ast__ = ast;
-  fn.__compiled__ = false;
+  fn.__interpreted__ = true;
   fn.__gen_env__ = function(args) {
     console.log("params = ", pr_str(params, true));
     return new Env(env, params, args);
@@ -254,7 +223,7 @@ function fn_QMARK_(obj) {
  * @returns True iff the object is a Javascript function.
  */
 function compiled_function_QMARK_(obj) {
-  return fn_QMARK_(obj) && !!obj.__compiled__;
+  return fn_QMARK_(obj) && !obj.__interpreted__;
 }
 
 /**
@@ -268,31 +237,42 @@ function compiled_function_QMARK_(obj) {
  * @returns True iff the object is a Lisp function.
  */
 function interpreted_function_QMARK_(obj) {
-  return fn_QMARK_(obj) && !obj.__compiled__;
+  return fn_QMARK_(obj) && !!obj.__interpreted__;
 }
 
 /**
  * A poor man's atom.
  *
+ * This is the only way to create a class with a private field using
+ * ES5, that I could think of, at least.
+ *
  * @param value - Optional initial value, defaults to NULL.
- * @constructor
  * @see {@link https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Atom.java}
+ * @see {@link https://css-tricks.com/implementing-private-variables-in-javascript/}
+ * @constructor
  */
-function Atom(value) {
-  this.value = value || null;
+function Atom(initial_value) {
+  var value = initial_value || null;
+
+  this.deref = () => value;
+
+  this.reset = (new_value) => {
+    value = new_value;
+  };
 }
+
+Atom.prototype.type = function() { return 'atom'; };
 
 function atom_QMARK_(obj) {
   return (obj instanceof Atom);
 }
 
-Atom.prototype.deref = function() { return this.value; };
-Atom.prototype.reset = function(new_value) {
-  this.value = new_value;
-  return new_value;
+/**
+ * Two atoms are equal iff they are identical (refer to the same location in memory).
+ */
+Atom.prototype.eq = function(rhs) {
+  return atom_QMARK_(rhs) && (this === rhs);
 };
-Atom.prototype.type = function() { return 'atom'; };
-
 
 
 function true_QMARK_(obj) {
@@ -313,6 +293,13 @@ function number_QMARK_(obj) {
 
 /**
  * Produce a string representation of the type for the object.
+ *
+ * If given an object with a method "type", it will call that as a last
+ * resort.
+ *
+ * @param {*} obj - A user-supplied object.
+ * @returns {string} A string representation of the type of the object.
+ * @throws error if we cannot determine what type the object is.
  */
 function obj_type(obj) {
   if (symbol_QMARK_(obj)) { return 'symbol'; }
@@ -328,7 +315,33 @@ function obj_type(obj) {
     case 'function': return 'function';
     case 'string': return 'string';
     default:
+      if (obj.type) { return obj.type(); }
       throw new Error("Unknown type '"+typeof(obj)+"'");
     }
   }
 }
+
+
+
+register_suite(new TestSuite("MalSymbol Tests", [
+  test_case("equality fails on numbers", function () {
+    const symbol = new MalSymbol("foobar");
+    return !(symbol.eq(42));
+  }),
+  test_case("equality works on the same symbol", function () {
+    const symbol = new MalSymbol("foobar");
+    return (symbol.eq(symbol));
+  }),
+  test_case("equality works on the different symbol objects with the same name", function () {
+    const symbol = new MalSymbol("foobar");
+    const symb = new MalSymbol("foobar");
+    return (symbol.eq(symb));
+  }),
+  test_case("symbols are symbols", function() {
+    const symbol = new MalSymbol("foobar");
+    return symbol_QMARK_(symbol);
+  }),
+  test_case("numbers are not symbols", function() {
+    return !symbol_QMARK_(42);
+  })
+]));

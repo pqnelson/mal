@@ -52,6 +52,11 @@ docstrings...or whatever) and `defmethod` to do some basic
 prototyping. Then, e.g., overloading the `toString` method will change
 how the instances of the class are printed.
 
+# More Complete Testing
+
+I wrote a poor man's XUnit testing framework, which works fine enough. I
+should write more tests.
+
 # Javascript Symbols
 
 ES6 introduced symbols as a way to avoid name collisions. They seem to

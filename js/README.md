@@ -13,6 +13,5 @@ working on [step 9: try](https://github.com/kanaka/mal/blob/master/process/guide
 I have the evaluator defined in the `step1.js`, `step2.js`,
 etc. files; I have implemented macros in `step8.js`.
 
-# Keywords
-
-I implemented keywords using a Flyweight design pattern.
+I've tried to write JSDoc for most of the code, and I have written an
+XUnit testing framework sufficient for basic testing.
