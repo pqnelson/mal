@@ -76,6 +76,7 @@ function atom(val) {
 var ns = {
   'nil?': is_null,
   '=': egal,
+  'identical?': function(a,b) { return a===b; },
   'type': obj_type,
   'keyword?': is_keyword,
   'symbol?': is_symbol,

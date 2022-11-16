@@ -40,6 +40,7 @@ function Reader(tokens) {
 Reader.prototype.peek = function() { return this.tokens[this.position]; };
 Reader.prototype.next = function() { return this.tokens[this.position++]; };
 
+const floatPattern = /^([-+]?[0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)?)(M)?$/g;
 /**
  * Function to read the atom and determine what it is.
  *
@@ -51,7 +52,7 @@ function read_atom(reader) {
   var token = reader.next();
   if (token.match(/^-?[0-9]+$/)) { // integer
     return parseInt(token, 10);
-  } else if (token.match(/^(-?[0-9]+\.?[0-9]*[eE]?[0-9]*|-?[0-9]*\.?[0-9]+[eE]?[0-9]*)$/)) { // float
+  } else if (token.match(floatPattern)) { // float
     return parseFloat(token);
   } else if (token.match(/^"(?:\\.|[^\\"])*"$/)) { // string
     return token.slice(1, token.length - 1);

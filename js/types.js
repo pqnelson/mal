@@ -221,6 +221,7 @@ function Fun(Eval, Env, ast, env, params) {
   }
   fn.__meta__ = null;
   fn.__ast__ = ast;
+  fn.__compiled__ = false;
   fn.__gen_env__ = function(args) {
     console.log("params = ", pr_str(params, true));
     return new Env(env, params, args);
@@ -239,6 +240,35 @@ function is_macro(obj) {
 
 function is_fn(obj) {
   return (is_function(obj) && !obj._ismacro_);
+}
+
+/**
+ * Is the object a Javascript function?
+ *
+ * "Compiled" function, in analogy to Common Lisp's terminology. This is
+ * in contrast to being a Lisp interpreted function, which is executed
+ * only by the evaluator.
+ *
+ * @see {@link https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node226.html#SECTION002912000000000000000}
+ * @param {*} obj - A possible function object.
+ * @returns True iff the object is a Javascript function.
+ */
+function is_compiled_function(obj) {
+  return is_fn(obj) && !!obj.__compiled__;
+}
+
+/**
+ * Is the object a Lisp function?
+ *
+ * Lisp functions are interpreted by the evaluator, as opposed to being
+ * compiled to a Javascript function.
+ *
+ * @see is_compiled_function
+ * @param {*} obj - A possible Lisp function.
+ * @returns True iff the object is a Lisp function.
+ */
+function is_interpreted_function(obj) {
+  return is_fn(obj) && !obj.__compiled__;
 }
 
 /**
