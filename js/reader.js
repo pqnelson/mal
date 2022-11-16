@@ -148,18 +148,18 @@ function read_str(str) {
 register_suite(new TestSuite("Reader Tests", [
   test_case("- is a symbol, not a float", function () {
     var result = read_str("-");
-    return (is_symbol(result));
+    return (symbol_QMARK_(result));
   }),
   test_case("+ is a symbol, not a float", function () {
     var result = read_str("+");
-    return (is_symbol(result));
+    return (symbol_QMARK_(result));
   }),
   test_case("* is a symbol", function () {
     var result = read_str("*");
-    return (is_symbol(result));
+    return (symbol_QMARK_(result));
   }),
   test_case("/ is a symbol", function () {
     var result = read_str("/");
-    return (is_symbol(result));
+    return (symbol_QMARK_(result));
   })
 ]));

@@ -20,7 +20,7 @@ function Env(outer, keys, values) {
 }
 
 Env.prototype.set = function(key, value) {
-  if (!is_symbol(key)) {
+  if (!symbol_QMARK_(key)) {
     throw new Error("env.set key must be given a symbol");
   }
   this.bindings[key.getName()] = value;
@@ -28,7 +28,7 @@ Env.prototype.set = function(key, value) {
 };
 
 Env.prototype.find = function(key) {
-  if (!is_symbol(key)) {
+  if (!symbol_QMARK_(key)) {
     throw new Error("env.find key must be given a symbol, given "+obj_type(key));
   }
   if (key.getName() in this.bindings) { return this; }
@@ -37,7 +37,7 @@ Env.prototype.find = function(key) {
 };
 
 Env.prototype.get = function(key) {
-  if (!is_symbol(key)) {
+  if (!symbol_QMARK_(key)) {
     throw new Error("env.get key must be given a symbol, given "+obj_type(key));
   }
   var env = this.find(key);

@@ -40,14 +40,14 @@ function concat_with_arguments(coll) {
 }
 
 function first(coll) {
-  if (is_list(coll)) {
+  if (list_QMARK_(coll)) {
     return (coll.length > 0 ? coll[0] : null);
   }
   throw new Error("first expects a list, received "+obj_type(coll));
 }
 
 function rest(coll) {
-  if (is_list(coll)) {
+  if (list_QMARK_(coll)) {
     return (coll.length > 0 ? coll.slirce(1) : []);
   }
   throw new Error("rest expects a list, received "+obj_type(coll));
@@ -74,25 +74,26 @@ function atom(val) {
 }
 
 var ns = {
-  'nil?': is_null,
+  'nil?': nil_QMARK_,
   '=': egal,
   'identical?': function(a,b) { return a===b; },
   'type': obj_type,
-  'keyword?': is_keyword,
-  'symbol?': is_symbol,
-  'true?': is_true,
-  'false?': is_false,
-  'string?': is_string,
-  'number?': is_number,
-  'fn?': is_function,
+  'keyword?': keyword_QMARK_,
+  'symbol?': symbol_QMARK_,
+  'true?': true_QMARK_,
+  'false?': false_QMARK_,
+  'string?': string_QMARK_,
+  'number?': number_QMARK_,
+  'fn?': function_QMARK_,
+  'macro?': macro_QMARK_,
 
   'atom': atom,
-  'atom?': is_atom,
+  'atom?': atom_QMARK_,
   'deref': deref,
   'reset!': reset_BANG,
   'swap!': swap_BANG,
 
-  'list?': is_list,
+  'list?': list_QMARK_,
   'list': list,
 
   'pr-str': print_str,

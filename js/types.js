@@ -33,7 +33,7 @@ function MalSymbol(name) {
   this.name = name;
 }
 
-function is_symbol(obj) {
+function symbol_QMARK_(obj) {
   return (obj instanceof MalSymbol);
 }
 
@@ -52,7 +52,7 @@ MalSymbol.prototype.type = function() { return "symbol"; };
  * @return {boolean} - The result of comparing types and name [identifier].
  */
 MalSymbol.prototype.eq = function(rhs) {
-  if (is_symbol(rhs)) {
+  if (symbol_QMARK_(rhs)) {
     return (this.name === rhs.name);
   } else {
     return false;
@@ -89,10 +89,10 @@ register_suite(new TestSuite("MalSymbol Tests", [
   }),
   test_case("symbols are symbols", function() {
     const symbol = new MalSymbol("foobar");
-    return is_symbol(symbol);
+    return symbol_QMARK_(symbol);
   }),
   test_case("numbers are not symbols", function() {
-    return !is_symbol(42);
+    return !symbol_QMARK_(42);
   })
 ]));
 
@@ -102,7 +102,7 @@ register_suite(new TestSuite("MalSymbol Tests", [
  * @param {*} obj - The object we test for nullity.
  * @returns True if and only if obj is null.
  */
-function is_null(obj) {
+function nil_QMARK_(obj) {
   return null === obj;
 }
 
@@ -158,7 +158,7 @@ function keyword(name) {
   return FlyWeightFactory.get(name);
 }
 
-function is_keyword(obj) {
+function keyword_QMARK_(obj) {
   return FlyWeightFactory.is_kw(obj);
 }
 
@@ -172,7 +172,7 @@ function list() {
 /**
  * Predicate testing if an object is a list.
  */
-function is_list(obj) {
+function list_QMARK_(obj) {
   return Array.isArray(obj);
 }
 
@@ -185,7 +185,7 @@ function is_list(obj) {
  * @returns True iff the two objects are "the same".
  */
  function egal(lhs, rhs) {
-  if (is_list(lhs) && is_list(rhs)) {
+  if (list_QMARK_(lhs) && list_QMARK_(rhs)) {
     if (lhs.length !== rhs.length) return false;
     for (var i=0; i < lhs.length; i++) {
       if (!egal(lhs[i], rhs[i])) {
@@ -194,10 +194,10 @@ function is_list(obj) {
     }
     return true;
   }
-  if (is_symbol(lhs) && is_symbol(rhs)) {
+  if (symbol_QMARK_(lhs) && symbol_QMARK_(rhs)) {
     return lhs.eq(rhs);
   }
-  if (is_keyword(lhs) && is_keyword(rhs)) {
+  if (keyword_QMARK_(lhs) && keyword_QMARK_(rhs)) {
     return lhs.eq(rhs);
   }
   return lhs==rhs;
@@ -230,16 +230,16 @@ function Fun(Eval, Env, ast, env, params) {
   return fn;
 }
 
-function is_function(obj) {
+function function_QMARK_(obj) {
   return ('function' === typeof(obj));
 }
 
-function is_macro(obj) {
-  return (is_function(obj) && !!obj._ismacro_);
+function macro_QMARK_(obj) {
+  return (function_QMARK_(obj) && !!obj._ismacro_);
 }
 
-function is_fn(obj) {
-  return (is_function(obj) && !obj._ismacro_);
+function fn_QMARK_(obj) {
+  return (function_QMARK_(obj) && !obj._ismacro_);
 }
 
 /**
@@ -253,8 +253,8 @@ function is_fn(obj) {
  * @param {*} obj - A possible function object.
  * @returns True iff the object is a Javascript function.
  */
-function is_compiled_function(obj) {
-  return is_fn(obj) && !!obj.__compiled__;
+function compiled_function_QMARK_(obj) {
+  return fn_QMARK_(obj) && !!obj.__compiled__;
 }
 
 /**
@@ -263,12 +263,12 @@ function is_compiled_function(obj) {
  * Lisp functions are interpreted by the evaluator, as opposed to being
  * compiled to a Javascript function.
  *
- * @see is_compiled_function
+ * @see compiled_function_QMARK_
  * @param {*} obj - A possible Lisp function.
  * @returns True iff the object is a Lisp function.
  */
-function is_interpreted_function(obj) {
-  return is_fn(obj) && !obj.__compiled__;
+function interpreted_function_QMARK_(obj) {
+  return fn_QMARK_(obj) && !obj.__compiled__;
 }
 
 /**
@@ -282,7 +282,7 @@ function Atom(value) {
   this.value = value || null;
 }
 
-function is_atom(obj) {
+function atom_QMARK_(obj) {
   return (obj instanceof Atom);
 }
 
@@ -295,19 +295,19 @@ Atom.prototype.type = function() { return 'atom'; };
 
 
 
-function is_true(obj) {
+function true_QMARK_(obj) {
   return true === obj;
 }
 
-function is_false(obj) {
+function false_QMARK_(obj) {
   return false === obj;
 }
 
-function is_string(obj) {
+function string_QMARK_(obj) {
   return 'string' === typeof(obj);
 }
 
-function is_number(obj) {
+function number_QMARK_(obj) {
   return 'number' === typeof(obj);
 }
 
@@ -315,13 +315,13 @@ function is_number(obj) {
  * Produce a string representation of the type for the object.
  */
 function obj_type(obj) {
-  if (is_symbol(obj)) { return 'symbol'; }
-  else if (is_keyword(obj)) { return 'object'; }
-  else if (is_list(obj)) { return 'list'; }
-  else if (is_null(obj)) { return 'nil'; }
-  else if (is_true(obj)) { return 'boolean'; }
-  else if (is_false(obj)) { return 'boolean'; }
-  else if (is_atom(obj)) { return 'atom'; }
+  if (symbol_QMARK_(obj)) { return 'symbol'; }
+  else if (keyword_QMARK_(obj)) { return 'object'; }
+  else if (list_QMARK_(obj)) { return 'list'; }
+  else if (nil_QMARK_(obj)) { return 'nil'; }
+  else if (true_QMARK_(obj)) { return 'boolean'; }
+  else if (false_QMARK_(obj)) { return 'boolean'; }
+  else if (atom_QMARK_(obj)) { return 'atom'; }
   else {
     switch(typeof(obj)) {
     case 'number': return 'number';

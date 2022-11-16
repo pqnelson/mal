@@ -3,9 +3,9 @@ function READ(str) {
 }
 
 function eval_ast(ast, env) {
-  if(is_symbol(ast)) {
+  if(symbol_QMARK_(ast)) {
     return env.get(ast);
-  } else if (is_list(ast)) {
+  } else if (list_QMARK_(ast)) {
     return ast.map(function(a) { return EVAL(a, env); });
   } else {
     return ast;
@@ -16,7 +16,7 @@ function eval_ast(ast, env) {
 // This unimaginative name is taken from Appendix C of Guy Steele's
 // "Common Lisp the Language".
 function qq_process(acc, e) {
-  if (is_list(e) && e.length && is_symbol(e[0]) && e[0].getName() === "splice") {
+  if (list_QMARK_(e) && e.length && symbol_QMARK_(e[0]) && e[0].getName() === "splice") {
     return [new MalSymbol("concat"), e[1], acc];
   } else {
     return [new MalSymbol("cons"), quasiquote(e), acc];
@@ -34,11 +34,11 @@ function qq_process(acc, e) {
 function quasiquote(ast) {
   const unquote = new MalSymbol("unquote");
   const quote = new MalSymbol("quote");
-  if (is_list(ast) && 0 < ast.length && egal(ast[0],unquote)) {
+  if (list_QMARK_(ast) && 0 < ast.length && egal(ast[0],unquote)) {
     return ast[1];
-  } else if (is_list(ast)) {
+  } else if (list_QMARK_(ast)) {
     return ast.reduceRight(qq_process, []);
-  } else if (is_symbol(ast)) {
+  } else if (symbol_QMARK_(ast)) {
     return [quote, ast];
   } else {
     return ast;
@@ -47,7 +47,7 @@ function quasiquote(ast) {
 
 function _eval(ast, env) {
   while(true) {
-    if (!is_list(ast)) {
+    if (!list_QMARK_(ast)) {
       return eval_ast(ast, env);
     }
     if (ast.length === 0) {
@@ -151,7 +151,7 @@ function repl() {
 function wrapDo(str) {
   return "(do "+str+")";
 }
-    
+
 function malCompile(inputElement, outputContainer) {
   outputContainer.innerHTML = rep(wrapDo(inputElement.value));
 }

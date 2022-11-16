@@ -18,7 +18,7 @@ function pr_str(obj, prettyprint) {
   default:
     if (null === obj) {
       return "nil";
-    } else if (is_list(obj)) {
+    } else if (list_QMARK_(obj)) {
       var result = obj.map(function(e) { return pr_str(e, prettyprint); });
       return "("+result.join(' ')+")";
     } else {

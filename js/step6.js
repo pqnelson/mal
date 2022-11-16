@@ -3,9 +3,9 @@ function READ(str) {
 }
 
 function eval_ast(ast, env) {
-  if(is_symbol(ast)) {
+  if(symbol_QMARK_(ast)) {
     return env.get(ast);
-  } else if (is_list(ast)) {
+  } else if (list_QMARK_(ast)) {
     return ast.map(function(a) { return EVAL(a, env); });
   } else {
     return ast;
@@ -14,7 +14,7 @@ function eval_ast(ast, env) {
 
 function _eval(ast, env) {
   while(true) {
-    if (!is_list(ast)) {
+    if (!list_QMARK_(ast)) {
       return eval_ast(ast, env);
     }
     if (ast.length === 0) {
@@ -111,7 +111,7 @@ function repl() {
 function wrapDo(str) {
   return "(do "+str+")";
 }
-    
+
 function malCompile(inputElement, outputContainer) {
   outputContainer.innerHTML = rep(wrapDo(inputElement.value));
 }
