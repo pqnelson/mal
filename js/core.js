@@ -73,10 +73,14 @@ function atom(val) {
   return new Atom(val);
 }
 
+/* Just a note about identical: NaN !== NaN, but I think it should be treated as
+   identical to itself. That's why I use Object.is;
+   @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is}
+*/
 var ns = {
   'nil?': nil_QMARK_,
   '=': egal,
-  'identical?': function(a,b) { return a===b; },
+  'identical?': Object.is,
   'type': obj_type,
   'keyword?': keyword_QMARK_,
   'symbol?': symbol_QMARK_,

@@ -176,11 +176,14 @@ function egal(lhs, rhs) {
 /**
  * Interpreted function (as opposed to 'compiled' or 'native' function).
  *
- * @param Eval - The Eval function from our REPL
- * @param Env - The Environment constructor.
- * @param ast - The S-expression for the function's body.
- * @param env - The environment when we constructed our function.
- * @param params - The formal parameters to the function.
+ * Explicitly calls back to the Lisp evaluator, as opposed to compiling
+ * down to a Javascript function.
+ *
+ * @param {Function} Eval - The Eval function from our REPL
+ * @param {Function} Env - The Environment constructor.
+ * @param {*} ast - The S-expression for the function's body.
+ * @param {Env} env - The environment when we constructed our function.
+ * @param {MalSymbol[]} params - The formal parameters to the function.
  * @constructor
  */
 function Fun(Eval, Env, ast, env, params) {
@@ -247,7 +250,7 @@ function interpreted_function_QMARK_(obj) {
  * This is the only way to create a class with a private field using
  * ES5, that I could think of, at least.
  *
- * @param value - Optional initial value, defaults to NULL.
+ * @param {*=} initial_value - Optional initial value, defaults to NULL.
  * @see {@link https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Atom.java}
  * @see {@link https://css-tricks.com/implementing-private-variables-in-javascript/}
  * @constructor
