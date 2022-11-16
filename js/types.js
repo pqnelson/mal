@@ -148,12 +148,16 @@ function list_QMARK_(obj) {
 /**
  * Checks if two objects are equal.
  *
+ * Defaults to "eq" method, if available. If you are writing a custom
+ * class, then implement an "eq" method; it will allow lisp to defer
+ * to it upon testing for equality.
+ *
  * @see "Equal Rights for Functional Objects, or, the More Things Change, The More They Are the Same" by Henry Baker
  * @param {*} lhs - The left-hand side of the equality test.
  * @param {*} rhs - The right-hand side of the equality test.
  * @returns True iff the two objects are "the same".
  */
- function egal(lhs, rhs) {
+function egal(lhs, rhs) {
   if (list_QMARK_(lhs) && list_QMARK_(rhs)) {
     if (lhs.length !== rhs.length) return false;
     for (var i=0; i < lhs.length; i++) {
@@ -163,13 +167,10 @@ function list_QMARK_(obj) {
     }
     return true;
   }
-  if (symbol_QMARK_(lhs) && symbol_QMARK_(rhs)) {
+  if (typeof(lhs) === typeof(rhs) && !!lhs.eq) {
     return lhs.eq(rhs);
   }
-  if (keyword_QMARK_(lhs) && keyword_QMARK_(rhs)) {
-    return lhs.eq(rhs);
-  }
-  return lhs==rhs;
+  return lhs===rhs;
 }
 
 /**
