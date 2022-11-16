@@ -16,6 +16,7 @@
  * @private
  */
 function tokenize(str) {
+  /* re = /whitespace(splice|collections|string|comment|everything-else)/ */
   var re = /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g;
 
   var results = [];
@@ -65,9 +66,8 @@ function read_atom(reader) {
   } else if ("false" === token) {
     return false;
   } else { // default: symbol
-    // We can lookup a Javascript variable by
-    // `window[token]`.
-    // @see {@link https://stackoverflow.com/q/1920867}
+    /* TODO: consider handling namespaces here? Things like
+       "namespace.subspace.subsubspace/identifier" */
     return new MalSymbol(token);
   }
 }
@@ -119,13 +119,26 @@ Reader.prototype.readForm = function() {
   case "~@":
     this.next();
     return [new MalSymbol("splice-unquote"), this.readForm()];
+
+  // metadata
+  case "^":
+    this.next();
+    var meta = this.readForm();
+    return [new MalSymbol("with-meta"), this.readForm(), meta];
+  // deref
+  case "@":
+    this.next();
+    return [new MalSymbol("deref"), this.readForm()];
   // Lists
   case ')': throw new Error("unexpected ')'");
   case '(': return read_list(this, "(", ")");
 
+  // Treat vectors as lists
   case ']': throw new Error("unexpected ']'");
   case '[': return read_list(this, "[", "]");
 
+  // If we had hashmaps, we would add analogous "}", "{" cases here
+    
   default: return read_atom(this);
   }
 };

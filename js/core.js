@@ -86,6 +86,19 @@ function map_one(f, coll) {
   return coll.map(function(x) { return f(x); });
 }
 
+function with_meta(obj, new_meta_data) {
+  if (!obj.clone) {
+    throw new Error("Trying to add metadata to an object not supporting it");
+  }
+  var clone = obj.clone();
+  clone.__meta__ = new_meta_data;
+  return clone;
+}
+
+function get_meta(obj) {
+  return obj.__meta__ || null;
+}
+
 /* Just a note about identical: NaN !== NaN, but I think it should be treated as
    identical to itself. That's why I use Object.is;
    @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is}
@@ -105,6 +118,8 @@ var ns = {
   'macro?': macro_QMARK_,
   'apply': apply_fn,
   'throw': function (e) { throw e; },
+  'with-meta': with_meta,
+  'meta': get_meta,
 
   'atom': atom,
   'atom?': atom_QMARK_,

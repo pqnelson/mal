@@ -39,6 +39,7 @@
  */
 function MalSymbol(name) {
   this.name = name;
+  this.__meta__ = null;
 }
 
 function symbol_QMARK_(obj) {
@@ -48,6 +49,10 @@ function symbol_QMARK_(obj) {
 MalSymbol.prototype.getName = function() { return this.name; };
 
 MalSymbol.prototype.type = function() { return "symbol"; };
+
+MalSymbol.prototype.clone = function() {
+  return new MalSymbol(this.getName());
+};
 
 /**
  * Test for equality with another object.
@@ -101,7 +106,8 @@ var FlyWeightFactory = (function () {
   Keyword.prototype.toString = function() { return ":"+(this.name); };
   Keyword.prototype.type = function() { return 'keyword'; };
   Keyword.prototype.eq = function(rhs) { return this===rhs; };
-
+  Keyword.prototype.clone = function() { return this; };
+  
   return {
     get: function (name) {
       if (!table[name]) {
@@ -144,6 +150,20 @@ function keyword_QMARK_(obj) {
  */
 function list() {
   return Array.prototype.slice.call(arguments, 0);
+}
+
+/**
+ * Fastest way to clone an array.
+ *
+ * Right now (16 Nov 2022), `list.slice()` is barely faster than
+ * `list.slice(0)` on Firefox 106.0.5 (64-bit). Array.from is among
+ * the slowest.
+ *
+ * @see {@link https://stackoverflow.com/a/21514254}
+ * @returns {Array.<*>} Shallow clone of the object.
+ */
+Array.prototype.clone = function() {
+  return this.slice(0);
 }
 
 /**
@@ -210,6 +230,28 @@ function Fun(Eval, Env, ast, env, params) {
   fn._ismacro_ = false;
   return fn;
 }
+
+/**
+ * Clone a function.
+ *
+ * @see {@link https://stackoverflow.com/a/11230005}
+ */
+Function.prototype.clone = function() {
+  // Avoid long chains of needless callbacks
+  var that = this;
+  if(this.__isClone) {
+    that = this.__clonedFrom;
+  }
+  // Send in the clowns...I mean, clones...
+  var clown = function () { return that.apply(this, arguments); };
+  for(key in this) {
+    clown[key] = this[key];
+  }
+  
+  clown.__isClone = true;
+  clown.__clonedFrom = that;
+  return clown;
+};
 
 function function_QMARK_(obj) {
   return ('function' === typeof(obj));

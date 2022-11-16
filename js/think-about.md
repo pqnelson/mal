@@ -5,6 +5,14 @@ Clojure has thought longer about
 special characters, perhaps I should adopt their naming convention. I
 started doing this with atom methods.
 
+# Docstrings, Printing Source
+
+Clojure allows you to access the documentation for a function (or
+variable) *and* the sourcecode, using `(doc foo)` and
+`(source baz)` respectively. The [`source`](https://github.com/clojure/clojure/blob/3b6256e654bf250ddfd01cdaa4be9f39a74c2de6/src/clj/clojure/repl.clj#L172)
+function seems doable, and if we stick the documentation in the
+metadata...well that simplifies life considerably.
+
 # Standard Library
 
 There is no "prelude library", no "core.lisp". We should probably
@@ -36,14 +44,65 @@ implement it. Some useful functions off the top of my head:
       etc.)
 - [ ] `spit`
 
+## Functions
+
+Just looking through the sourcecode for the Compiler in Clojure, it
+seems the primitive version of a function is `fn*`, which is implemented
+as a [`public static class FnMethod extends ObjMethod`](https://github.com/clojure/clojure/blob/e6fce5a42ba78fadcde00186c0b0c3cd00f45435/src/jvm/clojure/lang/Compiler.java#L5289-L5768),
+according to the `FnMethod::parse` method.
+
+It's a mess, really, it seems the [`FnExpr`](https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Compiler.java#L3904-L4150)
+class, which uses `FnMethod` as an encoding of the different signatures
+for a `fn*`; i.e., `(fn* ([arg1] method1) ([arg2] method2) ...)`
+stores each `([arg1] method1)`, `([arg2] method2)`, ..., in their own
+`FnMethod` object. The `FnExpr` is then compiled to a Java class.
+
+### Multi-arity functions in Clojurescript
+
+Running on the figwheel repl the commands:
+
+```cljs
+(require 'cljs.js)
+(def st (cljs.js/empty-state))
+(cljs.js/compile-str st "(defn foo ([a] (+ a 1)) ([a b] (* a b)))" println)
+```
+
+Produces the following javascript:
+
+```js
+(function cljs$user$foo(var_args) {
+    var G__23 = arguments.length;
+    switch (G__23) {
+    case (1):
+        return cljs.user.foo.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
+        break;
+    case (2):
+        return cljs.user.foo.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
+        break;
+    default:
+        throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(arguments.length)].join('')));
+    }
+});
+
+(cljs.user.foo.cljs$core$IFn$_invoke$arity$1 = (function (a){
+return (a + (1));
+}));
+
+(cljs.user.foo.cljs$core$IFn$_invoke$arity$2 = (function (a,b){
+return (a * b);
+}));
+
+(cljs.user.foo.cljs$lang$maxFixedArity = (2));
+```
 
 ## Data Structures
 
 We don't have any hash maps, vectors, or sets. These would probably be
 nice to have.
 
-Is there any reason to have a custom hash map? I don't know.
-Clojurescript uses `js#{ ... }` notation for JSON objects.
+Is there any reason to have a custom hash map? JSON objects allow only
+strings for its keys (or, if `Symbol` is supported, those too). If you
+want anything else, you'd need a custom hash map.
 
 ## Classes
 
@@ -57,7 +116,16 @@ how the instances of the class are printed.
 I wrote a poor man's XUnit testing framework, which works fine enough. I
 should write more tests.
 
-# Javascript Symbols
+# Interoperability with Javascript
+
+Interoperability with Javascript seems like a good idea.
+
+## JSON Objects
+
+About interoperability notation,
+Clojurescript uses `js#{ ... }` notation for JSON objects.
+
+## Javascript ES6 `Symbol`
 
 ES6 introduced symbols as a way to avoid name collisions. They seem to
 resemble Common Lisp keywords (like `#:foo`), as opposed to being used
@@ -73,3 +141,34 @@ There is no infrastructure for emitting Javascript code, nor any
 optimizer.
 We could probably implement this in the object language (i.e., in Lisp)
 since we have an evaluator.
+
+# Vars
+
+Clojure uses [`Var`](https://clojure.org/reference/vars)
+to bind symbols to values.
+The [implementation](https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Var.java)
+may be worth looking at.
+
+Is this a good idea, or is it over-engineering for a Javascript Lisp?
+The advantage in Clojure is that `Var` can be rebound within a thread,
+without affecting the other threads. But Javascript is (not yet)
+multithreaded, not in the same way as Java.
+
+# Namespaces
+
+I'm still thinking about namespaces. Clojure uses a namespace as a
+mapping from `Var` to values. For the evaluator, we could treat a
+namespace as "just another JSON object", and create it by something like
+`window["my-new-namespace"][symbol_in_ns] = value`.
+
+(The reason this works: [`window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) accesses global bindings, see, e.g.,
+[thread](https://stackoverflow.com/q/1920867) on stackoverflow.)
+Care must be taken, apparently Node.js does not use `window` as a global
+object but instead uses a `global` variable, see
+[global objects in Javascript](https://developer.mozilla.org/en-US/docs/Glossary/Global_object).
+
+Though if we compile to Javascript, then we may want to compile a
+namespace to an object using the [module design pattern](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch8.md).
+
+
+

@@ -80,6 +80,8 @@ function macroexpand(ast, env) {
   return ast;
 }
 
+var is_log_verbose = false;
+
 function _eval(ast, env) {
   while(true) {
     if (!list_QMARK_(ast)) {
@@ -95,14 +97,18 @@ function _eval(ast, env) {
       return eval_ast(ast, env);
     }
     /* end macroexpansion */
-    console.log("ast = ", pr_str(ast, true));
+    if (is_log_verbose) {
+      console.log("ast = ", pr_str(ast, true));
+    }
     switch(ast[0].toString()) {
     case 'def!':
       var body = ast[2],
       identifier = ast[1],
       result = EVAL(body,env);
-      console.log("defining '"+identifier.toString()+"' = ",
-                  pr_str(result,true));
+      if (is_log_verbose) {
+        console.log("defining '"+identifier.toString()+"' = ",
+                    pr_str(result,true));
+      }
       return env.set(identifier, result);
     case 'let*':
       var let_env = new Env(env),
@@ -164,7 +170,9 @@ function _eval(ast, env) {
       }
     default:
       var e = eval_ast(ast, env);
-      console.log("e = ", pr_str(e, true));
+      if (is_log_verbose) {
+        console.log("e = ", pr_str(e, true));
+      }
       var f = e[0];
       /* if (is interpreted function) */
       if (f.__ast__) {
@@ -187,15 +195,21 @@ function PRINT(exp) {
   return pr_str(exp, true);
 }
 
-var init_env = new Env();
+function new_init_env() {
 
-for (const [key, value] of Object.entries(ns)) {
-  init_env.set(new MalSymbol(key), value);
+  var init_env = new Env();
+  
+  for (const [key, value] of Object.entries(ns)) {
+    init_env.set(new MalSymbol(key), value);
+  }
+  
+  init_env.set(new MalSymbol('eval'), function(ast) {
+    return EVAL(ast, init_env);
+  });
+  return init_env;
 }
 
-init_env.set(new MalSymbol('eval'), function(ast) {
-  return EVAL(ast, init_env);
-});
+var init_env = new_init_env();
 
 function rep(str) {
   return PRINT(EVAL(READ(str), init_env));
