@@ -8,6 +8,10 @@
  * Right now, I am wondering if there is a way to hack things to use a
  * Javascript function instead of a `Function` class.
  *
+ * A number of public-facing predicates are suffixed with "_QMARK_",
+ * following Clojure's munging naming-conventions.
+ *
+ * @see {@link https://github.com/clojure/clojure/blob/e6fce5a42ba78fadcde00186c0b0c3cd00f45435/src/jvm/clojure/lang/Compiler.java#L2846-L2871}
  * @author Alex Nelson <pqnelson@gmail.com>
  */
 
@@ -22,8 +26,12 @@
 /**
  * Creates a Lisp symbol.
  *
+ * Unlike Common Lisp, this is not a Flyweight. (We *do* treat Keywords
+ * as a Flyweight design pattern.)
+ * 
  * Note that ES6 introduces a new builtin class, also called "Symbol".
- * Perhaps there is a way to leverage this?
+ * Do not be confused: ES6 "Symbols" are more like enum entries, not
+ * identifiers we can bind values to.
  *
  * @constructor
  * @param {string} name - The identifier for the symbol.

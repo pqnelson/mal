@@ -73,6 +73,19 @@ function atom(val) {
   return new Atom(val);
 }
 
+function apply_fn(f, x) {
+  if (arguments.length > 2) {
+    var args = [x].concat(Array.prototype.slice.class(arguments, 2));
+    return f.apply(f, args);
+  } else {
+    return f(x);
+  }
+}
+
+function map_one(f, coll) {
+  return coll.map(function(x) { return f(x); });
+}
+
 /* Just a note about identical: NaN !== NaN, but I think it should be treated as
    identical to itself. That's why I use Object.is;
    @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is}
@@ -90,6 +103,8 @@ var ns = {
   'number?': number_QMARK_,
   'fn?': function_QMARK_,
   'macro?': macro_QMARK_,
+  'apply': apply_fn,
+  'throw': function (e) { throw e; },
 
   'atom': atom,
   'atom?': atom_QMARK_,
