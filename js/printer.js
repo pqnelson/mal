@@ -15,8 +15,10 @@ function pr_str(obj, prettyprint) {
     } else {
       return obj;
     }
+
   case 'function':
     return obj.name;
+
   default:
     if (null === obj) {
       return "nil";

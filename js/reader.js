@@ -98,6 +98,13 @@ function read_list(reader, start, end) {
   return ast;
 }
 
+const _quote = new MalSymbol("quote");
+const _quasiquote = new MalSymbol("quasiquote");
+const _unquote = new MalSymbol("unquote");
+const _splice_unquote = new MalSymbol("splice-unquote");
+const _deref = new MalSymbol("deref");
+const _with_meta = new MalSymbol("with-meta");
+
 /**
  * Private reader main method for reading.
  * @private
@@ -109,26 +116,26 @@ Reader.prototype.readForm = function() {
   // Minimal reader macros
   case "'":
     this.next();
-    return [new MalSymbol("quote"), this.readForm()];
+    return [_quote, this.readForm()];
   case "`":
     this.next();
-    return [new MalSymbol("quasiquote"), this.readForm()];
+    return [_quasiquote, this.readForm()];
   case "~":
     this.next();
-    return [new MalSymbol("unquote"), this.readForm()];
+    return [_unquote, this.readForm()];
   case "~@":
     this.next();
-    return [new MalSymbol("splice-unquote"), this.readForm()];
+    return [_splice_unquote, this.readForm()];
 
   // metadata
   case "^":
     this.next();
     var meta = this.readForm();
-    return [new MalSymbol("with-meta"), this.readForm(), meta];
+    return [_with_meta, this.readForm(), meta];
   // deref
   case "@":
     this.next();
-    return [new MalSymbol("deref"), this.readForm()];
+    return [_deref, this.readForm()];
   // Lists
   case ')': throw new Error("unexpected ')'");
   case '(': return read_list(this, "(", ")");
@@ -138,7 +145,7 @@ Reader.prototype.readForm = function() {
   case '[': return read_list(this, "[", "]");
 
   // If we had hashmaps, we would add analogous "}", "{" cases here
-    
+
   default: return read_atom(this);
   }
 };

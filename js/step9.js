@@ -27,14 +27,16 @@ function eval_ast(ast, env) {
   }
 }
 
+const _concat = new MalSymbol("concat");
+const _cons = new MalSymbol("cons");
 
 // This unimaginative name is taken from Appendix C of Guy Steele's
 // "Common Lisp the Language".
 function qq_process(acc, e) {
   if (list_QMARK_(e) && e.length && symbol_QMARK_(e[0]) && e[0].getName() === "splice") {
-    return [new MalSymbol("concat"), e[1], acc];
+    return [_concat, e[1], acc];
   } else {
-    return [new MalSymbol("cons"), quasiquote(e), acc];
+    return [_cons, quasiquote(e), acc];
   }
 }
 
@@ -47,14 +49,12 @@ function qq_process(acc, e) {
  * algorithm.
  */
 function quasiquote(ast) {
-  const unquote = new MalSymbol("unquote");
-  const quote = new MalSymbol("quote");
-  if (list_QMARK_(ast) && 0 < ast.length && egal(ast[0],unquote)) {
+  if (list_QMARK_(ast) && 0 < ast.length && egal(ast[0], _unquote)) {
     return ast[1];
   } else if (list_QMARK_(ast)) {
     return ast.reduceRight(qq_process, []);
   } else if (symbol_QMARK_(ast)) {
-    return [quote, ast];
+    return [_quote, ast];
   } else {
     return ast;
   }
@@ -101,86 +101,92 @@ function _eval(ast, env) {
       console.log("ast = ", pr_str(ast, true));
     }
     switch(ast[0].toString()) {
-    case 'def!':
-      var body = ast[2],
-      identifier = ast[1],
-      result = EVAL(body,env);
-      if (is_log_verbose) {
-        console.log("defining '"+identifier.toString()+"' = ",
-                    pr_str(result,true));
-      }
-      return env.set(identifier, result);
-    case 'let*':
-      var let_env = new Env(env),
-      let_bindings = ast[1],
-      body = ast[2];
-      for (var i=0; i < let_bindings.length; i+=2) {
-        let_env.set(let_bindings[i], EVAL(let_bindings[i+1], let_env));
-      }
-      ast = body;
-      env = let_env;
-      break;
-    case "do":
-      for (var i=1; i < ast.length-1; i++) {
-        EVAL(ast[i], env);
-      }
-      ast = ast[ast.length-1];
-      break;
-    case "if":
-      var test = EVAL(ast[1], env);
-      if (null === test || false == test) {
-        ast = ("undefined" !== typeof ast[3] ? ast[3] : null);
-      } else {
-        ast = ast[2];
-      }
-      break;
-    case "fn*": // (fn* [args] body...)
-      return Fun(EVAL, Env, ast[2], env, ast[1]);
-    case "macroexpand":
-      return macroexpand(ast[1], env);
-    case "quote":
-      return ast[1];
-    case "quasiquoteexpand":
-      return quasiquote(ast[1]);
-    case "quasiquote":
-      ast = quasiquote(ast[1]);
-      break;
-    case "defmacro!":
-      var macro = EVAL(ast[2], env);
-      macro._ismacro_ = true;
-      return env.set(ast[1], macro);
-    case "try*":
-      /* ast[0] = try*
-         ast[1] = expr
-         ast[2] = (catch e body) */
-      try {
-        return EVAL(ast[1], env);
-      } catch (e) {
-        if (ast[2] && !!ast[2][0] && "catch*" === ast[2][0].getName()) {
-          let catch_body = ast[2][2],
-              exception_id = ast[2][1];
-          if (e instanceof Error) {
-            return EVAL(catch_body, new Env(env, [exception_id], [e.message]));
-          } else {
-            return EVAL(catch_body, new Env(env, [exception_id], [e]));
-          }
-        } else {
-          throw e;
+      case 'def!': {
+        var body = ast[2],
+            identifier = ast[1],
+            result = EVAL(body,env);
+        if (is_log_verbose) {
+          console.log("defining '"+identifier.toString()+"' = ",
+                      pr_str(result,true));
         }
+        return env.set(identifier, result);
       }
-    default:
-      var e = eval_ast(ast, env);
-      if (is_log_verbose) {
-        console.log("e = ", pr_str(e, true));
+      case 'let*': {
+        var let_env = new Env(env),
+        let_bindings = ast[1],
+            body = ast[2];
+        for (var i=0; i < let_bindings.length; i+=2) {
+          let_env.set(let_bindings[i], EVAL(let_bindings[i+1], let_env));
+        }
+        ast = body;
+        env = let_env;
+        break;
       }
-      var f = e[0];
-      /* if (is interpreted function) */
-      if (f.__ast__) {
-        ast = f.__ast__;
-        env = f.__gen_env__(e.slice(1));
-      } else {
-        // "native function"
-        return f.apply(f, e.slice(1));
+      case "do": {
+        for (var i=1; i < ast.length-1; i++) {
+          EVAL(ast[i], env);
+        }
+        ast = ast[ast.length-1];
+        break;
+      }
+      case "if": {
+        var test = EVAL(ast[1], env);
+        if (null === test || false == test) {
+          ast = ("undefined" !== typeof ast[3] ? ast[3] : null);
+        } else {
+          ast = ast[2];
+        }
+        break;
+      }
+      case "fn*": // (fn* [args] body...)
+        return Fun(EVAL, Env, ast[2], env, ast[1]);
+      case "macroexpand":
+        return macroexpand(ast[1], env);
+      case "quote":
+        return ast[1];
+      case "quasiquoteexpand":
+        return quasiquote(ast[1]);
+      case "quasiquote":
+        ast = quasiquote(ast[1]);
+        break;
+      case "defmacro!": {
+        var macro = EVAL(ast[2], env);
+        macro._ismacro_ = true;
+        return env.set(ast[1], macro);
+      }
+      case "try*":
+        /* ast[0] = try*
+           ast[1] = expr
+           ast[2] = (catch e body) */
+        try {
+          return EVAL(ast[1], env);
+        } catch (e) {
+          if (ast[2] && !!ast[2][0] && "catch*" === ast[2][0].getName()) {
+            let catch_body = ast[2][2],
+                exception_id = ast[2][1];
+            if (e instanceof Error) {
+              return EVAL(catch_body, new Env(env, [exception_id], [e.message]));
+            } else {
+              return EVAL(catch_body, new Env(env, [exception_id], [e]));
+            }
+          } else {
+            throw e;
+          }
+        }
+      default: {
+        var e = eval_ast(ast, env);
+        if (is_log_verbose) {
+          console.log("e = ", pr_str(e, true));
+        }
+        var f = e[0];
+        /* if (is interpreted function) */
+        if (f.__ast__) {
+          ast = f.__ast__;
+          env = f.__gen_env__(e.slice(1));
+        } else {
+          // "native function"
+          return f.apply(f, e.slice(1));
+        }
       }
     }
   }
@@ -198,11 +204,11 @@ function PRINT(exp) {
 function new_init_env() {
 
   var init_env = new Env();
-  
+
   for (const [key, value] of Object.entries(ns)) {
     init_env.set(new MalSymbol(key), value);
   }
-  
+
   init_env.set(new MalSymbol('eval'), function(ast) {
     return EVAL(ast, init_env);
   });
