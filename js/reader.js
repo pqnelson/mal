@@ -65,6 +65,8 @@ function read_atom(reader) {
     return true;
   } else if ("false" === token) {
     return false;
+  } else if (":" === token[0]) {
+    return keyword(token.slice(1, token.length));
   } else { // default: symbol
     /* TODO: consider handling namespaces here? Things like
        "namespace.subspace.subsubspace/identifier" */
@@ -153,10 +155,13 @@ Reader.prototype.readForm = function() {
 /**
  * Public facing `read` function.
  *
- * A bug: if `str` is multiple forms, e.g. "(def! foo 42)\n(- foo 33)"
- * then it will just evaluate the first form.
+ * If `str` is multiple forms, e.g. "(def! foo 42)\n(- foo 33)"
+ * then it will just evaluate the first form. THIS IS NOT A BUG.
+ * This is how the Lisp reader is expected to behave; e.g., Common Lisp
+ * works this way.
  *
  * @param {string} str - the string we are reading.
+ * @returns {*} The Lisp object represented by the string.
  */
 function read_str(str) {
   var tokens = tokenize(str);
@@ -181,5 +186,37 @@ register_suite(new TestSuite("Reader Tests", [
   test_case("/ is a symbol", function () {
     var result = read_str("/");
     return (symbol_QMARK_(result));
+  }),
+  test_case("'nil' reads to null", function () {
+    var result = read_str("nil");
+    return (null === result);
+  }),
+  test_case("'true' reads to true", function () {
+    var result = read_str("true");
+    return (true === result);
+  }),
+  test_case("'false' reads to false", function () {
+    var result = read_str("false");
+    return (false === result);
+  }),
+  test_case("'-1.25' is a float", function () {
+    var result = read_str("-1.25");
+    return (-1.25 === result);
+  }),
+  test_case("'.25' is a symbol", function () {
+    var result = read_str(".25");
+    return (symbol_QMARK_(result));
+  }),
+  test_case("'3e5' is a symbol", function () {
+    var result = read_str("3e5");
+    return (3e5 === result);
+  }),
+  test_case("':foo' is a keyword", function () {
+    var result = read_str(":foo");
+    return (keyword_QMARK_(result));
+  }),
+  test_case("'(:foo 1 2)' is a list", function () {
+    var result = read_str("(:foo 1 2)");
+    return (list_QMARK_(result));
   })
 ]));
