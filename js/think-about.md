@@ -20,12 +20,12 @@ implement it. Some useful functions off the top of my head:
 
 - [ ] `def`
   - [ ] docstrings
-  - [ ] metadata
+  - [x] metadata
   - [ ] private
 - [ ] `fn`
   - destructuring...can we piggieback off of Javascript's [destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)?
 - [ ] `defn` and `defn-`
-- [ ] `apply`
+- [x] `apply`
 - [ ] `map`
   - Although Javascript's [`map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
     is probably optimal for a single collection, it doesn't work for the
@@ -142,6 +142,7 @@ function f(x1, x2, x3) {
   } // now everything is initialized as the Clojure coder *intended*
   /* insert compiler(body) here */
 }
+```
 
 ### Destructuring
 
