@@ -174,7 +174,7 @@ HashMap._setUpPrototype();
 function map_QMARK_(obj) {
   return (obj instanceof HashMap);
 }
-
+var debugging = false;
 /**
  * Keywords are unique symbols prefixed by a colon.
  *
@@ -182,17 +182,19 @@ function map_QMARK_(obj) {
  * [inverted 'k'] but using the Flyweight design pattern, we can use '=='
  * comparison to check if they refer to the same object.
  */
-var FlyWeightFactory = (function () {
-  var table = {};
+var KeywordFactory = (function () {
+  // Using a JSON object can lead to memory leaks on IE10, which isn't
+  // (or shouldn't be) a concern anymore, but I'm paranoid.
+  var table = new Map(); // Weak maps won't work, neither strings nor symbols are objects
 
   class Keyword extends Callable {
-    name;
+    #name = null;
     constructor(name) {
       // TODO: make this more robust
       super((coll,defaultValue=null) => coll.get(this, defaultValue));
-      this.name = name;
+      this.#name = name;
     }
-    toString() { return ":"+this.name; }
+    toString() { return ":"+this.#name; }
     type() { return "keyword"; }
     eq(rhs) { return this === rhs; }
     clone() { return this; }
@@ -200,20 +202,28 @@ var FlyWeightFactory = (function () {
 
   return {
     get: function (name) {
-      if (!table[name]) {
-        table[name] = new Keyword(name);
+      var k = Symbol.for(name);
+      if (table.has(k)) {
+        return table.get(k);
       }
-      return table[name];
-    },
-
-    getCount: function () {
-      var count = 0;
-      for (var f in table) count++;
-      return count;
+      var result = new Keyword(name);
+      table.set(k, result);
+      return result;
     },
 
     is_kw: function(obj) {
       return (obj instanceof Keyword);
+    },
+
+    // debugging code, also useful for testing
+    clear: () => table.clear(),
+
+    getCount: function () {
+      var count = 0;
+      for (const [k,v] of table.entries()) {
+        count++;
+      }
+      return count;
     }
   };
 })();
@@ -227,11 +237,11 @@ var FlyWeightFactory = (function () {
  * @returns New Keyword instance.
  */
 function keyword(name) {
-  return FlyWeightFactory.get(name);
+  return KeywordFactory.get(name);
 }
 
 function keyword_QMARK_(obj) {
-  return FlyWeightFactory.is_kw(obj);
+  return KeywordFactory.is_kw(obj);
 }
 
 /**
