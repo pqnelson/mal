@@ -196,7 +196,10 @@ var KeywordFactory = (function () {
     }
     toString() { return ":"+this.#name; }
     type() { return "keyword"; }
-    eq(rhs) { return this === rhs; }
+    eq(rhs) {
+      if (this === rhs) { return true; }
+      else { return ((rhs instanceof Keyword) && (this.#name === rhs.#name)); }
+    }
     clone() { return this; }
   }
 
