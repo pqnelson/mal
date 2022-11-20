@@ -32,3 +32,6 @@ native functions.
 We can "hack" this part of the evaluator to have a new type behave like
 a function by adding an `apply(self, args)` method. Here the `args`
 parameter behaves like `arguments` object in Javascript.
+
+The only alternative I could think of would be something like Sean Lee's
+[callable](https://github.com/sleexyz/callable) hack.

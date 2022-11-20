@@ -11,6 +11,10 @@
  * A number of public-facing predicates are suffixed with "_QMARK_",
  * following Clojure's munging naming-conventions.
  *
+ * I may need to sit down, and thnk about cloning more carefully.
+ *
+ * @see {@link https://exploringjs.com/deep-js/ch_copying-objects-and-arrays.html}
+ * @see {@link https://exploringjs.com/deep-js/ch_copying-class-instances.html}
  * @see {@link https://github.com/clojure/clojure/blob/e6fce5a42ba78fadcde00186c0b0c3cd00f45435/src/jvm/clojure/lang/Compiler.java#L2846-L2871}
  * @author Alex Nelson <pqnelson@gmail.com>
  */
@@ -89,31 +93,43 @@ function nil_QMARK_(obj) {
   return null === obj;
 }
 
-class HashMap extends Map {
-  __meta__ = null;
-  constructor() {
-    super();
+
+/**
+ * Abstract class for callable objects.
+ *
+ * @see {@link https://github.com/sleexyz/callable}
+ */
+function Callable(f) {
+  const wrapped = x => f(x);
+  Object.setPrototypeOf(wrapped, this.constructor.prototype);
+  return wrapped;
+}
+
+Callable.prototype = Object.create(Function.prototype);
+Callable.prototype.constructor = Callable;
+
+class HashMap extends Callable {
+  static _setUpPrototype() {
+    for (const methodName of ['has', 'keys', 'set', 'values', 'entries',
+                              'delete','forEach', 'clear']) {
+      HashMap.prototype[methodName] = function (...args) {
+        return this.#table[methodName](...args);
+      };
+    }
   }
 
-  type() { return "HashMap"; }
+  #table;
+  constructor() {
+    super(k => this.get(k));
+    this.#table = new Map();
+    this.__meta__ = null;
+  }
 
-  length() { return this.size; }
+  type () { return "HashMap"; }
 
-  isEmpty() { return 0===this.size; }
-
-  /**
-   * Following clojure, default to {@code nil} as the return value.
-   *
-   * @param {*} key - The key to lookup.
-   * @param {*=} defaultValue - The value to return if the key is not in the map
-   *                            (or if the value is {@code undefined});
-   *                            defaults to null.
-   * @returns The associated value, or the defaultValue.
-   * @override
-   */
-  get(key, defaultValue = null) {
-    var value = super.get(key);
-    return (undefined === value ? defaultValue : value);
+  get(k, defaultValue=null) {
+    const val = this.#table.get(k);
+    return (undefined === val ? defaultValue : val);
   }
 
   /**
@@ -125,7 +141,7 @@ class HashMap extends Map {
   toString(prettyPrintKVs=true) {
     if (0 === this.size) { return "{}"; }
     var entries = [];
-    for (const [k,v] of this) {
+    for (const [k,v] of this.#table) {
       entries.push(pr_str(k, prettyPrintKVs)+" "+pr_str(v, prettyPrintKVs));
     }
     return "{" + entries.reduce((acc, entry) => (""===acc ? entry : acc+", "+entry), "")+"}";
@@ -150,26 +166,10 @@ class HashMap extends Map {
     return true;
   }
 
-  /**
-   * Override function calls, when HashMaps are the argument, to be {@code get}.
-   *
-   * This works because the default case for EVAL will be to treat an S-expression
-   * like a function. If the rator has an __ast__ property, it will defer to the
-   * interpretation of the AST with the new environment bindings for the argument;
-   * however, this HashMap will be treated like a native function, and the
-   * interpreter will simply call {@code my_hash_map.apply(my_hash_map, args)}.
-   * We hack this aspect of the evaluator.
-   *
-   * @param {HashMap} self - A synonym of {@code this}.
-   * @param {Array.<*>} args - The arguments passed in, the key is {@code args[0]}.
-   * @returns {*} The value associated to the key, or null if not found.
-   * @see {@link https://262.ecma-international.org/6.0/#sec-iscallable}
-   */
-  apply(self, args) {
-    var k = args[0];
-    return this.get(k);
-  }
+  size() { return this.#table.size; }
+  isEmpty() { return 0 === this.#table.size; }
 }
+HashMap._setUpPrototype();
 
 function map_QMARK_(obj) {
   return (obj instanceof HashMap);
@@ -185,23 +185,18 @@ function map_QMARK_(obj) {
 var FlyWeightFactory = (function () {
   var table = {};
 
-  /* One way to go about making Keywords callable is to make them functions.
-     @see {@link https://github.com/sleexyz/callable} for the basic idea
-  */
-  function Keyword(name) {
-    this.name = name;
+  class Keyword extends Callable {
+    name;
+    constructor(name) {
+      // TODO: make this more robust
+      super((coll,defaultValue=null) => coll.get(this, defaultValue));
+      this.name = name;
+    }
+    toString() { return ":"+this.name; }
+    type() { return "keyword"; }
+    eq(rhs) { return this === rhs; }
+    clone() { return this; }
   }
-  Keyword.prototype.toString = function() { return ":"+(this.name); };
-  Keyword.prototype.type = function() { return 'keyword'; };
-  Keyword.prototype.eq = function(rhs) { return this===rhs; };
-  Keyword.prototype.clone = function() { return this; };
-
-  /* We just hack the apply method instead */
-  Keyword.prototype.apply = function(self, args) {
-    const coll = args[0];
-    const defaultValue = args[1] ?? null;
-    return coll.get(self,defaultValue);
-  };
 
   return {
     get: function (name) {
@@ -348,7 +343,7 @@ Function.prototype.clone = function() {
 };
 
 function function_QMARK_(obj) {
-  return ('function' === typeof(obj));
+  return (Function === obj?.constructor);
 }
 
 function macro_QMARK_(obj) {
@@ -432,7 +427,7 @@ function false_QMARK_(obj) {
 }
 
 function string_QMARK_(obj) {
-  return 'string' === typeof(obj);
+  return String === obj.constructor;
 }
 
 function number_QMARK_(obj) {
@@ -448,25 +443,20 @@ function number_QMARK_(obj) {
  *
  * @param {*} obj - A user-supplied object.
  * @returns {string} A string representation of the type of the object.
- * @throws error if we cannot determine what type the object is.
  */
 function obj_type(obj) {
-  if (symbol_QMARK_(obj)) { return 'symbol'; }
-  else if (keyword_QMARK_(obj)) { return 'object'; }
+  if (obj?.type) { return obj.type(); }
   else if (list_QMARK_(obj)) { return 'list'; }
   else if (nil_QMARK_(obj)) { return 'nil'; }
   else if (true_QMARK_(obj)) { return 'boolean'; }
   else if (false_QMARK_(obj)) { return 'boolean'; }
-  else if (atom_QMARK_(obj)) { return 'atom'; }
-  else if (map_QMARK_(obj)) { return 'map'; }
   else {
-    switch(typeof(obj)) {
-    case 'number': return 'number';
-    case 'function': return 'function';
-    case 'string': return 'string';
-    default:
-      if (function_QMARK_(obj.type)) { return obj.type(); }
-      throw new Error("Unknown type '"+typeof(obj)+"'");
+    switch(obj.constructor.name) {
+      case 'number': return 'number';
+      case 'function': return 'function';
+      case 'string': return 'string';
+      default:
+        return Object.prototype.toString.call(obj).replace(/^\[object (.+)\]$/,"$1").toLowerCase();
     }
   }
 }
@@ -496,6 +486,7 @@ register_suite(new TestSuite("MalSymbol Tests", [
   })
 ]));
 
+
 register_suite(new TestSuite("HashMap Tests", [
   test_case("map is not a function", () => {
     const m = new HashMap();
@@ -518,10 +509,6 @@ register_suite(new TestSuite("HashMap Tests", [
   test_case("(map? (HashMap.)) is true", () => {
     const m = new HashMap();
     return map_QMARK_(m);
-  }),
-  test_case("HashMaps are instances of Maps", () => {
-    const m = new HashMap();
-    return (m instanceof Map);
   }),
   test_case("toString for empty map is {}", () => {
     const m = new HashMap();
@@ -558,18 +545,22 @@ register_suite(new TestSuite("HashMap Tests", [
     m.set(k, v);
     return ("spam" === m.get("foo", "spam"));
   }),
-  test_case("HashMap::call() returns value when key is present", () => {
-    let m = new HashMap();
-    let k = keyword("foo");
-    let v = keyword("bar");
-    m.set(k, v);
-    return (v === m.call(k));
+  test_case("A hashmap is not a function", () => {
+    const m = new HashMap();
+    return !function_QMARK_(m);
   }),
-  test_case("HashMap::call(k) returns null when key is absent", () => {
-    let m = new HashMap();
+  test_case("A hashmap is callable, syntactically 'like' a function", () => {
+    const m = new HashMap();
     let k = keyword("foo");
     let v = keyword("bar");
     m.set(k, v);
-    return (null === m.call("foo"));
+    return (v === m(k));
+  }),
+  test_case("A key is a rator when a hashmap is its rand", () => {
+    const m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return (v === k(m));
   })
 ]));
