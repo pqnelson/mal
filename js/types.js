@@ -28,7 +28,7 @@
  *
  * Unlike Common Lisp, this is not a Flyweight. (We *do* treat Keywords
  * as a Flyweight design pattern.)
- * 
+ *
  * Note that ES6 introduces a new builtin class, also called "Symbol".
  * Do not be confused: ES6 "Symbols" are more like enum entries, not
  * identifiers we can bind values to.
@@ -89,6 +89,92 @@ function nil_QMARK_(obj) {
   return null === obj;
 }
 
+class HashMap extends Map {
+  __meta__ = null;
+  constructor() {
+    super();
+  }
+
+  type() { return "HashMap"; }
+
+  length() { return this.size; }
+
+  isEmpty() { return 0===this.size; }
+
+  /**
+   * Following clojure, default to {@code nil} as the return value.
+   *
+   * @param {*} key - The key to lookup.
+   * @param {*=} defaultValue - The value to return if the key is not in the map
+   *                            (or if the value is {@code undefined});
+   *                            defaults to null.
+   * @returns The associated value, or the defaultValue.
+   * @override
+   */
+  get(key, defaultValue = null) {
+    var value = super.get(key);
+    return (undefined === value ? defaultValue : value);
+  }
+
+  /**
+   * Produce a string representation of the HashMap, suitable for reading.
+   *
+   * @param {boolean} prettyPrintKVs - Pretty print flag used when calling pr_str
+   * @returns {string} String representation of all key-value pairs in braces.
+   */
+  toString(prettyPrintKVs=true) {
+    if (0 === this.size) { return "{}"; }
+    var entries = [];
+    for (const [k,v] of this) {
+      entries.push(pr_str(k, prettyPrintKVs)+" "+pr_str(v, prettyPrintKVs));
+    }
+    return "{" + entries.reduce((acc, entry) => (""===acc ? entry : acc+", "+entry), "")+"}";
+  }
+
+  /**
+   * Test for equality.
+   *
+   * @param {*} rhs - The right hand side of equality testing.
+   * @returns {boolean} True iff equal.
+   */
+  eq(rhs) {
+    if (typeof(this) !== typeof(rhs)) return false;
+    if (this === rhs) return true;
+    if (this.size !== rhs.size) return false;
+
+    for (const [k,v] of this) {
+      if (!egal(v, rhs.get(k))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Override function calls, when HashMaps are the argument, to be {@code get}.
+   *
+   * This works because the default case for EVAL will be to treat an S-expression
+   * like a function. If the rator has an __ast__ property, it will defer to the
+   * interpretation of the AST with the new environment bindings for the argument;
+   * however, this HashMap will be treated like a native function, and the
+   * interpreter will simply call {@code my_hash_map.apply(my_hash_map, args)}.
+   * We hack this aspect of the evaluator.
+   *
+   * @param {HashMap} self - A synonym of {@code this}.
+   * @param {Array.<*>} args - The arguments passed in, the key is {@code args[0]}.
+   * @returns {*} The value associated to the key, or null if not found.
+   * @see {@link https://262.ecma-international.org/6.0/#sec-iscallable}
+   */
+  apply(self, args) {
+    var k = args[0];
+    return this.get(k);
+  }
+}
+
+function map_QMARK_(obj) {
+  return (obj instanceof HashMap);
+}
+
 /**
  * Keywords are unique symbols prefixed by a colon.
  *
@@ -96,10 +182,12 @@ function nil_QMARK_(obj) {
  * [inverted 'k'] but using the Flyweight design pattern, we can use '=='
  * comparison to check if they refer to the same object.
  */
-
 var FlyWeightFactory = (function () {
   var table = {};
 
+  /* One way to go about making Keywords callable is to make them functions.
+     @see {@link https://github.com/sleexyz/callable} for the basic idea
+  */
   function Keyword(name) {
     this.name = name;
   }
@@ -107,12 +195,18 @@ var FlyWeightFactory = (function () {
   Keyword.prototype.type = function() { return 'keyword'; };
   Keyword.prototype.eq = function(rhs) { return this===rhs; };
   Keyword.prototype.clone = function() { return this; };
-  
+
+  /* We just hack the apply method instead */
+  Keyword.prototype.apply = function(self, args) {
+    const coll = args[0];
+    const defaultValue = args[1] ?? null;
+    return coll.get(self,defaultValue);
+  };
+
   return {
     get: function (name) {
       if (!table[name]) {
-        table[name] =
-          new Keyword(name);
+        table[name] = new Keyword(name);
       }
       return table[name];
     },
@@ -164,7 +258,7 @@ function list() {
  */
 Array.prototype.clone = function() {
   return this.slice(0);
-}
+};
 
 /**
  * Predicate testing if an object is a list.
@@ -247,7 +341,7 @@ Function.prototype.clone = function() {
   for(key in this) {
     clown[key] = this[key];
   }
-  
+
   clown.__isClone = true;
   clown.__clonedFrom = that;
   return clown;
@@ -345,6 +439,7 @@ function number_QMARK_(obj) {
   return 'number' === typeof(obj);
 }
 
+
 /**
  * Produce a string representation of the type for the object.
  *
@@ -363,6 +458,7 @@ function obj_type(obj) {
   else if (true_QMARK_(obj)) { return 'boolean'; }
   else if (false_QMARK_(obj)) { return 'boolean'; }
   else if (atom_QMARK_(obj)) { return 'atom'; }
+  else if (map_QMARK_(obj)) { return 'map'; }
   else {
     switch(typeof(obj)) {
     case 'number': return 'number';
@@ -397,5 +493,83 @@ register_suite(new TestSuite("MalSymbol Tests", [
   }),
   test_case("numbers are not symbols", function() {
     return !symbol_QMARK_(42);
+  })
+]));
+
+register_suite(new TestSuite("HashMap Tests", [
+  test_case("map is not a function", () => {
+    const m = new HashMap();
+    return !function_QMARK_(m);
+  }),
+  test_case("new maps are empty", () => {
+    const m = new HashMap();
+    return m.isEmpty();
+  }),
+  test_case("assoc'd maps are not empty", function () {
+    var m = new HashMap();
+    m.set("foo", "bar");
+    return !m.isEmpty();
+  }),
+  test_case("assoc'd maps contain the new key", () => {
+    var m = new HashMap();
+    m.set("foo", "bar");
+    return m.has("foo");
+  }),
+  test_case("(map? (HashMap.)) is true", () => {
+    const m = new HashMap();
+    return map_QMARK_(m);
+  }),
+  test_case("HashMaps are instances of Maps", () => {
+    const m = new HashMap();
+    return (m instanceof Map);
+  }),
+  test_case("toString for empty map is {}", () => {
+    const m = new HashMap();
+    return ("{}" === m.toString());
+  }),
+  test_case("HashMap toString() works as expected", () => {
+    let m = new HashMap();
+    m.set("foo", "bar");
+    return ('{"foo" "bar"}' === m.toString());
+  }),
+  test_case("HashMap toString(false) works as expected", () => {
+    let m = new HashMap();
+    m.set("foo", "bar");
+    return ("{foo bar}" === m.toString(false));
+  }),
+  test_case("HashMap::get() returns value when key is present", () => {
+    let m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return (v === m.get(k));
+  }),
+  test_case("HashMap::get(k) returns null when key is absent", () => {
+    let m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return (null === m.get("foo"));
+  }),
+  test_case("HashMap::get(k, default) returns default when key is absent", () => {
+    let m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return ("spam" === m.get("foo", "spam"));
+  }),
+  test_case("HashMap::call() returns value when key is present", () => {
+    let m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return (v === m.call(k));
+  }),
+  test_case("HashMap::call(k) returns null when key is absent", () => {
+    let m = new HashMap();
+    let k = keyword("foo");
+    let v = keyword("bar");
+    m.set(k, v);
+    return (null === m.call("foo"));
   })
 ]));

@@ -100,6 +100,18 @@ function read_list(reader, start, end) {
   return ast;
 }
 
+function read_hash_map(reader) {
+  var contents = read_list(reader, "{", "}");
+  if (contents.length % 2 !== 0) {
+    throw new Error("Hash maps require an even number of elements as key-value pairs");
+  }
+  var result = new HashMap();
+  for (var i=0; i < contents.length; i += 2) {
+    result.set(contents[i], contents[i+1]);
+  }
+  return result;
+}
+
 const _quote = new MalSymbol("quote");
 const _quasiquote = new MalSymbol("quasiquote");
 const _unquote = new MalSymbol("unquote");
@@ -114,41 +126,43 @@ const _with_meta = new MalSymbol("with-meta");
 Reader.prototype.readForm = function() {
   var token = this.peek();
   switch (token) {
-  case ';': return null;
-  // Minimal reader macros
-  case "'":
-    this.next();
-    return [_quote, this.readForm()];
-  case "`":
-    this.next();
-    return [_quasiquote, this.readForm()];
-  case "~":
-    this.next();
-    return [_unquote, this.readForm()];
-  case "~@":
-    this.next();
-    return [_splice_unquote, this.readForm()];
+    case ';': return null;
+    // Minimal reader macros
+    case "'":
+      this.next();
+      return [_quote, this.readForm()];
+    case "`":
+      this.next();
+      return [_quasiquote, this.readForm()];
+    case "~":
+      this.next();
+      return [_unquote, this.readForm()];
+    case "~@":
+      this.next();
+      return [_splice_unquote, this.readForm()];
 
-  // metadata
-  case "^":
-    this.next();
-    var meta = this.readForm();
-    return [_with_meta, this.readForm(), meta];
-  // deref
-  case "@":
-    this.next();
-    return [_deref, this.readForm()];
-  // Lists
-  case ')': throw new Error("unexpected ')'");
-  case '(': return read_list(this, "(", ")");
+    // metadata
+    case "^":
+      this.next();
+      var meta = this.readForm();
+      return [_with_meta, this.readForm(), meta];
+    // deref
+    case "@":
+      this.next();
+      return [_deref, this.readForm()];
+    // Lists
+    case ')': throw new Error("unexpected ')'");
+    case '(': return read_list(this, "(", ")");
 
-  // Treat vectors as lists
-  case ']': throw new Error("unexpected ']'");
-  case '[': return read_list(this, "[", "]");
+    // Treat vectors as lists
+    case ']': throw new Error("unexpected ']'");
+    case '[': return read_list(this, "[", "]");
 
-  // If we had hashmaps, we would add analogous "}", "{" cases here
+    // hashmaps!
+    case "}": throw new Error("unexpected '}'");
+    case "{": return read_hash_map(this);
 
-  default: return read_atom(this);
+    default: return read_atom(this);
   }
 };
 

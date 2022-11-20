@@ -99,6 +99,22 @@ function get_meta(obj) {
   return obj.__meta__ || null;
 }
 
+function assoc(m, k, v) {
+  if (null === m) {
+    return new HashMap([[k,v]]);
+  }
+  if (!map_QMARK_(m)) {
+    throw new Error("Cannot assoc with "+m.type());
+  }
+  m.set(k,v);
+  return m;
+}
+
+function dissoc(m, k) {
+  m.delete(k);
+  return m;
+}
+
 /* Just a note about identical: NaN !== NaN, but I think it should be treated as
    identical to itself. That's why I use Object.is;
    @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is}
@@ -129,6 +145,13 @@ var ns = {
 
   'list?': list_QMARK_,
   'list': list,
+
+  'map?': map_QMARK_,
+  'assoc': assoc,
+  'dissoc': dissoc,
+  'keys': (m) => m.keys(),
+  'vals': (m) => m.values(),
+  'get': (m, k, defaultValue=null) => m.get(k, defaultValue),
 
   'pr-str': print_str,
   'str': str,

@@ -108,16 +108,40 @@ Presumably a cleaner way, for certain functions, would be
    body))
 ```
 
-compiled as
+compiled as (using [nullish](https://exploringjs.com/impatient-js/ch_undefined-null.html#nullish-coalescing-operator))
 
 ```js
 function f(x1, x2, x3) {
-  x1 = x1 || const1;
-  x2 = x2 || const2;
-  x3 = x3 || const3;
+  x1 = x1 ?? const1; // = (x1 !== undefined && x1 !== null ? x1 : const1)
+  x2 = x2 ?? const2;
+  x3 = x3 ?? const3;
   /* insert compile(body) here */
 }
 ```
+
+Or using [parameter default values](https://exploringjs.com/impatient-js/ch_callables.html#parameter-default-values)
+
+```js
+function f(x1 = const1, x2 = const2, x3 = const3) {
+  /* insert compile(body) here */
+}
+```
+
+These are not quite the same, because what happens when `x1` is null but
+`x2` is not? Clojure will treat `x1` as `nil`, but the way we have
+translated it to Javascript will not adequately reflect this. Or if
+`undefined` is propagated from another function, this would not reflect
+the intended semantics. Therefore, a more faithful way would be:
+
+```js
+function f(x1, x2, x3) {
+  switch (arguments.length) {
+    case 0: x1 = const1; // fallthrough!
+    case 1: x2 = const2; // fallthrough!
+    case 2: x3 = const3; // fallthrough!
+  } // now everything is initialized as the Clojure coder *intended*
+  /* insert compiler(body) here */
+}
 
 ### Destructuring
 
@@ -150,6 +174,13 @@ function process_client ({name}, client) {
   // ...and then translate the function body...
 }
 ```
+
+For more on destructuring, see:
+
+- _JavaScript for impatient programmers_ (ES2022 edition)
+  Chapters on
+  [destructuring](https://exploringjs.com/impatient-js/ch_destructuring.html)
+  and [function call parameter handling](https://exploringjs.com/impatient-js/ch_callables.html#parameter-handling)
 
 ## Data Structures
 
