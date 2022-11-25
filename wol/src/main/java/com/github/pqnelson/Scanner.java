@@ -76,6 +76,22 @@ class Scanner {
     }
 
     /**
+     * When advancing the scanner by one character, we must adjust
+     * the next character caches accordingly.
+     */
+    private void shiftCachedNextChars() {
+        // confusing book-keeping to shuffle the cached characters correctly
+        cachedNextNextChar.ifPresent(i -> {
+                cachedNextChar = OptionalInt.of(i);
+            });
+        if (cachedNextNextChar.isPresent()) {
+            cachedNextNextChar = OptionalInt.empty();
+        } else {
+            cachedNextChar = OptionalInt.empty();
+        }
+    }
+
+    /**
      * Obtain the next character code point in the input stream.
      *
      * <p>If the cached next character is not empty, then we use that. Otherwise
@@ -93,15 +109,7 @@ class Scanner {
     int advance() {
         current++;
         int result = cachedNextChar.orElseGet(nextCharFromSource);
-        // confusing book-keeping to shuffle the cached characters correctly
-        cachedNextNextChar.ifPresent(i -> {
-                cachedNextChar = OptionalInt.of(i);
-            });
-        if (cachedNextNextChar.isPresent()) {
-            cachedNextNextChar = OptionalInt.empty();
-        } else {
-            cachedNextChar = OptionalInt.empty();
-        }
+        shiftCachedNextChars();
         return result;
     }
 
@@ -124,7 +132,7 @@ class Scanner {
         } catch (IOException e) {
             return true;
         }
-        // post-condition: cachedNextChar.isPresent();
+        // post-condition: cachedNextChar.isPresent() || isAtEnd();
     }
 
     @VisibleForTesting
@@ -181,8 +189,12 @@ class Scanner {
                              (1 << Character.PARAGRAPH_SEPARATOR));
     private final static int CR_CODEPOINT = 0x000d;
     private final static int LF_CODEPOINT = 0x000a;
-    // NEL = Next Line
-    private final static int NEL_CODEPOINT = 0x0085;
+    private final static int NEL_CODEPOINT = 0x0085;  // NEL = Next Line
+
+    /**
+     * Test for a newline, using the various system-dependent versions
+     * for newlines.
+     */
     @VisibleForTesting
     static boolean isNewline(int codePoint) {
         return (((SEPARATORS >> Character.getType(codePoint)) & 1) != 0) ||
@@ -190,12 +202,16 @@ class Scanner {
             (NEL_CODEPOINT == codePoint);
     }
 
+    private final static int WHITESPACE = (1 << Character.SPACE_SEPARATOR);
     private final static int TAB_CODEPOINT = Character.codePointAt("\t", 0);
 
+    /**
+     * Test for whitespace, including tabs as "whitespace".
+     */
     @VisibleForTesting
     static boolean isSpace(int codePoint) {
-        return ((((1 << Character.SPACE_SEPARATOR) >> Character.getType(codePoint)) & 1)
-                != 0) || (TAB_CODEPOINT == codePoint);
+        return (((WHITESPACE >> Character.getType(codePoint)) & 1) != 0)
+            || (TAB_CODEPOINT == codePoint);
     }
 
     /**
@@ -263,7 +279,8 @@ class Scanner {
             pushToken((splice ? SPLICE : UNQUOTE), (splice ? 2 : 1));
             break;
         default:
-            if (Character.isDigit(c)) {
+            if ((('-' == c || '+' == c) && Character.isDigit(peekNext()))
+                || Character.isDigit(c)) {
                 number();
             } else if (Character.isLetter(cp) || '_' == c || '$' == c) {
                 identifier();
@@ -313,6 +330,7 @@ class Scanner {
         return (Character.isDigit(c) || "'-".indexOf(c) > -1
                 || isIdentifierLeadingChar(c));
     }
+
     /**
      * Tokenize an identifier.
      *
@@ -331,6 +349,7 @@ class Scanner {
         if (type != null) addToken(type);
         else addToken(IDENTIFIER, currentLexeme.toString());
     }
+
     /**
      * Tokenize a keyword.
      */
@@ -357,11 +376,10 @@ class Scanner {
      * }</blockquote>
      * The default assumption is to treat a number as if it were floating
      * point.
-     *
-     * @TODO Handle leading signs, optional '[-+]?' prefixes.
      */
     @VisibleForTesting
     void number() {
+        if ('+' == peek() || '-' == peek()) currentLexeme.appendCodePoint(advance());
         if ('0' == peek()) {
             switch (peekNext()) {
             case 'b':
@@ -384,21 +402,16 @@ class Scanner {
     }
 
     void floatingPointNumber() {
-        while (Character.isDigit(peek())) {
-            currentLexeme.appendCodePoint(advance());
-        }
-
         floatMantissa();
         floatExponent();
-
-        while (Character.isDigit(peek())) {
-            currentLexeme.appendCodePoint(advance());
-        }
-
         addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
     }
 
     void floatMantissa() {
+        while (Character.isDigit(peek())) {
+            currentLexeme.appendCodePoint(advance());
+        }
+
         if('.' == peek() && Character.isDigit(peekNext())) {
             int cp = advance();
             currentLexeme.appendCodePoint(cp);
@@ -420,6 +433,10 @@ class Scanner {
                 // treat "12.34ENOUGH_SCREAM_CASE" as an identifier?
                 error(line, "Number has invalid character");
             }
+        }
+
+        while (Character.isDigit(peek())) {
+            currentLexeme.appendCodePoint(advance());
         }
     }
 
@@ -451,16 +468,19 @@ class Scanner {
             currentLexeme.appendCodePoint(cp);
         }
         int radix = upperBound;
-        char radixSpec = currentLexeme.charAt(1);
-        int start = ((b == radixSpec || B == radixSpec) ? 2 : 1);
+        int sign = ('-' == currentLexeme.charAt(0) ? -1 : 1);
+        int signOffset = ('-' == currentLexeme.charAt(0) || '+' == currentLexeme.charAt(0)) ? 1 : 0;
+        char radixSpec = currentLexeme.charAt(1+signOffset);
+        int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)+signOffset;
         if (isJavascriptBigintSuffix()) {
             cp = advance();
             currentLexeme.appendCodePoint(cp);
             BigInteger literal = new BigInteger(currentLexeme.substring(start, currentLexeme.length()-1), base);
+            if (-1 == sign) literal = literal.negate();
             addToken(NUMBER, literal);
         } else {
             Long literal = Long.parseLong(currentLexeme.substring(start), base);
-            addToken(NUMBER, literal);
+            addToken(NUMBER, sign*literal);
         }
     }
 }

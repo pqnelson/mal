@@ -346,6 +346,19 @@ public class ScannerTest
         assertEquals(TokenType.EOF, t.type);
     }
 
+    @Test
+    public void scanHexadecimalNumber4() {
+        String lexeme = "-0x123456789ABCDEFn";
+        Scanner s = new Scanner(lexeme);
+        List<Token> tokens = s.scanTokens();
+        assertEquals(tokens.size(), 2);
+        Token t = tokens.get(0);
+        assertEquals(TokenType.NUMBER, t.type);
+        assertEquals(t.lexeme, lexeme);
+        t = tokens.get(1);
+        assertEquals(TokenType.EOF, t.type);
+    }
+
 
     @Test
     public void identifierTest1() {
