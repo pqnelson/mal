@@ -15,6 +15,7 @@ enum TokenType {
 
     // special forms
     DEF, DO, FN_STAR, IF, LET_STAR,
+    NIL, TRUE, FALSE,
 
     EOF
 }

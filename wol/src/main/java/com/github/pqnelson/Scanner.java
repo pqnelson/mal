@@ -56,16 +56,19 @@ class Scanner {
         keywords = new HashMap<>();
         keywords.put("def", DEF);
         keywords.put("do", DO);
+        keywords.put("false", FALSE);
         keywords.put("fn*", FN_STAR);
         keywords.put("if", IF);
         keywords.put("let*", LET_STAR);
+        keywords.put("nil", NIL);
         keywords.put("quote", QUOTE);
+        keywords.put("true", TRUE);
     }
     /**
      * Create a scanner for code contained in a string.
      */
     public Scanner(String snippet) {
-        this(new StringReader(snippet));
+        this(new StringReader((null == snippet ? "" : snippet)));
     }
 
     public Scanner(InputStream source) {

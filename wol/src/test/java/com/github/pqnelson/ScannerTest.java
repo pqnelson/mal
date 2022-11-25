@@ -648,6 +648,40 @@ public class ScannerTest
                 assertEquals(tokens.get(i).type, types[i]);
             }
         }
+
+        @Test
+        public void booleanLiteralTest() {
+            String lexeme = "(true false)";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            TokenType types[] = {TokenType.LEFT_PAREN,
+                TokenType.TRUE, TokenType.FALSE, TokenType.RIGHT_PAREN, TokenType.EOF};
+            for (int i=0; i < types.length; i++) {
+                assertEquals(tokens.get(i).type, types[i]);
+            }
+        }
+
+        @Test
+        public void nilLiteralTest() {
+            String lexeme = "nil";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            TokenType types[] = {TokenType.NIL, TokenType.EOF};
+            for (int i=0; i < types.length; i++) {
+                assertEquals(tokens.get(i).type, types[i]);
+            }
+        }
+    }
+
+    @Test
+    public void scanningAnEmptyStringYieldsAnEOF() {
+        String lexeme = null;
+        Scanner s = new Scanner(lexeme);
+        List<Token> tokens = s.scanTokens();
+        TokenType types[] = {TokenType.EOF};
+        for (int i=0; i < types.length; i++) {
+            assertEquals(tokens.get(i).type, types[i]);
+        }
     }
 
     @Nested
