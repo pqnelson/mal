@@ -38,6 +38,7 @@ class Scanner {
     private int start = 0;
     private int current = 0;
     private int line = 1;
+    private int startLine = 1;
     private final StringBuffer currentLexeme = new StringBuffer();
     private final IntSupplier nextCharFromSource = new IntSupplier() {
             @Override
@@ -181,7 +182,7 @@ class Scanner {
     private void addToken(TokenType type, Object literal) {
         String lexeme = currentLexeme.toString();
         resetCurrentLexeme();
-        tokens.add(new Token(type, lexeme, literal, line));
+        tokens.add(new Token(type, lexeme, literal, startLine));
     }
 
     // see https://github.com/openjdk/jdk/blob/590de37bd703bdae56e8b41c84f5fca5e5a00811/src/java.base/share/classes/java/lang/Character.java#L11232-L11237
@@ -220,8 +221,11 @@ class Scanner {
      * If successful, its last element will always be an EOF Token.
      */
     List<Token> scanTokens() {
+        if (!tokens.isEmpty()) return tokens;
+
         while(!isAtEnd()) {
             start = current;
+            startLine = line;
             scanToken();
         }
         tokens.add(new Token(EOF, "", null, line));
@@ -282,7 +286,7 @@ class Scanner {
             if ((('-' == c || '+' == c) && Character.isDigit(peekNext()))
                 || Character.isDigit(c)) {
                 number();
-            } else if (Character.isLetter(cp) || '_' == c || '$' == c) {
+            } else if (isIdentifierLeadingChar(c)) {
                 identifier();
             } else {
                 error(line, "Unexpected character.");
@@ -322,10 +326,13 @@ class Scanner {
         addToken(STRING, currentLexeme.toString());
     }
 
+    @VisibleForTesting
     boolean isIdentifierLeadingChar(char c) {
         return (Character.isLetter(c) || "_$*+!?<>=".indexOf(c) > -1) &&
             !Character.isIdentifierIgnorable(c);
     }
+
+    @VisibleForTesting
     boolean isIdentifierChar(char c) {
         return (Character.isDigit(c) || "'-".indexOf(c) > -1
                 || isIdentifierLeadingChar(c));
@@ -341,8 +348,7 @@ class Scanner {
     void identifier() {
         assert (isIdentifierLeadingChar(peek()));
         while (isIdentifierChar(peek())) {
-            int cp = advance();
-            currentLexeme.appendCodePoint(cp);
+            currentLexeme.appendCodePoint(advance());
         }
         String lexeme = currentLexeme.toString();
         TokenType type = keywords.get(lexeme);
@@ -352,6 +358,8 @@ class Scanner {
 
     /**
      * Tokenize a keyword.
+     *
+     * The lexeme is the keyword name (i.e., chops off the leading colon).
      */
     @VisibleForTesting
     void keyword() {
@@ -359,8 +367,7 @@ class Scanner {
         advance();
         assert (isIdentifierLeadingChar(peek()));
         while (isIdentifierChar(peek())) {
-            int cp = advance();
-            currentLexeme.appendCodePoint(cp);
+            currentLexeme.appendCodePoint(advance());
         }
         String lexeme = currentLexeme.toString();
         addToken(KEYWORD, currentLexeme.toString());
@@ -401,6 +408,9 @@ class Scanner {
         floatingPointNumber();
     }
 
+    /**
+     * Tokenize a number as a double.
+     */
     void floatingPointNumber() {
         floatMantissa();
         floatExponent();
@@ -413,11 +423,9 @@ class Scanner {
         }
 
         if('.' == peek() && Character.isDigit(peekNext())) {
-            int cp = advance();
-            currentLexeme.appendCodePoint(cp);
+            currentLexeme.appendCodePoint(advance());
             while (Character.isDigit(peek())) {
-                cp = advance();
-                currentLexeme.appendCodePoint(cp);
+                currentLexeme.appendCodePoint(advance());
             }
         }
     }
@@ -446,6 +454,19 @@ class Scanner {
     private boolean isJavascriptBigintSuffix() {
         return 'n'==peek();
     }
+
+    /**
+     * Tokenize a number '0[bBoOxX]\d+[n]?'.
+     *
+     * If successful, this pushes a new token. If fails, defer to the
+     * {@code error()} reporting, possibly throwing an exception.
+     *
+     * BigIntegers have a suffix 'n'. This is Javascript conventions.
+     *
+     * @param base The radix of the number.
+     * @param b The lowercase character of the radix separator.
+     * @param B The uppercase character of the radix separator.
+     */
     private void radixNumber(int base, char b, char B) {
         assembleRadixNumberLexeme(base, b, B);
         tokenizeRadixNumberLexeme(base, b, B);
