@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.function.IntSupplier;
+import java.util.function.IntPredicate;
 
 import com.github.pqnelson.annotations.VisibleForTesting;
 import static com.github.pqnelson.TokenType.*;
@@ -346,31 +347,58 @@ class Scanner {
         addToken(KEYWORD, currentLexeme.toString());
     }
 
+    /**
+     * Tokenize a number.
+     *
+     * A number can look like:
+     * <blockquote>{@code
+     *   number ::= '0[bBxXoO]\d+'     --- written in specific radix
+     *           |  '\d+\\.?\d+([eE][+-]?\d+)' --- floating point
+     * }</blockquote>
+     * The default assumption is to treat a number as if it were floating
+     * point.
+     *
+     * @TODO Handle leading signs, optional '[-+]?' prefixes.
+     */
     @VisibleForTesting
     void number() {
         if ('0' == peek()) {
-            if ('b' == peekNext()) {
-                radixNumber('2', 'b', 'B');
+            switch (peekNext()) {
+            case 'b':
+            case 'B':
+                radixNumber(2, 'b', 'B');
                 return;
-            }
-
-            if (('x' == peekNext()) || ('X' == peekNext())) {
-                hexadecimalNumber();
+            case 'x':
+            case 'X':
+                radixNumber(16, 'x', 'X');
                 return;
-            }
-
-            if (('o' == peekNext()) || ('O' == peekNext()) ||
-                Character.isDigit(peekNext())) {
-                octalNumber();
+            case 'o':
+            case 'O':
+                radixNumber(8, 'o', 'O');
                 return;
+            default:
+                break;
             }
         }
+        floatingPointNumber();
+    }
+
+    void floatingPointNumber() {
+        while (Character.isDigit(peek())) {
+            currentLexeme.appendCodePoint(advance());
+        }
+
+        floatMantissa();
+        floatExponent();
 
         while (Character.isDigit(peek())) {
-            int cp = advance();
-            currentLexeme.appendCodePoint(cp);
+            currentLexeme.appendCodePoint(advance());
         }
 
+        addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
+    }
+
+    void floatMantissa() {
         if('.' == peek() && Character.isDigit(peekNext())) {
             int cp = advance();
             currentLexeme.appendCodePoint(cp);
@@ -379,7 +407,9 @@ class Scanner {
                 currentLexeme.appendCodePoint(cp);
             }
         }
+    }
 
+    void floatExponent() {
         if (('e' == peek() || 'E' == peek()) &&
             ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext()))) {
             currentLexeme.appendCodePoint(advance());
@@ -391,21 +421,15 @@ class Scanner {
                 error(line, "Number has invalid character");
             }
         }
-
-        while (Character.isDigit(peek())) {
-            currentLexeme.appendCodePoint(advance());
-        }
-
-        addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
-    }
-    private void octalNumber() {
-        radixNumber('8', 'o', 'O');
     }
 
+    /**
+     * Javascript indicates a BigInt by an {@code n} suffix.
+     */
     private boolean isJavascriptBigintSuffix() {
         return 'n'==peek();
     }
-    private void radixNumber(char radix, char b, char B) {
+    private void radixNumber(int base, char b, char B) {
         assert (('0' == peek()) && ((b == peekNext()) || (B == peekNext()) ||
                                     Character.isDigit(peekNext())));
         int cp = advance();
@@ -414,16 +438,19 @@ class Scanner {
             cp = advance();
             currentLexeme.appendCodePoint(cp);
         }
-
-        while (Character.isDigit(peek())) {
-            if (!('0' <= peek() && peek() <= radix)) {
-                error(line, "Invalid octal number");
-                return;
-            }
+        final int upperBound = Math.min('9', '0' + base);
+        final int lcLetterLowerBound = (base > 10 ? 'a' : '0');
+        final int ucLetterLowerBound = (base > 10 ? 'A' : '0');
+        final int lcLetterUpperBound = (base > 10 ? ((base - 10) + 'a') : '0');
+        final int ucLetterUpperBound = (base > 10 ? ((base - 10) + 'A') : '0');
+        IntPredicate withinBounds = (c) -> (('0' <= c && c <= upperBound) ||
+                ((lcLetterLowerBound <= c && c <= lcLetterUpperBound) ||
+                 (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
+        while (withinBounds.test((int)peek())) {
             cp = advance();
             currentLexeme.appendCodePoint(cp);
         }
-        int base = radix - '0';
+        int radix = upperBound;
         char radixSpec = currentLexeme.charAt(1);
         int start = ((b == radixSpec || B == radixSpec) ? 2 : 1);
         if (isJavascriptBigintSuffix()) {
@@ -436,32 +463,4 @@ class Scanner {
             addToken(NUMBER, literal);
         }
     }
-
-    private void hexadecimalNumber() {
-        assert (('0' == peek()) && (('x' == peekNext()) || ('X' == peekNext())));
-        int cp = advance();
-        assert('0' == Character.toChars(cp)[0]) : "hexadecimalNumber has no leading zero";
-        currentLexeme.appendCodePoint(cp);
-        assert(currentLexeme.toString().equals("0")) : "currentLexeme has no leading zero";
-        cp = advance();
-        currentLexeme.appendCodePoint(cp);
-
-        while (Character.isDigit(peek()) ||
-               ('a' <= peek() && peek() <= 'f') ||
-               ('A' <= peek() && peek() <= 'F')) {
-            cp = advance();
-            currentLexeme.appendCodePoint(cp);
-        }
-        if (isJavascriptBigintSuffix()) {
-            cp = advance();
-            currentLexeme.appendCodePoint(cp);
-            BigInteger literal = new BigInteger(currentLexeme.substring(2, currentLexeme.length()-1), 16);
-            addToken(NUMBER, literal);
-        } else {
-            addToken(NUMBER, Long.decode(currentLexeme.toString()));
-        }
-    }
-
-
-    // this.currentLexeme.appendCodePoint(advance())
 }
