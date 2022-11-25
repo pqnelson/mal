@@ -447,37 +447,50 @@ class Scanner {
         return 'n'==peek();
     }
     private void radixNumber(int base, char b, char B) {
-        assert (('0' == peek()) && ((b == peekNext()) || (B == peekNext()) ||
-                                    Character.isDigit(peekNext())));
-        int cp = advance();
-        currentLexeme.appendCodePoint(cp);
-        if ((b == peek()) || (B == peek())) {
-            cp = advance();
-            currentLexeme.appendCodePoint(cp);
-        }
+        assembleRadixNumberLexeme(base, b, B);
+        tokenizeRadixNumberLexeme(base, b, B);
+    }
+
+    // Produce a predicate testing if a given character's codePoint is between
+    // 0 and (whatever the number of digits in the radix is).
+    IntPredicate radixBoundsFactory(int base, char b, char B) {
         final int upperBound = Math.min('9', '0' + base);
         final int lcLetterLowerBound = (base > 10 ? 'a' : '0');
-        final int ucLetterLowerBound = (base > 10 ? 'A' : '0');
         final int lcLetterUpperBound = (base > 10 ? ((base - 10) + 'a') : '0');
+        // upper bounds = '0' means we're "turning off" alphabetic digits;
+        // i.e., we're not in hexadecimal.
+        final int ucLetterLowerBound = (base > 10 ? 'A' : '0');
         final int ucLetterUpperBound = (base > 10 ? ((base - 10) + 'A') : '0');
         IntPredicate withinBounds = (c) -> (('0' <= c && c <= upperBound) ||
                 ((lcLetterLowerBound <= c && c <= lcLetterUpperBound) ||
                  (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
-        while (withinBounds.test((int)peek())) {
-            cp = advance();
-            currentLexeme.appendCodePoint(cp);
+        return withinBounds;
+    }
+
+    void assembleRadixNumberLexeme(int base, char b, char B) {
+        assert (('0' == peek()) && ((b == peekNext()) || (B == peekNext()) ||
+                                    Character.isDigit(peekNext())));
+        currentLexeme.appendCodePoint(advance());
+        if ((b == peek()) || (B == peek())) { // octal formats make this optional :(
+            currentLexeme.appendCodePoint(advance());
         }
-        int radix = upperBound;
+        // build predicate to test if we're still in the right radix
+        IntPredicate withinBounds = radixBoundsFactory(base, b, B);
+        // CONSUME!
+        while (withinBounds.test((int)peek())) {
+            currentLexeme.appendCodePoint(advance());
+        }
+    }
+
+    void tokenizeRadixNumberLexeme(int base, char b, char B) {
         int sign = ('-' == currentLexeme.charAt(0) ? -1 : 1);
         int signOffset = ('-' == currentLexeme.charAt(0) || '+' == currentLexeme.charAt(0)) ? 1 : 0;
         char radixSpec = currentLexeme.charAt(1+signOffset);
         int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)+signOffset;
         if (isJavascriptBigintSuffix()) {
-            cp = advance();
-            currentLexeme.appendCodePoint(cp);
+            currentLexeme.appendCodePoint(advance());
             BigInteger literal = new BigInteger(currentLexeme.substring(start, currentLexeme.length()-1), base);
-            if (-1 == sign) literal = literal.negate();
-            addToken(NUMBER, literal);
+            addToken(NUMBER, (-1 == sign ? literal.negate() : literal));
         } else {
             Long literal = Long.parseLong(currentLexeme.substring(start), base);
             addToken(NUMBER, sign*literal);
