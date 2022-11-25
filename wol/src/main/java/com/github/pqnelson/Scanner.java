@@ -256,7 +256,7 @@ class Scanner {
     private void scanToken() {
         int cp = peek();
         // skip whitespace
-        if (Scanner.isSpace(cp)) {
+        if (Scanner.isSpace(cp) || ',' == cp) {
             advance();
             return;
         }
@@ -390,7 +390,7 @@ class Scanner {
     @VisibleForTesting
     void number() {
         if ('+' == peek() || '-' == peek()) currentLexeme.appendCodePoint(advance());
-        if ('0' == peek()) {
+        if ('0' == peek() && '\0' != peekNext()) {
             switch (peekNext()) {
             case 'b':
             case 'B':
@@ -405,7 +405,8 @@ class Scanner {
                 radixNumber(8, 'o', 'O');
                 return;
             default:
-                break;
+                radixNumber(8, 'o', 'O');
+                return;
             }
         }
         floatingPointNumber();

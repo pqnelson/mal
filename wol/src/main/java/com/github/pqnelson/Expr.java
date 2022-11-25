@@ -12,14 +12,29 @@ import java.util.List;
  */
 abstract class Expr {
     interface Visitor<T> {
+        T visitPair(Pair expr);
         T visitDef(Def expr);
         T visitIf(If expr);
         T visitLet(Let expr);
         T visitFun(Fun expr);
-        T visitColl(Coll expr);
+        T visitVector(Vector expr);
+        T visitSeq(Seq expr);
         T visitSymbol(Symbol expr);
         T visitKeyword(Keyword expr);
         T visitLiteral(Literal expr);
+    }
+
+    static class Pair extends Expr {
+        Pair(Token specialForm, Expr body) {
+            this.specialForm = specialForm;
+            this.body = body;
+        }
+        final Token specialForm;
+        final Expr body;
+        @Override
+        <T> T accept(Visitor<T> visitor) {
+            return visitor.visitPair(this);
+        }
     }
 
     static class Def extends Expr {
@@ -54,12 +69,12 @@ abstract class Expr {
     }
 
     static class Let extends Expr {
-        Let(Coll bindings, Coll body) {
+        Let(Vector bindings, Seq body) {
             this.bindings = bindings;
             this.body = body;
         }
-        final Coll bindings;
-        final Coll body;
+        final Vector bindings;
+        final Seq body;
         @Override
         <T> T accept(Visitor<T> visitor) {
             return visitor.visitLet(this);
@@ -67,18 +82,18 @@ abstract class Expr {
     }
 
     static class Fun extends Expr {
-        Fun(Coll args, Coll body, Symbol funName) {
+        Fun(Vector args, Seq body, Symbol funName) {
             this.args = args;
             this.body = body;
             this.name = funName;
         }
-        Fun(Coll args, Coll body) {
+        Fun(Vector args, Seq body) {
             this.args = args;
             this.body = body;
             this.name = null;
         }
-        final Coll args;
-        final Coll body;
+        final Vector args;
+        final Seq body;
         final Symbol name;
         @Override
         <T> T accept(Visitor<T> visitor) {
@@ -87,11 +102,23 @@ abstract class Expr {
     }
 
     /**
-     * A vector or list; since we're emitting them as Javascript arrays, they're
-     * the same.
+     * A vector.
      */
-    static class Coll extends Expr {
-        Coll(List<Expr> contents) {
+    static class Vector extends Expr {
+        Vector(List<Expr> contents) {
+            this.contents = contents;
+        }
+        final List<Expr> contents;
+        @Override
+        <T> T accept(Visitor<T> visitor) {
+            return visitor.visitVector(this);
+        }
+    }
+    /**
+     * A list.
+     */
+    static class Seq extends Expr {
+        Seq(List<Expr> contents) {
             this.contents = contents;
         }
         final List<Expr> contents;
@@ -104,7 +131,7 @@ abstract class Expr {
         }
         @Override
         <T> T accept(Visitor<T> visitor) {
-            return visitor.visitColl(this);
+            return visitor.visitSeq(this);
         }
     }
     static class Symbol extends Expr {
@@ -130,10 +157,15 @@ abstract class Expr {
         }
     }
     static class Literal extends Expr {
-        Literal(Object value) {
+        Literal(Token token) {
+            this(token, token.literal);
+        }
+        Literal(Token token, Object value) {
+            this.token = token;
             this.value = value;
         }
-        final Object value;
+        public final Token token;
+        public final Object value;
 
         @Override
         <T> T accept(Visitor<T> visitor) {

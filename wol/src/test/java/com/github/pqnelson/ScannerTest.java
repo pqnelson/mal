@@ -1,5 +1,6 @@
 package com.github.pqnelson;
 
+import java.math.BigInteger;
 import java.util.InputMismatchException;
 import java.util.List;
 
@@ -12,9 +13,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import com.github.pqnelson.Scanner;
 
-/**
- * Unit test for simple App.
- */
 public class ScannerTest
 {
     @Nested
@@ -260,6 +258,7 @@ public class ScannerTest
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
             double x = Double.parseDouble("3e5");
+            assertEquals(t.literal, x);
         }
 
         @Test
@@ -271,6 +270,7 @@ public class ScannerTest
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
             assertEquals(t.lexeme, lexeme);
+            assertEquals(t.literal, 015L);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -284,6 +284,7 @@ public class ScannerTest
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
             assertEquals(t.lexeme, lexeme);
+            assertEquals(t.literal, 0001L);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -317,6 +318,20 @@ public class ScannerTest
         }
 
         @Test
+        public void scanOctalNumber5() {
+            String lexeme = "015n";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            assertEquals(tokens.size(), 2);
+            Token t = tokens.get(0);
+            assertEquals(TokenType.NUMBER, t.type);
+            assertEquals(t.lexeme, lexeme);
+            assertEquals(t.literal, new BigInteger("015", 8));
+            t = tokens.get(1);
+            assertEquals(TokenType.EOF, t.type);
+        }
+
+        @Test
         public void scanHexadecimalNumber1() {
             String lexeme = "0x1123";
             Scanner s = new Scanner(lexeme);
@@ -325,6 +340,7 @@ public class ScannerTest
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
             assertEquals(t.lexeme, lexeme);
+            assertEquals(t.literal, 0x1123L);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -338,6 +354,7 @@ public class ScannerTest
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
             assertEquals(t.lexeme, lexeme);
+            assertEquals(t.literal, 0x00111L);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
