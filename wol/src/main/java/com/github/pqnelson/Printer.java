@@ -11,7 +11,7 @@ class Printer implements Expr.Visitor<String> {
         buf.append(expr.accept(this));
         return buf.toString();
     }
-
+    /*
     @Override
     public String visitDef(Expr.Def expr) {
         StringBuffer buf = new StringBuffer();
@@ -55,21 +55,30 @@ class Printer implements Expr.Visitor<String> {
         return buf.toString();
     }
 
+*/
     @Override
     public String visitFun(Expr.Fun expr) {
         StringBuffer buf = new StringBuffer();
-        buf.append("(f* ");
-        if (null != expr.name) {
-            buf.append(expr.name.accept(this));
+        if (null != expr.body) {
+            buf.append("(fn* ");
+            if (null != expr.name) {
+                buf.append(expr.name.accept(this));
+                buf.append(" ");
+            }
+            buf.append(expr.params.accept(this));
             buf.append(" ");
-        }
-        buf.append(expr.args.accept(this));
-        buf.append(" ");
-        String body = expr.body.accept(this);
-        if (body.length() > 0) {
-            buf.append(body.substring(1));
+            String body = expr.body.accept(this);
+            if (body.length() > 0) {
+                buf.append(body.substring(1));
+            } else {
+                buf.append(")");
+            }
+        } else if (null != expr.name) {
+            buf.append(expr.name.accept(this));
         } else {
-            buf.append(")");
+            buf.append("#<function");
+            buf.append(expr.hashCode());
+            buf.append(">");
         }
         return buf.toString();
     }

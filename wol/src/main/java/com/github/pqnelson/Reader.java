@@ -87,13 +87,22 @@ class Reader {
         }
     }
 
+    private String expectedDelimiter(TokenType rightDelimiter) {
+        switch(rightDelimiter) {
+        case RIGHT_PAREN: return ")";
+        case RIGHT_BRACE: return "}";
+        case RIGHT_BRACKET: return "]";
+        default: return rightDelimiter.toString();
+        }
+    }
+
     ArrayList<Expr> gatherContents(Token start, TokenType leftDelimiter, TokenType rightDelimiter) {
         assert (leftDelimiter == start.type) : "left delimiter didn't match start token";
         ArrayList<Expr> ast = new ArrayList<>();
         Token token = peek();
         while (rightDelimiter != token.type) {
             if (EOF == token.type) {
-                String expected = (RIGHT_PAREN == rightDelimiter ? ")" : "]");
+                String expected = expectedDelimiter(rightDelimiter);
                 throw new InputMismatchException("expected '"+expected+"' found '"+token.lexeme+"'");
             }
             ast.add(readForm());
@@ -115,77 +124,11 @@ class Reader {
         return new Expr.Vector(gatherContents(token, LEFT_BRACKET, RIGHT_BRACKET));
     }
 
-    Expr.Def readDef() {
-        assert (DEF == peek().type) : "expected def";
-        next();
-        Expr e = readForm();
-        assert (e != null) : "definien is null";
-        assert (Expr.Symbol.class.isInstance(e)) : "expected to define a symbol, found "+e.getClass().toString();
-        Expr.Symbol name = (Expr.Symbol)e;
-        Expr body = null;
-        if (RIGHT_PAREN != peek().type) {
-            body = readForm();
-        }
-        assert (RIGHT_PAREN == peek().type) : "expected right paren";
-        next();
-        return new Expr.Def(name, body);
-    }
-
-    Expr.If readIf() {
-        assert (IF == peek().type);
-        next();
-        Expr test = readForm();
-        Expr trueBranch = readForm();
-        Expr falseBranch = null;
-        if (RIGHT_PAREN != peek().type) {
-            falseBranch = readForm();
-        }
-        assert (RIGHT_PAREN == peek().type) : "if expected a right paren";
-        next();
-        return new Expr.If(test, trueBranch, falseBranch);
-    }
-
-    Expr.Fun readFun(Token leftDelimiter) {
-        assert (FN_STAR == peek().type) : "Expected fn*";
-        next();
-        Expr e = readForm();
-        assert (null != e) : "Expected a name or args vector";
-        Expr.Symbol name = null;
-        Expr.Vector args = null;
-        if (Expr.Symbol.class.isInstance(e)) {
-            name = (Expr.Symbol)e;
-            e = readForm();
-        }
-        assert (Expr.Vector.class.isInstance(e)) : "Args expected as vector";
-        args = (Expr.Vector)e;
-        Expr.Seq body = readSeq(leftDelimiter);
-        return new Expr.Fun(args, body, name);
-    }
-
-    Expr.Let readLet(Token leftDelimiter) {
-        assert (LET_STAR == peek().type);
-        next();
-        Expr.Vector bindings = (Expr.Vector)readForm();
-        Expr.Seq body = readSeq(leftDelimiter);
-        return new Expr.Let(bindings, body);
-    }
-
     Expr readList() {
         Token token = next();
         assert (LEFT_PAREN == token.type) : ("readList expected a left parentheses but found "+token.toString());
         Token rator = peek();
-        switch(rator.type) { // handle special forms
-        case DEF:
-            return readDef();
-        case IF:
-            return readIf();
-        case FN_STAR:
-            return readFun(token);
-        case LET_STAR:
-            return readLet(token);
-        default:
-            return readSeq(token);
-        }
+        return readSeq(token);
     }
 
     Expr readAtom() {

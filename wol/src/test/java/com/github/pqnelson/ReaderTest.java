@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -103,58 +104,6 @@ public class ReaderTest
         }
     }
 
-
-    @Nested
-    class ReadSpecialFormTests {
-        @Test
-        public void readDefTest1() {
-            String lexeme = "(def foo [1 2 3 4])";
-            Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Def.class, e);
-            Expr.Def def = (Expr.Def)e;
-            assertInstanceOf(Expr.Symbol.class, def.name);
-            assertEquals(def.name.identifier.lexeme, "foo");
-        }
-        @Test
-        public void readFunTest1() {
-            String lexeme = "(fn* foo [1 2 3 4] then do stuff)";
-            Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Fun.class, e);
-        }
-        @Test
-        public void readFunTest2() {
-            String lexeme = "(fn* foo [1 2 3 4] then do stuff)";
-            Expr e = Reader.readString(lexeme);
-            Expr.Fun fn = (Expr.Fun)e;
-            assertInstanceOf(Expr.Symbol.class, fn.name);
-            assertEquals(fn.name.identifier.lexeme, "foo");
-        }
-        @Test
-        public void readFunNameTest() {
-            String lexeme = "(fn* foo [1 2 3 4] then do stuff)";
-            Expr e = Reader.readString(lexeme);
-            Expr.Fun fn = (Expr.Fun)e;
-            assertEquals(fn.name.identifier.lexeme, "foo");
-        }
-        @Test
-        public void readLetTest1() {
-            String lexeme = "(let* [x 3] now do stuff)";
-            Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Let.class, e);
-        }
-        @Test
-        public void readIfTest1() {
-            String lexeme = "(if (= x y) (go-there) (stay-here))";
-            Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.If.class, e);
-        }
-        @Test
-        public void readIfTest2() {
-            String lexeme = "(if (= x y) (go-there))";
-            Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.If.class, e);
-        }
-    }
     @Test
     public void readListTest1() {
         String lexeme = "(this is a list)";

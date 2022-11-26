@@ -9,6 +9,12 @@ class Token {
     final Object literal;
     final int line;
 
+    Token(TokenType type) {
+        this(type, null, null, 0);
+    }
+    Token(TokenType type, String lexeme) {
+        this(type, lexeme, null, 0);
+    }
     Token(TokenType type, String lexeme, Object literal, int line) {
         this.type = type;
         this.lexeme = lexeme;

@@ -1,0 +1,2 @@
+- [ ] Unit test the evaluator thoroughly (or, at all)
+- [ ] Add more documentation
