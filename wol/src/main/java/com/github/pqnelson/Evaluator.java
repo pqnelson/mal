@@ -4,7 +4,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.github.pqnelson.Expr.*;
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.BigInt;
+import com.github.pqnelson.expr.Float;
+import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.Int;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
 import com.github.pqnelson.TokenType;
 
 public class Evaluator {
@@ -50,7 +60,7 @@ public class Evaluator {
             return ((Seq)ast).get(1);
         } else if (ast.isList()) {
             Seq acc = new Seq();
-            for (Expr e : ((Seq)ast).contents) {
+            for (Expr e : ((Seq)ast)) {
                 qqProcess(acc, e);
             }
             return acc;
@@ -83,13 +93,13 @@ public class Evaluator {
             return env.get((Symbol)ast);
         } else if (ast.isList()) {
             Seq result = new Seq();
-            for (Expr e : (List<Expr>)(((Seq)ast).contents)) {
+            for (Expr e : (Seq)ast) {
                 result.conj(eval(e, env));
             }
             return result;
         } else if (ast.isVector()) {
             Vector result = new Vector();
-            for (Expr e : (List<Expr>)(((Vector)ast).contents)) {
+            for (Expr e : (Vector)ast) {
                 result.conj(eval(e, env));
             }
             return result;
@@ -204,7 +214,7 @@ public class Evaluator {
                         .map(line -> line.toString())
                         .collect(Collectors.joining("\n"));
                     Env eenv = new Env(env);
-                    eenv.set(exceptionId, new Literal(new Token(TokenType.STRING, stacktrace), stacktrace));
+                    eenv.set(exceptionId, new Str(stacktrace));
                     expr = catchBody;
                     env = eenv;
                     break;
@@ -213,7 +223,7 @@ public class Evaluator {
             default: {
                 Seq args = (Seq)evalLiteral(ast, env);
                 Fun f = (Fun)(evalLiteral(rator, env));
-                if (null == f.body) { // "compiled" function
+                if (!f.isInterpreted()) { // "compiled" function
                     return f.invoke(args);
                 } else { // interpreted function
                     expr = ast;

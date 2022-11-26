@@ -10,6 +10,17 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.BigInt;
+import com.github.pqnelson.expr.Float;
+import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.Int;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
 
 public class ReaderTest
 {
@@ -19,15 +30,15 @@ public class ReaderTest
         public void readPiTest1() {
             String lexeme = "3.14159";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Literal.class, e);
+            assertInstanceOf(Literal.class, e);
         }
 
         @Test
         public void readPiTest2() {
             String lexeme = "3.14159";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Literal.class, e);
-            Expr.Literal lit = (Expr.Literal)e;
+            assertInstanceOf(Literal.class, e);
+            Literal lit = (Literal)e;
             assertEquals(lit.token.lexeme, lexeme);
         }
 
@@ -35,17 +46,17 @@ public class ReaderTest
         public void readKeywordTest1() {
             String lexeme = ":my-keyword";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Keyword.class, e);
-            Expr.Keyword kw = (Expr.Keyword)e;
-            assertEquals(":"+kw.identifier.lexeme, lexeme);
+            assertInstanceOf(Keyword.class, e);
+            Keyword kw = (Keyword)e;
+            assertEquals(":"+kw.name(), lexeme);
         }
 
         @Test
         public void readNilTest1() {
             String lexeme = "nil";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Literal.class, e);
-            Expr.Literal lit = (Expr.Literal)e;
+            assertInstanceOf(Literal.class, e);
+            Literal lit = (Literal)e;
             assertEquals(lit.token.lexeme, lexeme);
         }
 
@@ -53,8 +64,8 @@ public class ReaderTest
         public void readTrueTest1() {
             String lexeme = "true";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Literal.class, e);
-            Expr.Literal lit = (Expr.Literal)e;
+            assertInstanceOf(Literal.class, e);
+            Literal lit = (Literal)e;
             assertEquals(lit.token.lexeme, lexeme);
         }
 
@@ -62,8 +73,8 @@ public class ReaderTest
         public void readFalseTest1() {
             String lexeme = "true";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Literal.class, e);
-            Expr.Literal lit = (Expr.Literal)e;
+            assertInstanceOf(Literal.class, e);
+            Literal lit = (Literal)e;
             assertEquals(lit.token.lexeme, lexeme);
         }
 
@@ -71,9 +82,9 @@ public class ReaderTest
         public void readSymbolTest1() {
             String lexeme = "true?";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Symbol.class, e);
-            Expr.Symbol lit = (Expr.Symbol)e;
-            assertEquals(lit.identifier.lexeme, lexeme);
+            assertInstanceOf(Symbol.class, e);
+            Symbol lit = (Symbol)e;
+            assertEquals(lit.name(), lexeme);
         }
 
     }
@@ -84,23 +95,23 @@ public class ReaderTest
         public void readVectorTest1() {
             String lexeme = "[1]";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Vector.class, e);
+            assertInstanceOf(Vector.class, e);
         }
         @Test
         public void readVectorTest2() {
             String lexeme = "[1 2 3 4]";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Vector.class, e);
-            Expr.Vector vec = (Expr.Vector)e;
-            assertEquals(vec.contents.size(), 4);
+            assertInstanceOf(Vector.class, e);
+            Vector vec = (Vector)e;
+            assertEquals(vec.size(), 4);
         }
         @Test
         public void readVectorTest3() {
             String lexeme = "[1, 2, 3, 4]";
             Expr e = Reader.readString(lexeme);
-            assertInstanceOf(Expr.Vector.class, e);
-            Expr.Vector vec = (Expr.Vector)e;
-            assertEquals(vec.contents.size(), 4);
+            assertInstanceOf(Vector.class, e);
+            Vector vec = (Vector)e;
+            assertEquals(vec.size(), 4);
         }
     }
 
@@ -108,6 +119,6 @@ public class ReaderTest
     public void readListTest1() {
         String lexeme = "(this is a list)";
         Expr e = Reader.readString(lexeme);
-        assertInstanceOf(Expr.Seq.class, e);
+        assertInstanceOf(Seq.class, e);
     }
 }

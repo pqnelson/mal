@@ -3,19 +3,19 @@ package com.github.pqnelson;
 /**
  * A token is a lexeme with some useful metadata.
  */
-class Token {
-    final TokenType type;
-    final String lexeme;
-    final Object literal;
-    final int line;
+public class Token {
+    public final TokenType type;
+    public final String lexeme;
+    public final Object literal;
+    public final int line;
 
-    Token(TokenType type) {
+    public Token(TokenType type) {
         this(type, null, null, 0);
     }
-    Token(TokenType type, String lexeme) {
+    public Token(TokenType type, String lexeme) {
         this(type, lexeme, null, 0);
     }
-    Token(TokenType type, String lexeme, Object literal, int line) {
+    public Token(TokenType type, String lexeme, Object literal, int line) {
         this.type = type;
         this.lexeme = lexeme;
         this.literal = literal;

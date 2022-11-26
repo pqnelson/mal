@@ -1,11 +1,22 @@
 package com.github.pqnelson;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.github.pqnelson.Expr;
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.BigInt;
+import com.github.pqnelson.expr.Float;
+import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.Int;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
 import com.github.pqnelson.annotations.VisibleForTesting;
 import static com.github.pqnelson.TokenType.*;
 
@@ -73,8 +84,8 @@ class Reader {
         case SPLICE:
         case WITH_META:
             next();
-            Expr.Seq result = new Expr.Seq();
-            result.conj(new Expr.Symbol(token));
+            Seq result = new Seq();
+            result.conj(new Symbol(token));
             result.conj(readForm());
             return result;
         // lists
@@ -118,14 +129,14 @@ class Reader {
         return ast;
     }
 
-    Expr.Seq readSeq(Token start) {
+    Seq readSeq(Token start) {
         ArrayList<Expr> ast = gatherContents(start, LEFT_PAREN, RIGHT_PAREN);
-        return new Expr.Seq(ast);
+        return new Seq(ast);
     }
 
 
     Expr readVector(Token token) {
-        return new Expr.Vector(gatherContents(token, LEFT_BRACKET, RIGHT_BRACKET));
+        return new Vector(gatherContents(token, LEFT_BRACKET, RIGHT_BRACKET));
     }
 
     Expr readList() {
@@ -135,22 +146,33 @@ class Reader {
         return readSeq(token);
     }
 
+    Expr number(Token token, Object value) {
+        if (Long.class.isInstance(value)) {
+            return new Int(token, (long)value);
+        } else if (BigInteger.class.isInstance(value)) {
+            return new BigInt(token, (BigInteger)value);
+        } else if (Double.class.isInstance(value)) {
+            return new Float(token, (double)value);
+        } else {
+            throw new Error("Unexpected numeric value "+value.toString()+" "+value.getClass().toString());
+        }
+    }
+
     Expr readAtom() {
         final Token token = this.next();
         switch(token.type) {
         case KEYWORD:
-            return new Expr.Keyword(token);
+            return new Keyword(token);
         case NUMBER:
+            return number(token, token.literal);
         case STRING:
-            return new Expr.Literal(token);
+            return new Str(token);
         case NIL:
-            return new Expr.Literal(token, null);
         case TRUE:
-            return new Expr.Literal(token, true);
         case FALSE:
-            return new Expr.Literal(token, false);
+            return new Literal(token);
         default:
-            return new Expr.Symbol(token);
+            return new Symbol(token);
         }
     }
 }

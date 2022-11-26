@@ -9,6 +9,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.BigInt;
+import com.github.pqnelson.expr.Float;
+import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.Int;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
 
 public class PrinterTest {
     Printer printer = new Printer();
@@ -43,61 +54,61 @@ public class PrinterTest {
         public void printHexadecimalNumberTest1() {
             String lexeme = "0xDEADBEEF";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0xDEADBEEFL), printer.print(e));
         }
         @Test
         public void printHexadecimalNumberTest2() {
             String lexeme = "0xF01DE401";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0xF01DE401L), printer.print(e));
         }
         @Test
         public void printHexadecimalNumberTest3() {
             String lexeme = "0xDEADBEEFn";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0xDEADBEEFL), printer.print(e));
         }
         @Test
         public void printHexadecimalNumberTest4() {
             String lexeme = "0xF01DE401n";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0xF01DE401L), printer.print(e));
         }
         @Test
         public void printOctalNumberTest1() {
             String lexeme = "0112";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0112), printer.print(e));
         }
         @Test
         public void printOctalNumberTest2() {
             String lexeme = "0o311037552"; // ~ pi
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0311037552L), printer.print(e));
         }
         @Test
         public void printOctalNumberTest3() {
             String lexeme = "0O217067363"; // ~ sqrt(5)
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0217067363L), printer.print(e));
         }
         @Test
         public void printOctalNumberTest4() {
             String lexeme = "0112n";
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0112L), printer.print(e));
         }
         @Test
         public void printOctalNumberTest5() {
             String lexeme = "0o311037552n"; // ~ pi
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0311037552L), printer.print(e));
         }
         @Test
         public void printOctalNumberTest6() {
             String lexeme = "0O217067363n"; // ~ sqrt(5)
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
+            assertEquals(String.valueOf(0217067363L), printer.print(e));
         }
     }
 
@@ -114,15 +125,9 @@ public class PrinterTest {
     class PrintVectorTests {
         @Test
         public void printVectorTest1() {
-            String lexeme = "[1 2 3]";
-            Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme, printer.print(e));
-        }
-        @Test
-        public void printVectorTest2() {
             String lexeme = "[1, 2, 3]";
             Expr e = Reader.readString(lexeme);
-            assertEquals("[1 2 3]", printer.print(e));
+            assertEquals("[1.0 2.0 3.0]", printer.print(e));
         }
     }
 }

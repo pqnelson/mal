@@ -1,6 +1,10 @@
 package com.github.pqnelson;
 
 import java.util.HashMap;
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
 
 public class Env {
     Env outer = null;
@@ -10,13 +14,13 @@ public class Env {
         this.outer = outer;
     }
 
-    public Env(Env outer, Expr.Seq vars, Expr.Seq exprs) {
-        assert (vars.contents.size() == exprs.contents.size());
+    public Env(Env outer, Seq vars, Seq exprs) {
+        assert (vars.size() == exprs.size());
         this.outer = outer;
-        for (int i=0; i < vars.contents.size(); i++) {
-            String s = ((Expr.Symbol)vars.get(i)).name();
+        for (int i=0; i < vars.size(); i++) {
+            String s = ((Symbol)vars.get(i)).name();
             if (s.equals("&")) {
-                String k = ((Expr.Symbol)vars.get(i+1)).name();
+                String k = ((Symbol)vars.get(i+1)).name();
                 table.put(k, exprs.slice(i));
                 break;
             } else {
@@ -25,13 +29,13 @@ public class Env {
         }
     }
 
-    public Env(Env outer, Expr.Vector vars, Expr.Seq exprs) {
-        assert (vars.contents.size() == exprs.contents.size());
+    public Env(Env outer, Vector vars, Seq exprs) {
+        assert (vars.size() == exprs.size());
         this.outer = outer;
-        for (int i=0; i < vars.contents.size(); i++) {
-            String s = ((Expr.Symbol)vars.get(i)).name();
+        for (int i=0; i < vars.size(); i++) {
+            String s = ((Symbol)vars.get(i)).name();
             if (s.equals("&")) {
-                String k = ((Expr.Symbol)vars.get(i+1)).name();
+                String k = ((Symbol)vars.get(i+1)).name();
                 table.put(k, exprs.slice(i));
                 break;
             } else {
@@ -40,7 +44,7 @@ public class Env {
         }
     }
 
-    public Env find(Expr.Symbol key) {
+    public Env find(Symbol key) {
         if (table.containsKey(key.name())) {
             return this;
         } else if (null != outer) {
@@ -50,7 +54,7 @@ public class Env {
         }
     }
 
-    public Expr get(Expr.Symbol key) {
+    public Expr get(Symbol key) {
         Env e = find(key);
         if (null == e) {
             throw new RuntimeException("'"+key.name()+"' not found");
@@ -59,7 +63,7 @@ public class Env {
         }
     }
 
-    public Env set(Expr.Symbol key, Expr value) {
+    public Env set(Symbol key, Expr value) {
         table.put(key.name(), value);
         return this;
     }

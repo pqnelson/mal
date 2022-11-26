@@ -1,42 +1,32 @@
 package com.github.pqnelson;
 
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.BigInt;
+import com.github.pqnelson.expr.Float;
+import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.Int;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
+import com.github.pqnelson.expr.Visitor;
 /**
  * A String printer for expressions.
  */
-class Printer implements Expr.Visitor<String> {
+class Printer implements Visitor<String> {
 
     @Override
-    public String visitFun(Expr.Fun expr) {
-        StringBuffer buf = new StringBuffer();
-        if (null != expr.body) {
-            buf.append("(fn* ");
-            if (null != expr.name) {
-                buf.append(expr.name.accept(this));
-                buf.append(" ");
-            }
-            buf.append(expr.params.accept(this));
-            buf.append(" ");
-            String body = expr.body.accept(this);
-            if (body.length() > 0) {
-                buf.append(body.substring(1));
-            } else {
-                buf.append(")");
-            }
-        } else if (null != expr.name) {
-            buf.append(expr.name.accept(this));
-        } else {
-            buf.append("#<function");
-            buf.append(expr.hashCode());
-            buf.append(">");
-        }
-        return buf.toString();
+    public String visitFun(Fun expr) {
+        return expr.toString();
     }
 
     @Override
-    public String visitVector(Expr.Vector expr) {
+    public String visitVector(Vector expr) {
         StringBuffer buf = new StringBuffer();
         buf.append("[");
-        for (Expr e : expr.contents) {
+        for (Expr e : expr) {
             buf.append(e.accept(this));
             buf.append(" ");
         }
@@ -46,10 +36,10 @@ class Printer implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitSeq(Expr.Seq expr) {
+    public String visitSeq(Seq expr) {
         StringBuffer buf = new StringBuffer();
         buf.append("(");
-        for (Expr e : expr.contents) {
+        for (Expr e : expr) {
             buf.append(e.accept(this));
             buf.append(" ");
         }
@@ -59,22 +49,20 @@ class Printer implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitSymbol(Expr.Symbol expr) {
-        StringBuffer buf = new StringBuffer(expr.identifier.lexeme);
-        return buf.toString();
+    public String visitSymbol(Symbol expr) {
+        return expr.name();
     }
 
     @Override
-    public String visitKeyword(Expr.Keyword expr) {
+    public String visitKeyword(Keyword expr) {
         StringBuffer buf = new StringBuffer(":");
-        buf.append(expr.identifier.lexeme);
+        buf.append(expr.name());
         return buf.toString();
     }
 
     @Override
-    public String visitLiteral(Expr.Literal expr) {
-        StringBuffer buf = new StringBuffer(expr.token.lexeme);
-        return buf.toString();
+    public String visitLiteral(Literal expr) {
+        return expr.toString();
     }
 
     public String print(Expr e) {
