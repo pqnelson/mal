@@ -278,7 +278,7 @@ class Scanner {
         case '}': pushToken(RIGHT_BRACE); break;
         case '\'': pushToken(QUOTE); break;
         case '`': pushToken(BACKTICK); break;
-        case '^': pushToken(CARET); break;
+        case '^': pushToken(WITH_META); break;
         case '"': string(); break;
         case ':': keyword(); break;
         case '~':

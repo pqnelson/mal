@@ -18,10 +18,6 @@ abstract class Expr {
         Expr invoke(Seq args);
     }
     interface Visitor<T> {
-        T visitPair(Pair expr);
-        // T visitDef(Def expr);
-        //  T visitIf(If expr);
-        //   T visitLet(Let expr);
         T visitFun(Fun expr);
         T visitVector(Vector expr);
         T visitSeq(Seq expr);
@@ -29,64 +25,6 @@ abstract class Expr {
         T visitKeyword(Keyword expr);
         T visitLiteral(Literal expr);
     }
-
-    static class Pair extends Expr {
-        Pair(Token specialForm, Expr body) {
-            this.specialForm = specialForm;
-            this.body = body;
-        }
-        final Token specialForm;
-        final Expr body;
-        @Override
-        <T> T accept(Visitor<T> visitor) {
-            return visitor.visitPair(this);
-        }
-    }
-    /*
-    static class Def extends Expr {
-        Def(Symbol name, Expr value) {
-            this.name = name;
-            this.value = value;
-        }
-        final Symbol name;
-        final Expr value;
-        @Override
-        <T> T accept(Visitor<T> visitor) {
-            return visitor.visitDef(this);
-        }
-    }
-
-    static class If extends Expr {
-        If(Expr test, Expr trueBranch) {
-            this(test, trueBranch, null);
-        }
-        If(Expr test, Expr trueBranch, Expr falseBranch) {
-            this.test = test;
-            this.trueBranch = trueBranch;
-            this.falseBranch = falseBranch;
-        }
-        final Expr test;
-        final Expr trueBranch;
-        final Expr falseBranch;
-        @Override
-        <T> T accept(Visitor<T> visitor) {
-            return visitor.visitIf(this);
-        }
-    }
-
-    static class Let extends Expr {
-        Let(Vector bindings, Seq body) {
-            this.bindings = bindings;
-            this.body = body;
-        }
-        final Vector bindings;
-        final Seq body;
-        @Override
-        <T> T accept(Visitor<T> visitor) {
-            return visitor.visitLet(this);
-        }
-    }
-    */
 
     abstract static class Fun extends Expr {
         Fun() {

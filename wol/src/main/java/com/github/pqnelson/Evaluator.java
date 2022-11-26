@@ -27,9 +27,12 @@ public class Evaluator {
 
     final Symbol cons = symbol("cons");
     final Symbol concat = symbol("concat");
-
+    final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
     Expr quote(Expr e) {
-        return new Pair(new Token(TokenType.QUOTE), e);
+        Seq result = new Seq();
+        result.conj(quote);
+        result.conj(e);
+        return result;
     }
 
     void qqProcess(Seq acc, Expr e) {
