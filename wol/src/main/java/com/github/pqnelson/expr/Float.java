@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import com.github.pqnelson.Token;
 import static com.github.pqnelson.TokenType.NUMBER;
 
-public class Float extends Literal {
+public class Float extends com.github.pqnelson.expr.Number {
     private final double value;
     public Float(double value) {
         this(new Token(NUMBER, Double.toString(value), value), value);
@@ -71,6 +71,31 @@ public class Float extends Literal {
     }
 
     @Override
+    public Number add(Number rhs) {
+        if (rhs.isFloat()) return this.add((Float)rhs);
+        if (rhs.isInt()) return this.add((Int)rhs);
+        return this.add((BigInt)rhs);
+    }
+    @Override
+    public Number subtract(Number rhs) {
+        if (rhs.isFloat()) return this.subtract((Float)rhs);
+        if (rhs.isInt()) return this.subtract((Int)rhs);
+        return this.subtract((BigInt)rhs);
+    }
+    @Override
+    public Number divide(Number rhs) {
+        if (rhs.isFloat()) return this.divide((Float)rhs);
+        if (rhs.isInt()) return this.divide((Int)rhs);
+        return this.divide((BigInt)rhs);
+    }
+    @Override
+    public Number multiply(Number rhs) {
+        if (rhs.isFloat()) return this.multiply((Float)rhs);
+        if (rhs.isInt()) return this.multiply((Int)rhs);
+        return this.multiply((BigInt)rhs);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (null == obj) return false;
@@ -78,7 +103,6 @@ public class Float extends Literal {
         Float rhs = (Float)obj;
         return Double.valueOf(this.value).equals(Double.valueOf(rhs.value()));
     }
-
     @Override
     public int hashCode() { return Double.hashCode(this.value()); }
 }

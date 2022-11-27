@@ -13,6 +13,8 @@ public class Literal extends Expr {
     public static final Literal NIL = new Literal(new Token(TokenType.NIL));
     public static final Literal F = new Literal(new Token(TokenType.FALSE, "false", false));
     public static final Literal T = new Literal(new Token(TokenType.TRUE, "true", true));
+    public static final Literal ZERO = new Int(0L);
+    public static final Literal ONE = new Int(1L);
 
     public Literal(Token token) {
         this.token = token;

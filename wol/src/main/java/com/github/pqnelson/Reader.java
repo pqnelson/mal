@@ -160,7 +160,6 @@ class Reader {
     Expr readList() {
         Token token = next();
         assert (LEFT_PAREN == token.type) : ("readList expected a left parentheses but found "+token.toString());
-        Token rator = peek();
         return readSeq(token);
     }
 

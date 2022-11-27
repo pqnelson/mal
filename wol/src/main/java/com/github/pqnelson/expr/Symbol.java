@@ -23,6 +23,10 @@ public class Symbol extends Expr implements IObj {
         return TokenType.IDENTIFIER != this.identifier.type;
     }
 
+    public boolean isDef() {
+        return TokenType.DEF == this.identifier.type;
+    }
+
     @Override
     public Map meta() {
         return this.meta;

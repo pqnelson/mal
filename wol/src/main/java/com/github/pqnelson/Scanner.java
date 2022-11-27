@@ -223,7 +223,7 @@ class Scanner {
      *
      * If successful, its last element will always be an EOF Token.
      */
-    List<Token> scanTokens() {
+    public List<Token> scanTokens() {
         if (!tokens.isEmpty()) return tokens;
 
         while(!isAtEnd()) {
@@ -292,7 +292,7 @@ class Scanner {
             } else if (isIdentifierLeadingChar(c)) {
                 identifier();
             } else {
-                error(line, "Unexpected character.");
+                error(line, "Unexpected character: "+c);
             }
         }
     }
@@ -331,13 +331,13 @@ class Scanner {
 
     @VisibleForTesting
     boolean isIdentifierLeadingChar(char c) {
-        return (Character.isLetter(c) || "_$*+!?<>=".indexOf(c) > -1) &&
+        return (Character.isLetter(c) || "_$*+!?<>=-/".indexOf(c) > -1) &&
             !Character.isIdentifierIgnorable(c);
     }
 
     @VisibleForTesting
     boolean isIdentifierChar(char c) {
-        return (Character.isDigit(c) || "'-".indexOf(c) > -1
+        return (Character.isDigit(c) || "'".indexOf(c) > -1
                 || isIdentifierLeadingChar(c));
     }
 
@@ -411,17 +411,25 @@ class Scanner {
         }
         floatingPointNumber();
     }
-
+    /**
+     * Javascript interprets all numbers as double precision. ES6 is starting
+     * to change that. Should we follow pre-ES6 Javascript and parse numbers
+     * as double-precision floats? ({@code true} is "yes, follow old-school JS")
+     */
+    public boolean preferParsingNumbersAsFloats = true;
     /**
      * Tokenize a number as a double.
      */
     void floatingPointNumber() {
-        floatMantissa();
-        floatExponent();
-        addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
+        boolean mustParseAsFloat = floatMantissa();
+        mustParseAsFloat = floatExponent() || mustParseAsFloat;
+        if (mustParseAsFloat || preferParsingNumbersAsFloats)
+            addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
+        else
+            addToken(NUMBER, Long.parseLong(currentLexeme.toString()));
     }
 
-    void floatMantissa() {
+    boolean floatMantissa() {
         while (Character.isDigit(peek())) {
             currentLexeme.appendCodePoint(advance());
         }
@@ -431,10 +439,13 @@ class Scanner {
             while (Character.isDigit(peek())) {
                 currentLexeme.appendCodePoint(advance());
             }
+            return true;
         }
+        return false;
     }
 
-    void floatExponent() {
+    boolean floatExponent() {
+        boolean tokenIsFloat = false;
         if (('e' == peek() || 'E' == peek()) &&
             ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext()))) {
             currentLexeme.appendCodePoint(advance());
@@ -445,11 +456,13 @@ class Scanner {
                 // treat "12.34ENOUGH_SCREAM_CASE" as an identifier?
                 error(line, "Number has invalid character");
             }
+            tokenIsFloat = true;
         }
 
         while (Character.isDigit(peek())) {
             currentLexeme.appendCodePoint(advance());
         }
+        return tokenIsFloat;
     }
 
     /**

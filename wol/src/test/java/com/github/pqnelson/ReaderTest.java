@@ -202,4 +202,28 @@ public class ReaderTest
                          () -> Reader.readString(lexeme));
         }
     }
+
+
+    @Test
+    public void readDef2Test1() {
+        String lexeme = "(def x2 (+ 5 (- 2 3)))";
+        Seq s = (Seq)Reader.readString(lexeme);
+        assertEquals(3, s.size());
+    }
+
+    @Test
+    public void readDef2Test2() {
+        String lexeme = "(def x2 (+ 5 (- 2 3)))";
+        Seq s = (Seq)Reader.readString(lexeme);
+        assertTrue(((Symbol)(s.get(0))).isDef());
+    }
+
+    @Test
+    public void readDef2Test3() {
+        String lexeme = "(def x2 (+ 5 (- 2 3)))";
+        Seq s = (Seq)Reader.readString(lexeme);
+        Symbol x2 = new Symbol("x2");
+        assertTrue(s.get(1).isSymbol());
+        assertEquals((Symbol)(s.get(1)), x2);
+    }
 }

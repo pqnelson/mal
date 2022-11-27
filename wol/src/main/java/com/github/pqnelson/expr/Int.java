@@ -5,15 +5,18 @@ import java.math.BigInteger;
 import com.github.pqnelson.Token;
 import static com.github.pqnelson.TokenType.NUMBER;
 
-public class Int extends Literal {
+public class Int extends com.github.pqnelson.expr.Number {
     private final long value;
+    public Int(long value) {
+        this(new Token(NUMBER, Long.toString(value), value), value);
+    }
     public Int(Token token, long value) {
         super(token);
         this.value = value;
     }
 
     @Override
-    public Long value() { return Long.valueOf(this.value); }
+    public Long value() { return this.value; }
 
     @Override
     public boolean equals(Object obj) {
@@ -21,7 +24,7 @@ public class Int extends Literal {
         if (null == obj) return false;
         if (obj.getClass() != this.getClass()) return false;
         Int rhs = (Int)obj;
-        return (this.value() == rhs.value());
+        return (this.value().equals(rhs.value()));
     }
 
     @Override
@@ -32,7 +35,7 @@ public class Int extends Literal {
 
     @Override
     public String toString() {
-        return String.valueOf(this.value);
+        return Long.toString(this.value, 10);
     }
 
     public String toString(int radix) {
@@ -54,7 +57,7 @@ public class Int extends Literal {
     /**
      * Addition with possible overflow.
      */
-    public Int add(Int rhs) {
+    public Number add(Int rhs) {
         return new Int(new Token(NUMBER), this.value() + rhs.value());
     }
     public BigInt add(BigInt rhs) {
@@ -101,5 +104,30 @@ public class Int extends Literal {
     }
     public Float divide(Float rhs) {
         return new Float(new Token(NUMBER), this.value() / rhs.value());
+    }
+
+    @Override
+    public Number add(Number rhs) {
+        if (rhs.isFloat()) return this.add((Float)rhs);
+        if (rhs.isInt()) return this.add((Int)rhs);
+        return this.add((BigInt)rhs);
+    }
+    @Override
+    public Number subtract(Number rhs) {
+        if (rhs.isFloat()) return this.subtract((Float)rhs);
+        if (rhs.isInt()) return this.subtract((Int)rhs);
+        return this.subtract((BigInt)rhs);
+    }
+    @Override
+    public Number divide(Number rhs) {
+        if (rhs.isFloat()) return this.divide((Float)rhs);
+        if (rhs.isInt()) return this.divide((Int)rhs);
+        return this.divide((BigInt)rhs);
+    }
+    @Override
+    public Number multiply(Number rhs) {
+        if (rhs.isFloat()) return this.multiply((Float)rhs);
+        if (rhs.isInt()) return this.multiply((Int)rhs);
+        return this.multiply((BigInt)rhs);
     }
 }

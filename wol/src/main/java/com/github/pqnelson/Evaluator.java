@@ -240,4 +240,44 @@ public class Evaluator {
             }
         }
     }
+
+    public static Env initialEnv() {
+        Env env = new Env();
+        env.set(new Symbol("+"), new Fun(((Seq args) -> {
+            com.github.pqnelson.expr.Number sum = new Int(0L);
+            for(Expr e : args) {
+                sum = sum.add((com.github.pqnelson.expr.Number)e);
+            }
+            return sum;
+        })));
+        env.set(new Symbol("-"), new Fun(((Seq args) -> {
+            if (0 == args.size()) return Literal.ZERO;
+            com.github.pqnelson.expr.Number sum = (com.github.pqnelson.expr.Number)args.first();
+            for(Expr e : args.slice(1)) {
+                sum = sum.subtract((com.github.pqnelson.expr.Number)e);
+            }
+            return sum;
+        })));
+        env.set(new Symbol("*"), new Fun(((Seq args) -> {
+            if (0 == args.size()) return new Int(1L);
+            com.github.pqnelson.expr.Number product = new Int(1L);
+            for(Expr e : args) {
+                product = product.multiply((com.github.pqnelson.expr.Number)e);
+            }
+            return product;
+        })));
+        env.set(new Symbol("/"), new Fun(((Seq args) -> {
+            if (0 == args.size()) return Literal.ONE;
+            if (1 == args.size()) {
+                return (new Int(1L)).divide((com.github.pqnelson.expr.Number)(args.first()));
+            }
+            com.github.pqnelson.expr.Number quotient = (com.github.pqnelson.expr.Number)args.first();
+            for(Expr e : args.slice(1)) {
+                quotient = quotient.divide((com.github.pqnelson.expr.Number)e);
+            }
+            return quotient;
+        })));
+
+        return env;
+    }
 }

@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import com.github.pqnelson.Token;
 import static com.github.pqnelson.TokenType.NUMBER;
 
-public class BigInt extends Literal {
+public class BigInt extends com.github.pqnelson.expr.Number {
     private final BigInteger value;
     public BigInt(Token token, BigInteger value) {
         super(token);
@@ -63,5 +63,29 @@ public class BigInt extends Literal {
     }
     public Float divide(Float rhs) {
         return new Float(new Token(NUMBER), this.value().doubleValue() / rhs.value());
+    }
+    @Override
+    public Number add(Number rhs) {
+        if (rhs.isFloat()) return this.add((Float)rhs);
+        if (rhs.isInt()) return this.add((Int)rhs);
+        return this.add((BigInt)rhs);
+    }
+    @Override
+    public Number subtract(Number rhs) {
+        if (rhs.isFloat()) return this.subtract((Float)rhs);
+        if (rhs.isInt()) return this.subtract((Int)rhs);
+        return this.subtract((BigInt)rhs);
+    }
+    @Override
+    public Number divide(Number rhs) {
+        if (rhs.isFloat()) return this.divide((Float)rhs);
+        if (rhs.isInt()) return this.divide((Int)rhs);
+        return this.divide((BigInt)rhs);
+    }
+    @Override
+    public Number multiply(Number rhs) {
+        if (rhs.isFloat()) return this.multiply((Float)rhs);
+        if (rhs.isInt()) return this.multiply((Int)rhs);
+        return this.multiply((BigInt)rhs);
     }
 }
