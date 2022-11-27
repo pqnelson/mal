@@ -16,6 +16,21 @@ public class Int extends Literal {
     public Long value() { return Long.valueOf(this.value); }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (null == obj) return false;
+        if (obj.getClass() != this.getClass()) return false;
+        Int rhs = (Int)obj;
+        return (this.value() == rhs.value());
+    }
+
+    @Override
+    public final int hashCode() {
+        return Long.hashCode(this.value());
+    }
+
+
+    @Override
     public String toString() {
         return String.valueOf(this.value);
     }

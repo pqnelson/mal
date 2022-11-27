@@ -2,6 +2,7 @@ package com.github.pqnelson;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.github.pqnelson.expr.Expr;
@@ -125,7 +126,9 @@ public class Evaluator {
             String s = rator.isSymbol() ? ((Symbol)rator).name() : "";
             switch(s) {
             case "def": {
-                Symbol name = (Symbol)ast.first();
+                // treat (def ^:foo bar spam) as (def (with-meta bar :foo) spam)
+                // and (with-meta ...) as a macro.
+                Symbol name = (Symbol)macroexpand(ast.first(), env);
                 Expr body = ast.get(1);
                 Expr value = eval(body, env);
                 env.set(name, value);
@@ -169,14 +172,13 @@ public class Evaluator {
                 break;
             }
             case "fn*": {
-                final Vector params = (Vector)ast.first();
-                final Expr body = ast.get(1);
+                // ast ::= (name [params] body) OR ([params] body)
+                Symbol name = (ast.first().isSymbol() ? (Symbol)ast.first() : null);
+                final Vector params = (Vector)(null == name ? ast.first() : ast.get(1));
+                final Seq body = (Seq)(null == name ? ast.get(1) : ast.get(2));
                 final Env current = env;
-                return new Fun () {
-                    public Expr invoke(Seq args) {
-                        return eval(body, new Env(current, params, args));
-                    }
-                };
+                Function<Seq, Expr> f = (args) -> eval(body, new Env(current, params, args));
+                return new Fun (f, params, body, name);
             }
             case "macroexpand":
                 return macroexpand(ast.first(), env);

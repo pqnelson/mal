@@ -2,7 +2,7 @@ package com.github.pqnelson.expr;
 
 
 import com.github.pqnelson.Token;
-import static com.github.pqnelson.TokenType.NIL;
+import com.github.pqnelson.TokenType;
 import static com.github.pqnelson.TokenType.TRUE;
 import static com.github.pqnelson.TokenType.FALSE;
 import static com.github.pqnelson.TokenType.STRING;
@@ -10,12 +10,15 @@ import static com.github.pqnelson.TokenType.NUMBER;
 
 public class Literal extends Expr {
     public final Token token;
+    public static final Literal NIL = new Literal(new Token(TokenType.NIL));
+    public static final Literal F = new Literal(new Token(TokenType.FALSE, "false", false));
+    public static final Literal T = new Literal(new Token(TokenType.TRUE, "true", true));
 
     public Literal(Token token) {
         this.token = token;
     }
 
-    public boolean isNil() { return NIL == token.type; }
+    public boolean isNil() { return TokenType.NIL == token.type; }
 
     public boolean isTrue() { return TRUE == token.type; }
 
@@ -29,7 +32,6 @@ public class Literal extends Expr {
 
     public Object value() {
         switch (this.token.type) {
-        case NIL: return null;
         case TRUE: return Boolean.TRUE;
         case FALSE: return Boolean.FALSE;
         default: return null;
@@ -48,5 +50,9 @@ public class Literal extends Expr {
         if (obj.getClass() != this.getClass()) return false;
         Literal rhs = (Literal)obj;
         return (this.token.type == rhs.token.type) && (this.value().equals(rhs.value()));
+    }
+    @Override
+    public  int hashCode() {
+        return this.value().hashCode();
     }
 }

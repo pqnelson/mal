@@ -6,5 +6,11 @@
 - [ ] The reader should convert tokens to expressions in a better
       manner, specifically without being forced to carry around tokens
       forever. We should stick the position information in the metadata.
-- [ ] Support HashMaps
+- [X] Support HashMaps
+- [X] Support `IObj` (metadata setter and getter)
+  - [X] Seq
+  - [X] Vector
+  - [X] Symbol
+  - [X] Fun
+  - [X] Map
 - [ ] Atoms

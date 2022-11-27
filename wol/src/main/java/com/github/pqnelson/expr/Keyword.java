@@ -1,16 +1,29 @@
 package com.github.pqnelson.expr;
 
 import com.github.pqnelson.Token;
+import com.github.pqnelson.TokenType;
 
 public class Keyword extends Expr {
     final Token identifier;
 
+    public Keyword(String name) {
+        this(new Token(TokenType.KEYWORD, name));
+    }
     public Keyword(Token identifier) {
         this.identifier = identifier;
     }
 
     public final String name() {
         return this.identifier.lexeme;
+    }
+
+    public final int hashCode() {
+        return this.name().hashCode() + 0x9e3779b9;
+    }
+
+    @Override
+    public String toString() {
+        return ":"+this.name();
     }
 
     @Override

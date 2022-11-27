@@ -15,6 +15,9 @@ public class Token {
     public Token(TokenType type, String lexeme) {
         this(type, lexeme, null, 0);
     }
+    public Token(TokenType type, String lexeme, Object literal) {
+        this(type, lexeme, literal, 0);
+    }
     public Token(TokenType type, String lexeme, Object literal, int line) {
         this.type = type;
         this.lexeme = lexeme;

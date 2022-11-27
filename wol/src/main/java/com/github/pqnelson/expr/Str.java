@@ -16,4 +16,18 @@ public class Str extends Literal {
 
     @Override
     public String toString() { return this.value(); }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (null == obj) return false;
+        if (obj.getClass() != this.getClass()) return false;
+        Str rhs = (Str)obj;
+        return this.value().equals(rhs.value());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.value().hashCode();
+    }
 }

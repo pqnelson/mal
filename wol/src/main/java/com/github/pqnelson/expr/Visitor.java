@@ -10,4 +10,5 @@ public interface Visitor<T> {
     T visitSymbol(Symbol expr);
     T visitKeyword(Keyword expr);
     T visitLiteral(Literal expr);
+    T visitMap(Map expr);
 }

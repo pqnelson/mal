@@ -7,6 +7,7 @@ import com.github.pqnelson.expr.Fun;
 import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
 import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
@@ -24,28 +25,12 @@ class Printer implements Visitor<String> {
 
     @Override
     public String visitVector(Vector expr) {
-        StringBuffer buf = new StringBuffer();
-        buf.append("[");
-        for (Expr e : expr) {
-            buf.append(e.accept(this));
-            buf.append(" ");
-        }
-        buf.deleteCharAt(buf.length() - 1);
-        buf.append("]");
-        return buf.toString();
+        return expr.toString();
     }
 
     @Override
     public String visitSeq(Seq expr) {
-        StringBuffer buf = new StringBuffer();
-        buf.append("(");
-        for (Expr e : expr) {
-            buf.append(e.accept(this));
-            buf.append(" ");
-        }
-        buf.deleteCharAt(buf.length() - 1);
-        buf.append(")");
-        return buf.toString();
+        return expr.toString();
     }
 
     @Override
@@ -55,13 +40,16 @@ class Printer implements Visitor<String> {
 
     @Override
     public String visitKeyword(Keyword expr) {
-        StringBuffer buf = new StringBuffer(":");
-        buf.append(expr.name());
-        return buf.toString();
+        return expr.toString();
     }
 
     @Override
     public String visitLiteral(Literal expr) {
+        return expr.toString();
+    }
+
+    @Override
+    public String visitMap(Map expr) {
         return expr.toString();
     }
 

@@ -13,6 +13,7 @@ import com.github.pqnelson.expr.Fun;
 import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
 import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
@@ -97,6 +98,11 @@ class Reader {
         case LEFT_BRACKET:
             next(); return this.readVector(token);
 
+        // hash maps
+        case RIGHT_BRACE: throw new InputMismatchException("Unexpected '}'");
+        case LEFT_BRACE:
+            next(); return this.readMap(token);
+
         default:
             return readAtom();
         }
@@ -137,6 +143,18 @@ class Reader {
 
     Expr readVector(Token token) {
         return new Vector(gatherContents(token, LEFT_BRACKET, RIGHT_BRACKET));
+    }
+
+    Map readMap(Token token) {
+        ArrayList<Expr> contents = gatherContents(token, LEFT_BRACE, RIGHT_BRACE);
+        if (contents.size() % 2 != 0) {
+            throw new InputMismatchException("HashMap bindings must be even");
+        }
+        Map m = new Map();
+        for (int i = 0; i < contents.size(); i += 2) {
+            m.assoc(contents.get(i), contents.get(i+1));
+        }
+        return m;
     }
 
     Expr readList() {
