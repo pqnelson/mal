@@ -1,3 +1,7 @@
 (def x1 (count (list 1 2 3)))
 (def x2 (list? (list)))
 (def x3 (empty? (list)))
+(def x4 (vector? [1 2 3]))
+(def x5 (keyword? :foobar))
+(def x6 (true? (= (+ 1 2) 3)))
+(def x7 (- 0 1))

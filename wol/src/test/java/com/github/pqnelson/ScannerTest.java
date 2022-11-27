@@ -1,5 +1,7 @@
 package com.github.pqnelson;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import java.math.BigInteger;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -233,6 +235,12 @@ public class ScannerTest
         @Test
         public void scanZeroAsNumber() {
             Scanner s = new Scanner("0");
+            Token t = s.scanTokens().get(0);
+            assertEquals(TokenType.NUMBER, t.type);
+        }
+        @Test
+        public void scanZeroAsNumber2() {
+            Scanner s = new Scanner("0 ");
             Token t = s.scanTokens().get(0);
             assertEquals(TokenType.NUMBER, t.type);
         }
@@ -543,6 +551,19 @@ public class ScannerTest
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
+
+        @Test
+        public void subtractionIsAValidIdentifier() {
+            String lexeme = "-";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            assertEquals(tokens.size(), 2);
+            Token t = tokens.get(0);
+            assertEquals(TokenType.IDENTIFIER, t.type);
+            assertEquals(t.lexeme, lexeme);
+            t = tokens.get(1);
+            assertEquals(TokenType.EOF, t.type);
+        }
     }
 
     @Test
@@ -723,6 +744,20 @@ public class ScannerTest
             InputMismatchException e = assertThrows(InputMismatchException.class,
                                                     () -> s.scanTokens());
             assertEquals("Line 1: Unterminated string", e.getMessage());
+        }
+
+        @Test
+        public void stringTest2() {
+            String naive = "{:abc \"val1\" :def \"val2\"}";
+            String expected = StringEscapeUtils.escapeJava(naive);
+            String lexeme = "\""+expected+"\"";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            TokenType types[] = {TokenType.STRING, TokenType.EOF};
+            for (int i=0; i < types.length; i++) {
+                assertEquals(tokens.get(i).type, types[i]);
+            }
+            assertEquals(expected, tokens.get(0).lexeme);
         }
     }
 

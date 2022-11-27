@@ -1,5 +1,7 @@
 package com.github.pqnelson;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -116,9 +118,24 @@ public class PrinterTest {
     class PrintStringTests {
         @Test
         public void printStringTest() {
-            String lexeme = "\"I am a happy string\"";
+            String s = "I am a\t \"happy\" string";
+            String lexeme = "\""+StringEscapeUtils.escapeJava(s)+"\"";
+            String result = (StringEscapeUtils.escapeJava(s));
             Expr e = Reader.readString(lexeme);
-            assertEquals(lexeme.substring(1, lexeme.length()-1), printer.print(e));
+            assertEquals(result, printer.print(e));
+        }
+        @Test
+        public void printStringTest2() {
+            String lexeme = "\"I am a\t \\\"happy\\\" string\"";
+            String result = "I am a\t \\\"happy\\\" string";
+            Expr e = Reader.readString(lexeme);
+            assertEquals(result, printer.print(e));
+        }
+        @Test
+        public void printStringTest3() {
+            String lexeme = "\"I am a\t \\\"happy\\\" string\"";
+            Expr e = Reader.readString(lexeme);
+            assertEquals(e.toString(), printer.print(e));
         }
     }
     @Nested

@@ -12,10 +12,14 @@ public class Str extends Literal {
     }
 
     @Override
-    public String value() { return this.token.lexeme; }
+    public String value() {
+        return this.token.lexeme;
+    }
 
     @Override
-    public String toString() { return this.value(); }
+    public String toString() {
+        return this.token.lexeme;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -29,5 +33,23 @@ public class Str extends Literal {
     @Override
     public int hashCode() {
         return this.value().hashCode();
+    }
+
+    public Str substring(int start, int end) {
+        return new Str(this.value().substring(start, end));
+    }
+
+    public Expr seq() {
+        if (this.value().equals("")) return Literal.NIL;
+        Seq letters = new Seq();
+        for (int i = 0; i < this.value().length(); i++) {
+            letters.conj(this.substring(i, i+1));
+        }
+        return letters;
+    }
+
+    @Override
+    public String type() {
+        return "Str";
     }
 }

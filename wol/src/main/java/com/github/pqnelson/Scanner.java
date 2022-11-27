@@ -2,6 +2,7 @@ package com.github.pqnelson;
 
 // Consider using java.util.InputMismatchException throwables?
 // https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/util/InputMismatchException.html
+import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -248,9 +249,15 @@ class Scanner {
         advance();
         addToken(type);
     }
-    void pushToken(TokenType type, int lexemeLength) {
+    void pushToken(TokenType type, String lexeme) {
+        advance();
+        resetCurrentLexeme();
+        tokens.add(new Token(type, lexeme, null, startLine));
+    }
+    void pushToken(TokenType type, String lexeme, int lexemeLength) {
         for (int i=0; i < lexemeLength; i++) advance();
-        addToken(type);
+        resetCurrentLexeme();
+        tokens.add(new Token(type, lexeme, null, startLine));
     }
 
     private void scanToken() {
@@ -276,14 +283,17 @@ class Scanner {
         case ']': pushToken(RIGHT_BRACKET); break;
         case '{': pushToken(LEFT_BRACE); break;
         case '}': pushToken(RIGHT_BRACE); break;
-        case '\'': pushToken(QUOTE); break;
-        case '`': pushToken(BACKTICK); break;
+        case '\'': pushToken(QUOTE, "quote"); break;
+        case '`': pushToken(BACKTICK, "quasiquote"); break;
         case '^': pushToken(WITH_META); break;
         case '"': string(); break;
         case ':': keyword(); break;
         case '~':
-            boolean splice = '@' == peekNext();
-            pushToken((splice ? SPLICE : UNQUOTE), (splice ? 2 : 1));
+            if ('@' == peekNext()) {
+                pushToken(SPLICE, "unsplice", 2);
+            } else {
+                pushToken(UNQUOTE, "unquote");
+            }
             break;
         default:
             if ((('-' == c || '+' == c) && Character.isDigit(peekNext()))
@@ -319,6 +329,11 @@ class Scanner {
             int cp = advance();
             if (isNewline(cp)) line++;
             currentLexeme.appendCodePoint(cp);
+            if ('\\' == cp && '"' == peek()) {
+                currentLexeme.appendCodePoint(advance());
+                //} else {
+            }
+                // }
         }
 
         if (isAtEnd()) {
@@ -326,7 +341,7 @@ class Scanner {
         }
 
         advance();
-        addToken(STRING, currentLexeme.toString());
+        addToken(STRING, StringEscapeUtils.unescapeJava(currentLexeme.toString()));
     }
 
     @VisibleForTesting
@@ -506,8 +521,12 @@ class Scanner {
     }
 
     void assembleRadixNumberLexeme(int base, char b, char B) {
-        assert (('0' == peek()) && ((b == peekNext()) || (B == peekNext()) ||
-                                    Character.isDigit(peekNext())));
+        assert ('0' == peek());
+        if (!(((b == peekNext()) || (B == peekNext()) || Character.isDigit(peekNext())))) {
+            // We're scanning a zero
+            currentLexeme.appendCodePoint(advance());
+            return;
+        }
         currentLexeme.appendCodePoint(advance());
         if ((b == peek()) || (B == peek())) { // octal formats make this optional :(
             currentLexeme.appendCodePoint(advance());
@@ -523,6 +542,13 @@ class Scanner {
     void tokenizeRadixNumberLexeme(int base, char b, char B) {
         int sign = ('-' == currentLexeme.charAt(0) ? -1 : 1);
         int signOffset = ('-' == currentLexeme.charAt(0) || '+' == currentLexeme.charAt(0)) ? 1 : 0;
+        // check if it could possibly be a single digit number
+        if (1 == currentLexeme.length()) {
+            Long literal = Long.parseLong(currentLexeme.substring(signOffset), base);
+            addToken(NUMBER, sign*literal);
+            return;
+        }
+        // no? It must be a radix number
         char radixSpec = currentLexeme.charAt(1+signOffset);
         int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)+signOffset;
         if (isJavascriptBigintSuffix()) {

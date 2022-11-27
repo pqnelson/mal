@@ -25,7 +25,7 @@ public class Evaluator {
 
     static boolean ratorIs(Expr expr, String name) {
         if (expr.isList() && ((Seq)expr).size() > 0
-            && ((Seq)expr).first().isSymbol()) {
+                && ((Seq)expr).first().isSymbol()) {
             Symbol symb = (Symbol)(((Seq)expr).first());
             return symb.name().equals(name);
         }
@@ -42,6 +42,7 @@ public class Evaluator {
     static final Symbol cons = symbol("cons");
     static final Symbol concat = symbol("concat");
     static final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
+
     static Expr quote(Expr e) {
         Seq result = new Seq();
         result.conj(quote);
@@ -77,7 +78,7 @@ public class Evaluator {
 
     static boolean isMacroCall(Expr ast, Env env) {
         if (ast.isList() && ((Seq)ast).first().isSymbol() &&
-            !((Symbol)((Seq)ast).first()).isSpecialForm()) {
+                !((Symbol)((Seq)ast).first()).isSpecialForm()) {
             Expr e = env.get((Symbol)(((Seq)ast).first()));
             return e.isFunction() && ((Fun)e).isMacro();
         }
@@ -92,9 +93,12 @@ public class Evaluator {
         }
         return ast;
     }
+    public static boolean debug = false;
 
     static Expr evalLiteral(Expr ast, Env env) throws Throwable {
         if (ast.isSymbol()) {
+            if (debug) { System.out.println("evalLiteral() getting value of symbol '"+
+                                            ast.toString()+"' from environment"); }
             return env.get((Symbol)ast);
         } else if (ast.isList()) {
             Seq result = new Seq();
@@ -120,6 +124,7 @@ public class Evaluator {
      */
     public static Expr eval(Expr expr, Env env) throws Throwable {
         while (true) {
+            if (debug) { System.out.println("eval given expr = "+expr.toString()); }
             if (!expr.isList()) {
                 return evalLiteral(expr, env);
             }
@@ -134,11 +139,12 @@ public class Evaluator {
             String s = rator.isSymbol() ? ((Symbol)rator).name() : "";
             switch(s) {
             case "def": {
-                // treat (def ^:foo bar spam) as (def (with-meta bar :foo) spam)
-                // and (with-meta ...) as a macro.
+                assert (2 == ast.size()) : "def has "+ast.size()+" operands instead of 2";
+                /* the reader assembles (def ^:foo bar spam) as
+                   (def (with-meta bar :foo) spam), where
+                   (with-meta ...) is a secret macro. */
                 Symbol name = (Symbol)macroexpand(ast.first(), env);
-                Expr body = ast.get(1);
-                Expr value = eval(body, env);
+                Expr value = eval(ast.get(1), env);
                 env.set(name, value);
                 return value;
             }
@@ -215,7 +221,8 @@ public class Evaluator {
                     if (!ast.get(1).isList()) throw e;
                     Seq catchClause = (Seq)ast.get(1);
                     if (!catchClause.first().isSymbol() ||
-                        !((Symbol)catchClause.first()).name().equals("catch")) throw e;
+                            !((Symbol)catchClause.first()).name().equals("catch"))
+                        throw e;
 
                     // OK, so, ast handles the exception properly
                     Expr catchBody = catchClause.get(2);
@@ -234,8 +241,13 @@ public class Evaluator {
                 Seq args = (Seq)evalLiteral(ast, env);
                 Fun f = (Fun)(evalLiteral(rator, env));
                 if (!f.isInterpreted()) { // "compiled" function
-                    return f.invoke(args);
+                    if (debug) System.out.println("Executing a compiled function");
+                    if (debug) System.out.println("args = "+args.toString());
+                    Expr result = f.invoke(args);
+                    if (debug) System.out.println("Returning "+result.toString());
+                    return result;
                 } else { // interpreted function
+                    if (debug) System.out.println("Executing an interpreted function: "+ast.toString());
                     expr = ast;
                     env = f.genEnv(env, args);
                 }
@@ -247,44 +259,44 @@ public class Evaluator {
 
     public static Env initialEnv() {
         Env env = new Env();
-        env.set(new Symbol("+"), new Fun(((Seq args) -> {
-            com.github.pqnelson.expr.Number sum = new Int(0L);
-            for(Expr e : args) {
-                sum = sum.add((com.github.pqnelson.expr.Number)e);
-            }
-            return sum;
-        })));
-        env.set(new Symbol("-"), new Fun(((Seq args) -> {
-            if (0 == args.size()) return Literal.ZERO;
-            com.github.pqnelson.expr.Number sum = (com.github.pqnelson.expr.Number)args.first();
-            for(Expr e : args.slice(1)) {
-                sum = sum.subtract((com.github.pqnelson.expr.Number)e);
-            }
-            return sum;
-        })));
-        env.set(new Symbol("*"), new Fun(((Seq args) -> {
-            if (0 == args.size()) return new Int(1L);
-            com.github.pqnelson.expr.Number product = new Int(1L);
-            for(Expr e : args) {
-                product = product.multiply((com.github.pqnelson.expr.Number)e);
-            }
-            return product;
-        })));
-        env.set(new Symbol("/"), new Fun(((Seq args) -> {
-            if (0 == args.size()) return Literal.ONE;
-            if (1 == args.size()) {
-                return (new Int(1L)).divide((com.github.pqnelson.expr.Number)(args.first()));
-            }
-            com.github.pqnelson.expr.Number quotient = (com.github.pqnelson.expr.Number)args.first();
-            for(Expr e : args.slice(1)) {
-                quotient = quotient.divide((com.github.pqnelson.expr.Number)e);
-            }
-            return quotient;
-        })));
+        env.set(new Symbol("+"), new Fun(Core::add));
+        env.set(new Symbol("-"), new Fun(Core::subtract));
+        env.set(new Symbol("*"), new Fun(Core::multiply));
+        env.set(new Symbol("/"), new Fun(Core::divide));
         env.set(new Symbol("count"), new Fun(Core::count));
         env.set(new Symbol("list"), new Fun((Seq args) -> args));
-        env.set(new Symbol("list?"), new Fun(Core::list_QMARK_));
+        env.set(new Symbol("list?"), new Fun(Core.list_QMARK_));
         env.set(new Symbol("empty?"), new Fun(Core::empty_QMARK_));
+        env.set(new Symbol("seq"), new Fun(Core::seq));
+        env.set(new Symbol("first"), new Fun(Core::first));
+        env.set(new Symbol("nth"), new Fun(Core::nth));
+        env.set(new Symbol("rest"), new Fun(Core::rest));
+        env.set(concat, new Fun(Core::concat));
+        env.set(cons, new Fun(Core::cons));
+        env.set(new Symbol("="), new Fun(Core::equality));
+        env.set(new Symbol("nil?"), new Fun(Core.nil_QMARK_));
+        env.set(new Symbol("true?"), new Fun(Core.true_QMARK_));
+        env.set(new Symbol("false?"), new Fun(Core.false_QMARK_));
+        env.set(new Symbol("symbol?"), new Fun(Core.symbol_QMARK_));
+        env.set(new Symbol("symbol"), new Fun(Core::symbol));
+        env.set(new Symbol("keyword?"), new Fun(Core.keyword_QMARK_));
+        env.set(new Symbol("keyword"), new Fun(Core::keyword));
+        env.set(new Symbol("vector?"), new Fun(Core.vector_QMARK_));
+        env.set(new Symbol("vector"), new Fun(Core::vector));
+        env.set(new Symbol("map?"), new Fun(Core.map_QMARK_));
+        env.set(new Symbol("string?"), new Fun(Core.string_QMARK_));
+        env.set(new Symbol("fn?"), new Fun(Core.fn_QMARK_));
+        env.set(new Symbol("println"), new Fun(Core::println));
+        env.set(new Symbol("str"), new Fun(Core::str));
+        env.set(new Symbol("hash-map"), new Fun(Core::hash_map));
+        env.set(new Symbol("get"), new Fun(Core::get));
+        env.set(new Symbol("assoc"), new Fun(Core::assoc));
+        env.set(new Symbol("assoc!"), new Fun(Core::assoc_BANG_));
+        env.set(new Symbol("dissoc"), new Fun(Core::dissoc));
+        env.set(new Symbol("dissoc!"), new Fun(Core::dissoc_BANG_));
+        env.set(new Symbol("contains?"), new Fun(Core::contains_QMARK_));
+        env.set(new Symbol("keys"), new Fun(Core::keys));
+        env.set(new Symbol("vals"), new Fun(Core::vals));
 
         return env;
     }

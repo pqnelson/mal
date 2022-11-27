@@ -18,12 +18,17 @@ public abstract class Expr {
     public boolean isMap() { return Map.class.isInstance(this); }
     public boolean isSymbol() { return Symbol.class.isInstance(this); }
     public boolean isVector() { return Vector.class.isInstance(this); }
-
+    public boolean isNil() { return isLiteral() && ((Literal)this).isNil(); }
+    public boolean isString() { return isLiteral() && ((Literal)this).isString(); }
+    public boolean isInt() { return isLiteral() && ((Literal)this).isInt(); }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (null == obj) return false;
         return false;
+    }
+    public String type() {
+        return "Expr";
     }
 }

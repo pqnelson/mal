@@ -42,6 +42,10 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
 
     public Expr get(Expr k) { return this.table.get(k); }
 
+    public Expr get(Expr k, Expr defaultValue) {
+        return this.table.getOrDefault(k, defaultValue);
+    }
+
     public void assoc(Expr k, Expr v) {
         this.table.put(k, v);
     }
@@ -134,5 +138,10 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
             if (!this.get(k).equals(rhs.get(k))) return false;
         }
         return true;
+    }
+
+    @Override
+    public String type() {
+        return "Map";
     }
 }

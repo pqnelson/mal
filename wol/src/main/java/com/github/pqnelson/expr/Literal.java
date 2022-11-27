@@ -23,10 +23,17 @@ public class Literal extends Expr {
     public boolean isNil() { return TokenType.NIL == token.type; }
 
     public boolean isTrue() { return TRUE == token.type; }
-
+    public static boolean exprIsTrue(Expr e) {
+        return e.isLiteral() && ((Literal)e).isTrue();
+    }
     public boolean isFalse() { return FALSE == token.type; }
 
+    public static boolean exprIsFalse(Expr e) {
+        return e.isLiteral() && ((Literal)e).isFalse();
+    }
+
     public boolean isFalsy() { return isFalse() || isNil(); }
+    public static boolean isFalsy(Expr e) { return e.isLiteral() && ((Literal)e).isFalsy(); }
 
     public boolean isString() { return STRING == token.type; }
 
@@ -56,5 +63,21 @@ public class Literal extends Expr {
     @Override
     public  int hashCode() {
         return this.value().hashCode();
+    }
+
+
+    @Override
+    public String toString() {
+        if (this.isNil()) return "nil";
+        if (this.isTrue()) return "#Literal[true]";
+        if (this.isFalse()) return "#Literal[false]";
+        return this.value().toString();
+    }
+
+    @Override
+    public String type() {
+        if (this.isNil()) return "nil";
+        if (this.isTrue() || this.isFalse()) return "bool";
+        return "Literal";
     }
 }

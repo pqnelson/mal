@@ -142,4 +142,8 @@ public class Fun extends Expr implements IObj {
             return "#function<"+(this.name.name())+">";
         }
     }
+
+    @Override public String type() {
+        return "Fun";
+    }
 }

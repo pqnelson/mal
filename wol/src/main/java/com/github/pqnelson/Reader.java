@@ -83,12 +83,13 @@ class Reader {
         case BACKTICK:
         case UNQUOTE:
         case SPLICE:
-        case WITH_META:
+        case WITH_META: {
             next();
             Seq result = new Seq();
             result.conj(new Symbol(token));
             result.conj(readForm());
             return result;
+        }
         // lists
         case RIGHT_PAREN: throw new InputMismatchException("Unexpected ')'");
         case LEFT_PAREN: return this.readList();

@@ -130,4 +130,8 @@ public class Int extends com.github.pqnelson.expr.Number {
         if (rhs.isInt()) return this.multiply((Int)rhs);
         return this.multiply((BigInt)rhs);
     }
+
+    @Override public String type() {
+        return "Int";
+    }
 }

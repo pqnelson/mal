@@ -105,4 +105,8 @@ public class Float extends com.github.pqnelson.expr.Number {
     }
     @Override
     public int hashCode() { return Double.hashCode(this.value()); }
+
+    @Override public String type() {
+        return "Float";
+    }
 }

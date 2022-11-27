@@ -67,13 +67,26 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
 
     public Expr get(int i) { return contents.get(i); }
 
+
+    Expr _get(int i, Expr defaultValue) {
+        if (i < 0 || this.contents.size() >= i) return defaultValue;
+        return this.contents.get(i);
+    }
+
+
+    public Expr get(Expr i, Expr defaultValue) throws NoSuchMethodException {
+        if (!i.isInt()) throw new NoSuchMethodException("Vector::get requires an integer index");
+        return this._get(((Int)i).value().intValue(), defaultValue);
+    }
+
     public Expr last() { return contents.get(contents.size()-1); }
 
     public Vector slice(int i) {
         return new Vector(this.contents.subList(i, this.size()));
     }
 
-    public Seq seq() {
+    public Expr seq() {
+        if (this.isEmpty()) return Literal.NIL;
         return new Seq(List.copyOf(this.contents));
     }
 
@@ -104,5 +117,9 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
         buf.deleteCharAt(buf.length() - 1);
         buf.append("]");
         return buf.toString();
+    }
+
+    @Override public String type() {
+        return "Vector";
     }
 }

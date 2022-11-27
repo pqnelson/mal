@@ -13,4 +13,8 @@ public abstract class Number extends Literal {
     public boolean isBigInt() { return BigInt.class.isInstance(this); }
     public boolean isInt() { return Int.class.isInstance(this); }
     public boolean isFloat() { return Float.class.isInstance(this); }
+
+    @Override public String type() {
+        return "wol.Number";
+    }
 }

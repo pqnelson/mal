@@ -39,4 +39,12 @@ public class Keyword extends Expr {
         Keyword rhs = (Keyword)obj;
         return (this.name().equals(rhs.name()));
     }
+
+    @Override public String type() {
+        return "Keyword";
+    }
+
+    public Symbol symbol() {
+        return new Symbol(this.name());
+    }
 }

@@ -29,6 +29,12 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         this.meta = meta;
     }
 
+    public static Seq singleton(Expr e) {
+        Seq coll = new Seq();
+        coll.conj(e);
+        return coll;
+    }
+
     @Override
     public Map meta() {
         return this.meta;
@@ -64,6 +70,11 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         return this.contents.get(i);
     }
 
+    public Expr get(int i, Expr defaultValue) {
+        if (this.contents.size() >= i) return defaultValue;
+        return this.contents.get(i);
+    }
+
     @Override
     public int size() { return this.contents.size(); }
 
@@ -75,12 +86,21 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         this.contents.add(0, e);
     }
 
+    public Seq cons(Expr e) {
+        Seq result = new Seq(this);
+        result.prepend(e);
+        return result;
+    }
+
     public Seq butLast() {
         if (this.size() < 2) { return this; }
 
         return new Seq(this.contents.subList(0, size()-2));
     }
 
+    /**
+     * Add an expression to the END of the list.
+     */
     public void conj(Expr e) {
         this.contents.add(e);
     }
@@ -150,5 +170,30 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         buf.deleteCharAt(buf.length() - 1);
         buf.append(")");
         return buf.toString();
+    }
+
+    public Expr seq() {
+        if (this.isEmpty()) return Literal.NIL;
+        return this;
+    }
+
+    public Seq concat(Expr obj) {
+        if (obj.isNil()) return this;
+        Seq other = (Seq)obj;
+        if (other.isEmpty()) return this;
+        Seq result = new Seq(this);
+        for (Expr e : other) {
+            result.conj(e);
+        }
+        return result;
+    }
+
+    @Override
+    public String type() {
+        return "Seq";
+    }
+
+    public Vector vec() {
+        return new Vector(new ArrayList<>(this.contents));
     }
 }

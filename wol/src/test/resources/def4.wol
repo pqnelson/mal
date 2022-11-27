@@ -1,0 +1,33 @@
+(def x1 (assoc {} :abcd 1234))
+(def x2 (contains? x1 :abcd))
+(def x3 (contains? x1 :xyz))
+
+(def m1 {:a 1 :b 2})
+(def x4 (assoc m1 :a 3 :c 1))
+(def x4-1 (false? (= m1 x4)))
+(def x4-2 (contains? x4 :a))
+(def x4-3 (contains? x4 :c))
+(def x4-4 (false? (contains? m1 :c)))
+(def x4-5 (= 3 (get x4 :a)))
+(def x4-6 (= 1 (get m1 :a)))
+(def x4-7 (nil? (get m1 :c)))
+(def x4-8 (= (get m1 :b) (get x4 :b)))
+
+(def m5 {:a 1 :b 2})
+(def x5 (assoc! m5 :a 3 :c 1))
+(def x5-1 (= m5 x5))
+(def x5-2 (contains? x5 :a))
+(def x5-3 (contains? x5 :c))
+(def x5-4 (contains? m5 :c))
+(def x5-5 (= 3 (get x5 :a)))
+(def x5-6 (= 3 (get m5 :a)))
+(def x5-7 (= 1 (get m5 :c)))
+(def x5-8 (= (get m5 :b) (get x5 :b)))
+
+
+(def s6 (str true "." false "." nil "." :keyw "." 'symb))
+(def expected-x6 "true.false.nil.:keyw.symb")
+(def x6 (= expected-x6 s6))
+
+(def s7 "foobar")
+(def x7 (str s7))

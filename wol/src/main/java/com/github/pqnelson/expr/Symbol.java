@@ -65,4 +65,12 @@ public class Symbol extends Expr implements IObj {
     public final int hashCode() {
         return this.name().hashCode();
     }
+
+    @Override
+    public String type() {
+        return "Symbol";
+    }
+
+    @Override
+    public String toString() { return this.name(); }
 }
