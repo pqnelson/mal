@@ -1,5 +1,7 @@
 package com.github.pqnelson;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -22,6 +24,7 @@ import com.github.pqnelson.expr.Keyword;
 import com.github.pqnelson.expr.Literal;
 import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
 
@@ -296,6 +299,20 @@ class EvaluatorTest {
             Printer p = new Printer(true);
             assertEquals(env.get(x).toString(),
                          env.get(s).accept(p));
+        }
+
+        @Test
+        void evalDef4Test8() {
+            Symbol s = new Symbol("s8");
+            Symbol x = new Symbol("x8");
+            Printer p = new Printer(true);
+            assertEquals(env.get(x), new Str(env.get(s).accept(p)));
+        }
+        @Test
+        void evalDef4Test9() {
+            Symbol s = new Symbol("test9");
+            Symbol x = new Symbol("x9");
+            assertEquals(Literal.T, env.get(s));
         }
     }
 }

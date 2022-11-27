@@ -31,3 +31,11 @@
 
 (def s7 "foobar")
 (def x7 (str s7))
+
+(def s8 (pr-str "A" {:abc "val"} "Z"))
+(def x8 "\"A\" {:abc \"val\"} \"Z\"")
+
+;; Just test that pr-str does what we expect of it: it "undoes" read-str.
+(def x9 ["A" {:abc "val"} "Z"])
+(def test9 (= (read-string (pr-str x9))
+              x9))

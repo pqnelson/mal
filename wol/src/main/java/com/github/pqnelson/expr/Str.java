@@ -1,5 +1,7 @@
 package com.github.pqnelson.expr;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import com.github.pqnelson.Token;
 import com.github.pqnelson.TokenType;
 
@@ -19,6 +21,10 @@ public class Str extends Literal {
     @Override
     public String toString() {
         return this.token.lexeme;
+    }
+
+    public Str enquote() {
+        return new Str("\""+this.toString()+"\"");
     }
 
     @Override

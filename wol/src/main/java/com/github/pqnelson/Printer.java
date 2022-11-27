@@ -22,7 +22,7 @@ class Printer implements Visitor<String> {
     /**
      * "Readable" here means "We will handoff to System.out.println".
      */
-    private boolean isReadable = false;
+    protected boolean isReadable = false;
 
     public Printer() {
         this(false);

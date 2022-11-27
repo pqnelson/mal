@@ -1,5 +1,8 @@
 package com.github.pqnelson;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -226,9 +229,33 @@ public class Core {
     public static IFn fn_QMARK_ = predicateFactory("fn", Expr::isFunction);
     public static Expr println(Seq args) throws NoSuchMethodException {
         StringBuffer buf = new StringBuffer();
+        Printer p = new Printer();
         for (Expr e : args) {
-            buf.append(e.toString());
+            buf.append(e.accept(p));
+            buf.append(" ");
         }
+        buf.deleteCharAt(buf.length()-1);
+        System.out.println(buf.toString());
+        return Literal.NIL;
+    }
+    public static Expr pr_str(Seq args) throws NoSuchMethodException {
+        StringBuffer buf = new StringBuffer();
+        PPrinter p = new PPrinter();
+        for (Expr e : args) {
+            buf.append(e.accept(p));
+            buf.append(" ");
+        }
+        buf.deleteCharAt(buf.length()-1);
+        return new Str(buf.toString());
+    }
+    public static Expr prn(Seq args) throws NoSuchMethodException {
+        StringBuffer buf = new StringBuffer();
+        PPrinter p = new PPrinter();
+        for (Expr e : args) {
+            buf.append(e.accept(p));
+            buf.append(" ");
+        }
+        buf.deleteCharAt(buf.length()-1);
         System.out.println(buf.toString());
         return Literal.NIL;
     }
@@ -308,6 +335,17 @@ public class Core {
     public static Expr vals(Seq args) throws NoSuchMethodException {
         checkArity(1, args, "vals");
         return ((Map)args.first()).values();
+    }
+    public static Expr read_string(Seq args) throws NoSuchMethodException {
+        checkArity(1, args, "read-string");
+        Str s = (Str)args.first();
+        return Reader.readString(s.toString());
+    }
+    public static Expr slurp(Seq args) throws NoSuchMethodException, IOException {
+        checkArity(1, args, "slurp");
+        Path file = Path.of(args.first().toString());
+        String content = Files.readString(file);
+        return new Str(content);
     }
     // public static Expr (Seq args) throws NoSuchMethodException {}
 }

@@ -287,6 +287,8 @@ public class Evaluator {
         env.set(new Symbol("string?"), new Fun(Core.string_QMARK_));
         env.set(new Symbol("fn?"), new Fun(Core.fn_QMARK_));
         env.set(new Symbol("println"), new Fun(Core::println));
+        env.set(new Symbol("pr-str"), new Fun(Core::pr_str));
+        env.set(new Symbol("prn"), new Fun(Core::prn));
         env.set(new Symbol("str"), new Fun(Core::str));
         env.set(new Symbol("hash-map"), new Fun(Core::hash_map));
         env.set(new Symbol("get"), new Fun(Core::get));
@@ -297,6 +299,8 @@ public class Evaluator {
         env.set(new Symbol("contains?"), new Fun(Core::contains_QMARK_));
         env.set(new Symbol("keys"), new Fun(Core::keys));
         env.set(new Symbol("vals"), new Fun(Core::vals));
+        env.set(new Symbol("read-string"), new Fun(Core::read_string));
+        env.set(new Symbol("slurp"), new Fun(Core::slurp));
 
         return env;
     }
