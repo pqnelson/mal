@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-public class Seq extends Expr implements Iterable<Expr>, IObj {
+public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
     final List<Expr> contents;
     public static final Seq EMPTY = new Seq();
     private Map meta = null;
@@ -64,6 +64,7 @@ public class Seq extends Expr implements Iterable<Expr>, IObj {
         return this.contents.get(i);
     }
 
+    @Override
     public int size() { return this.contents.size(); }
 
     public Expr last() {

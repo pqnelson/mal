@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class Map extends Expr implements Iterable<Expr>, IObj {
+public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
     private final HashMap<Expr, Expr> table;
     public static final Map EMPTY = new Map();
     private Map meta = null;
@@ -74,9 +74,10 @@ public class Map extends Expr implements Iterable<Expr>, IObj {
 
     public boolean isEmpty() { return this.table.isEmpty(); }
 
+    @Override
     public int size() { return this.table.size(); }
 
-    Seq toSeq() {
+    public Seq toSeq() {
         if (this.isEmpty()) { return Seq.EMPTY; }
         Seq result = new Seq();
         for (java.util.Map.Entry<Expr, Expr> e : this.table.entrySet()) {

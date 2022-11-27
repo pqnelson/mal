@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * A vector, i.e., ordered tuple.
  */
-public class Vector extends Expr implements Iterable<Expr>, IObj {
+public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     final List<Expr> contents;
     private Map meta = null;
     public final static Vector EMPTY = new Vector();
@@ -62,6 +62,7 @@ public class Vector extends Expr implements Iterable<Expr>, IObj {
         return contents.iterator();
     }
 
+    @Override
     public int size() { return contents.size(); }
 
     public Expr get(int i) { return contents.get(i); }
@@ -84,6 +85,8 @@ public class Vector extends Expr implements Iterable<Expr>, IObj {
         if (contents.isEmpty()) return null;
         return contents.get(0);
     }
+
+    public boolean isEmpty() { return contents.isEmpty(); }
 
     @Override
     public <T> T accept(Visitor<T> visitor) {

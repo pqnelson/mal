@@ -9,9 +9,12 @@ import com.github.pqnelson.expr.Expr;
 import com.github.pqnelson.expr.BigInt;
 import com.github.pqnelson.expr.Float;
 import com.github.pqnelson.expr.Fun;
+import com.github.pqnelson.expr.ICountable;
+import com.github.pqnelson.expr.IFn;
 import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
 import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
@@ -81,7 +84,7 @@ public class Evaluator {
         return false;
     }
 
-    static Expr macroexpand(Expr ast, Env env) {
+    static Expr macroexpand(Expr ast, Env env) throws Throwable {
         while(isMacroCall(ast, env)) {
             Symbol rator = (Symbol)((Seq)ast).rator();
             Fun macro = (Fun)env.get(rator);
@@ -90,7 +93,7 @@ public class Evaluator {
         return ast;
     }
 
-    static Expr evalLiteral(Expr ast, Env env) {
+    static Expr evalLiteral(Expr ast, Env env) throws Throwable {
         if (ast.isSymbol()) {
             return env.get((Symbol)ast);
         } else if (ast.isList()) {
@@ -115,7 +118,7 @@ public class Evaluator {
      *
      * This is almost certainly what you are looking for.
      */
-    public static Expr eval(Expr expr, Env env) {
+    public static Expr eval(Expr expr, Env env) throws Throwable {
         while (true) {
             if (!expr.isList()) {
                 return evalLiteral(expr, env);
@@ -182,7 +185,7 @@ public class Evaluator {
                 final Vector params = (Vector)(null == name ? ast.first() : ast.get(1));
                 final Seq body = (Seq)(null == name ? ast.get(1) : ast.get(2));
                 final Env current = env;
-                Function<Seq, Expr> f = (args) -> eval(body, new Env(current, params, args));
+                IFn f = (args) -> eval(body, new Env(current, params, args));
                 return new Fun (f, params, body, name);
             }
             case "macroexpand":
@@ -241,6 +244,7 @@ public class Evaluator {
         }
     }
 
+
     public static Env initialEnv() {
         Env env = new Env();
         env.set(new Symbol("+"), new Fun(((Seq args) -> {
@@ -277,6 +281,10 @@ public class Evaluator {
             }
             return quotient;
         })));
+        env.set(new Symbol("count"), new Fun(Core::count));
+        env.set(new Symbol("list"), new Fun((Seq args) -> args));
+        env.set(new Symbol("list?"), new Fun(Core::list_QMARK_));
+        env.set(new Symbol("empty?"), new Fun(Core::empty_QMARK_));
 
         return env;
     }

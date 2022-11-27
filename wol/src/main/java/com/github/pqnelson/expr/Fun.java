@@ -20,21 +20,21 @@ public class Fun extends Expr implements IObj {
     private boolean macro;
     private Map meta = null;
     @VisibleForTesting
-    final Function<Seq, Expr> f;
+    final IFn f;
 
-    public Fun(Function<Seq, Expr> f) {
+    public Fun(IFn f) {
         this(f, null, null, null);
     }
 
-    public Fun(Function<Seq, Expr> f, Vector params) {
+    public Fun(IFn f, Vector params) {
         this(f, params, null, null);
     }
 
-    public Fun(Function<Seq, Expr> f, Vector params, Seq body) {
+    public Fun(IFn f, Vector params, Seq body) {
         this(f, params, body, null);
     }
 
-    public Fun(Function<Seq, Expr> f, Vector params, Seq body, Symbol funName) {
+    public Fun(IFn f, Vector params, Seq body, Symbol funName) {
         this.f = f;
         this.params = params;
         this.body = body;
@@ -125,8 +125,8 @@ public class Fun extends Expr implements IObj {
         return new Env(env, params, args);
     }
 
-    public Expr invoke(Seq args) {
-        return this.f.apply(args);
+    public Expr invoke(Seq args) throws Throwable {
+        return this.f.invoke(args);
     }
 
     @Override

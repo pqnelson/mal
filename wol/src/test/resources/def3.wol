@@ -1,0 +1,3 @@
+(def x1 (count (list 1 2 3)))
+(def x2 (list? (list)))
+(def x3 (empty? (list)))

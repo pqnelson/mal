@@ -34,11 +34,11 @@ class EvaluatorTest {
         return EvaluatorTest.class.getClassLoader().getResourceAsStream(resourceName);
     }
 
-    static Env loadResource(String resourceName) throws java.io.IOException {
+    static Env loadResource(String resourceName) throws Throwable {
         return loadResource(resourceName, true);
     }
 
-    static Env loadResource(String resourceName, boolean parserPrefersFloats) throws java.io.IOException {
+    static Env loadResource(String resourceName, boolean parserPrefersFloats) throws Throwable {
         Env env = Evaluator.initialEnv();
         try (InputStreamReader r = new InputStreamReader(resource(resourceName));
             BufferedReader resource = new BufferedReader(r)) {
@@ -56,7 +56,7 @@ class EvaluatorTest {
     class def1 {
         static Env env;
         @BeforeAll
-        static void loadDef1() throws java.io.IOException {
+        static void loadDef1() throws Throwable {
             env = loadResource("def1.wol");
         }
 
@@ -78,7 +78,7 @@ class EvaluatorTest {
     class def2 {
         static Env env;
         @BeforeAll
-        static void loadDef2() throws java.io.IOException {
+        static void loadDef2() throws Throwable {
             env = loadResource("def2.wol", false);
         }
 
@@ -133,6 +133,31 @@ class EvaluatorTest {
             val.conj(new Int(2));
             val.conj(new Int(3));
             assertEquals(val, env.get(x));
+        }
+    }
+
+    @Nested
+    class def3 {
+        static Env env;
+        @BeforeAll
+        static void loadDef3() throws Throwable {
+            env = loadResource("def3.wol", false);
+        }
+        @Test
+        void evalDef3Test1() {
+            Symbol x = new Symbol("x1");
+            Int val = new Int(3);
+            assertEquals(val, env.get(x));
+        }
+        @Test
+        void evalDef3Test2() {
+            Symbol x = new Symbol("x2");
+            assertEquals(Literal.T, env.get(x));
+        }
+        @Test
+        void evalDef3Test3() {
+            Symbol x = new Symbol("x3");
+            assertEquals(Literal.T, env.get(x));
         }
     }
 }
