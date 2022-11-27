@@ -7,6 +7,9 @@ import static com.github.pqnelson.TokenType.NUMBER;
 
 public class Float extends Literal {
     private final double value;
+    public Float(double value) {
+        this(new Token(NUMBER, Double.toString(value), value), value);
+    }
     public Float(Token token, double value) {
         super(token);
         this.value = value;
@@ -66,4 +69,16 @@ public class Float extends Literal {
     public Float divide(Float rhs) {
         return new Float(new Token(NUMBER), this.value() / rhs.value());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (null == obj) return false;
+        if (obj.getClass() != this.getClass()) return false;
+        Float rhs = (Float)obj;
+        return Double.valueOf(this.value).equals(Double.valueOf(rhs.value()));
+    }
+
+    @Override
+    public int hashCode() { return Double.hashCode(this.value()); }
 }

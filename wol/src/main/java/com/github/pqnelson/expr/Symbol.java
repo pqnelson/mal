@@ -19,6 +19,10 @@ public class Symbol extends Expr implements IObj {
         this.identifier = s.identifier;
     }
 
+    public boolean isSpecialForm() {
+        return TokenType.IDENTIFIER != this.identifier.type;
+    }
+
     @Override
     public Map meta() {
         return this.meta;

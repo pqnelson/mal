@@ -20,7 +20,7 @@ import com.github.pqnelson.TokenType;
 
 public class Evaluator {
 
-    boolean ratorIs(Expr expr, String name) {
+    static boolean ratorIs(Expr expr, String name) {
         if (expr.isList() && ((Seq)expr).size() > 0
             && ((Seq)expr).first().isSymbol()) {
             Symbol symb = (Symbol)(((Seq)expr).first());
@@ -28,25 +28,25 @@ public class Evaluator {
         }
         return false;
     }
-    boolean isUnquote(Expr expr) {
+    static boolean isUnquote(Expr expr) {
         return ratorIs(expr, "unquote");
     }
 
-    private final Symbol symbol(String name) {
+    private static final Symbol symbol(String name) {
         return new Symbol(new Token(TokenType.IDENTIFIER, name, null, 0));
     }
 
-    final Symbol cons = symbol("cons");
-    final Symbol concat = symbol("concat");
-    final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
-    Expr quote(Expr e) {
+    static final Symbol cons = symbol("cons");
+    static final Symbol concat = symbol("concat");
+    static final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
+    static Expr quote(Expr e) {
         Seq result = new Seq();
         result.conj(quote);
         result.conj(e);
         return result;
     }
 
-    void qqProcess(Seq acc, Expr e) {
+    static void qqProcess(Seq acc, Expr e) {
         if (ratorIs(e, "unsplice")) {
             acc.prepend(((Seq)e).get(1));
             acc.prepend(concat);
@@ -56,7 +56,7 @@ public class Evaluator {
         }
     }
 
-    Expr quasiquote(Expr ast) {
+    static Expr quasiquote(Expr ast) {
         if (isUnquote(ast)) {
             return ((Seq)ast).get(1);
         } else if (ast.isList()) {
@@ -72,16 +72,17 @@ public class Evaluator {
         }
     }
 
-    boolean isMacroCall(Expr ast, Env env) {
-        if (ast.isList() && ((Seq)ast).first().isSymbol()) {
+    static boolean isMacroCall(Expr ast, Env env) {
+        if (ast.isList() && ((Seq)ast).first().isSymbol() &&
+            !((Symbol)((Seq)ast).first()).isSpecialForm()) {
             Expr e = env.get((Symbol)(((Seq)ast).first()));
             return e.isFunction() && ((Fun)e).isMacro();
         }
         return false;
     }
 
-    Expr macroexpand(Expr ast, Env env) {
-        while(isMacroCall(ast,env)) {
+    static Expr macroexpand(Expr ast, Env env) {
+        while(isMacroCall(ast, env)) {
             Symbol rator = (Symbol)((Seq)ast).rator();
             Fun macro = (Fun)env.get(rator);
             ast = macro.invoke(((Seq)ast).slice(1));
@@ -89,7 +90,7 @@ public class Evaluator {
         return ast;
     }
 
-    Expr evalLiteral(Expr ast, Env env) {
+    static Expr evalLiteral(Expr ast, Env env) {
         if (ast.isSymbol()) {
             return env.get((Symbol)ast);
         } else if (ast.isList()) {
@@ -109,8 +110,12 @@ public class Evaluator {
         }
     }
 
-
-    Expr eval(Expr expr, Env env) {
+    /**
+     * Evaluate an expression relative to a given binding environment.
+     *
+     * This is almost certainly what you are looking for.
+     */
+    public static Expr eval(Expr expr, Env env) {
         while (true) {
             if (!expr.isList()) {
                 return evalLiteral(expr, env);

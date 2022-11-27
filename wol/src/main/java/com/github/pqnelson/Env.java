@@ -10,6 +10,8 @@ public class Env {
     Env outer = null;
     HashMap<String, Expr> table = new HashMap<>();
 
+    public Env() { }
+
     public Env(Env outer) {
         this.outer = outer;
     }

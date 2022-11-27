@@ -53,7 +53,7 @@ class Reader {
         return currentToken;
     }
 
-    boolean isAtEnd() {
+    public boolean isAtEnd() {
         return EOF == peek().type;
     }
 
