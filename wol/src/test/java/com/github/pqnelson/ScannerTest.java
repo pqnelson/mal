@@ -253,7 +253,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -269,270 +269,280 @@ public class ScannerTest
             assertEquals(t.literal, x);
         }
 
-        @Test
-        public void scanFloatNumber1() {
-            String lexeme = "0.36787944117"; // exp(-1)
-            double expected = 0.36787944117;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
+        @Nested
+        class floatTests {
+            @Test
+            public void scanFloatNumber1() {
+                String lexeme = "0.36787944117"; // exp(-1)
+                double expected = 0.36787944117;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber2() {
+                String lexeme = "-0.36787944117"; // -exp(-1)
+                double expected = -0.36787944117;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber3() {
+                String lexeme = "123e45";
+                double expected = 123e45;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber4() {
+                String lexeme = "123e-45";
+                double expected = 123e-45;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber5() {
+                String lexeme = "-123e-45";
+                double expected = -123e-45;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
         
-        @Test
-        public void scanFloatNumber2() {
-            String lexeme = "-0.36787944117"; // -exp(-1)
-            double expected = -0.36787944117;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
-        public void scanFloatNumber3() {
-            String lexeme = "123e45";
-            double expected = 123e45;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
-        public void scanFloatNumber4() {
-            String lexeme = "123e-45";
-            double expected = 123e-45;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
-        public void scanFloatNumber5() {
-            String lexeme = "-123e-45";
-            double expected = -123e-45;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
+            @Test
         public void scanFloatNumber6() {
-            String lexeme = "-123e45";
-            double expected = -123e45;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
+                String lexeme = "-123e45";
+                double expected = -123e45;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber7() {
+                String lexeme = "0.123";
+                double expected = 0.123;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber8() {
+                String lexeme = "123.456";
+                double expected = 123.456;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanFloatNumber9() {
+                String lexeme = "-123.456";
+                double expected = -123.456;
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(expected, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+        }
+
+        @Nested
+        class octalTests {
+            @Test
+            public void scanOctalNumber1() {
+                String lexeme = "015";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(t.literal, 015L);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanOctalNumber2() {
+                String lexeme = "0001";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(t.literal, 0001L);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanOctalNumber3() {
+                String lexeme = "0o7777777777n";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(t.literal, new BigInteger("07777777777", 8));
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanOctalNumber4() {
+                String lexeme = "0o7654x";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 3);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(t.lexeme, lexeme.substring(0,lexeme.length()-1));
+                assertEquals(t.literal, 07654L);
+                t = tokens.get(1);
+                assertEquals(TokenType.IDENTIFIER, t.type);
+                t = tokens.get(2);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanOctalNumber5() {
+                String lexeme = "015n";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(t.literal, new BigInteger("015", 8));
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
         }
         
-        @Test
-        public void scanFloatNumber7() {
-            String lexeme = "0.123";
-            double expected = 0.123;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
-        public void scanFloatNumber8() {
-            String lexeme = "123.456";
-            double expected = 123.456;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-        
-        @Test
-        public void scanFloatNumber9() {
-            String lexeme = "-123.456";
-            double expected = -123.456;
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(lexeme, t.lexeme);
-            assertEquals(expected, t.literal);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanOctalNumber1() {
-            String lexeme = "015";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, 015L);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanOctalNumber2() {
-            String lexeme = "0001";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, 0001L);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanOctalNumber3() {
-            String lexeme = "0o7777777777n";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, new BigInteger("07777777777", 8));
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanOctalNumber4() {
-            String lexeme = "0o7654x";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 3);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme.substring(0,lexeme.length()-1));
-            assertEquals(t.literal, 07654L);
-            t = tokens.get(1);
-            assertEquals(TokenType.IDENTIFIER, t.type);
-            t = tokens.get(2);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanOctalNumber5() {
-            String lexeme = "015n";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, new BigInteger("015", 8));
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanHexadecimalNumber1() {
-            String lexeme = "0x1123";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, 0x1123L);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanHexadecimalNumber2() {
-            String lexeme = "0x00111";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, 0x00111L);
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanHexadecimalNumber3() {
-            String lexeme = "0x123456789ABCDEFn";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, new BigInteger("123456789ABCDEF", 16));
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
-        }
-
-        @Test
-        public void scanHexadecimalNumber4() {
-            String lexeme = "-0x123456789ABCDEFn";
-            Scanner s = new Scanner(lexeme);
-            List<Token> tokens = s.scanTokens();
-            assertEquals(tokens.size(), 2);
-            Token t = tokens.get(0);
-            assertEquals(TokenType.NUMBER, t.type);
-            assertEquals(t.lexeme, lexeme);
-            assertEquals(t.literal, new BigInteger("-123456789ABCDEF", 16));
-            t = tokens.get(1);
-            assertEquals(TokenType.EOF, t.type);
+        @Nested
+        class hexadecimalTests {
+            @Test
+            public void scanHexadecimalNumber1() {
+                String lexeme = "0x1123";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(0x1123L, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanHexadecimalNumber2() {
+                String lexeme = "0x00111";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(0x00111L, t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanHexadecimalNumber3() {
+                String lexeme = "0x123456789ABCDEFn";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(t.literal, new BigInteger("123456789ABCDEF", 16));
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
+            
+            @Test
+            public void scanHexadecimalNumber4() {
+                String lexeme = "-0x123456789ABCDEFn";
+                Scanner s = new Scanner(lexeme);
+                List<Token> tokens = s.scanTokens();
+                assertEquals(tokens.size(), 2);
+                Token t = tokens.get(0);
+                assertEquals(TokenType.NUMBER, t.type);
+                assertEquals(lexeme, t.lexeme);
+                assertEquals(new BigInteger("-123456789ABCDEF", 16),
+                             t.literal);
+                t = tokens.get(1);
+                assertEquals(TokenType.EOF, t.type);
+            }
         }
     }
-
+    
     @Nested
     class TokenizeIdentifierTests {
         @Test
@@ -543,7 +553,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -556,7 +566,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -569,7 +579,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -582,7 +592,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -595,7 +605,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -608,7 +618,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -621,7 +631,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -634,7 +644,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -647,7 +657,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -660,7 +670,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -673,7 +683,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -686,7 +696,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -699,7 +709,7 @@ public class ScannerTest
             assertEquals(tokens.size(), 2);
             Token t = tokens.get(0);
             assertEquals(TokenType.IDENTIFIER, t.type);
-            assertEquals(t.lexeme, lexeme);
+            assertEquals(lexeme, t.lexeme);
             t = tokens.get(1);
             assertEquals(TokenType.EOF, t.type);
         }
@@ -712,7 +722,7 @@ public class ScannerTest
         List<Token> tokens = s.scanTokens();
         TokenType types[] = {TokenType.KEYWORD, TokenType.EOF};
         for (int i=0; i < types.length; i++) {
-            assertEquals(tokens.get(i).type, types[i]);
+            assertEquals(types[i], tokens.get(i).type);
         }
         assertEquals(":"+tokens.get(0).lexeme,
                      lexeme);
@@ -730,7 +740,7 @@ public class ScannerTest
                 TokenType.IDENTIFIER, TokenType.NUMBER, TokenType.RIGHT_PAREN,
                 TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -743,7 +753,7 @@ public class ScannerTest
                 TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.RIGHT_PAREN,
                 TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -756,7 +766,7 @@ public class ScannerTest
                 TokenType.LEFT_BRACKET, TokenType.RIGHT_BRACKET,
                 TokenType.IDENTIFIER, TokenType.RIGHT_PAREN, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -769,7 +779,7 @@ public class ScannerTest
                 TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.IDENTIFIER,
                 TokenType.RIGHT_PAREN, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -783,7 +793,7 @@ public class ScannerTest
                 TokenType.RIGHT_BRACKET, TokenType.IDENTIFIER, TokenType.RIGHT_PAREN,
                 TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -796,7 +806,7 @@ public class ScannerTest
                 TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.RIGHT_PAREN,
                 TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -809,7 +819,7 @@ public class ScannerTest
                 TokenType.DO, TokenType.UNQUOTE, TokenType.IDENTIFIER,
                 TokenType.IDENTIFIER, TokenType.RIGHT_PAREN, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -822,7 +832,7 @@ public class ScannerTest
                 TokenType.DO, TokenType.SPLICE, TokenType.IDENTIFIER,
                 TokenType.IDENTIFIER, TokenType.RIGHT_PAREN, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -834,7 +844,7 @@ public class ScannerTest
             TokenType types[] = {TokenType.LEFT_PAREN,
                 TokenType.TRUE, TokenType.FALSE, TokenType.RIGHT_PAREN, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
 
@@ -845,7 +855,7 @@ public class ScannerTest
             List<Token> tokens = s.scanTokens();
             TokenType types[] = {TokenType.NIL, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
         }
     }
@@ -857,7 +867,7 @@ public class ScannerTest
         List<Token> tokens = s.scanTokens();
         TokenType types[] = {TokenType.EOF};
         for (int i=0; i < types.length; i++) {
-            assertEquals(tokens.get(i).type, types[i]);
+            assertEquals(types[i], tokens.get(i).type);
         }
     }
 
@@ -870,7 +880,7 @@ public class ScannerTest
             List<Token> tokens = s.scanTokens();
             TokenType types[] = {TokenType.STRING, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
             assertEquals("\""+tokens.get(0).lexeme+"\"",
                          lexeme);
@@ -894,7 +904,7 @@ public class ScannerTest
             List<Token> tokens = s.scanTokens();
             TokenType types[] = {TokenType.STRING, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
-                assertEquals(tokens.get(i).type, types[i]);
+                assertEquals(types[i], tokens.get(i).type);
             }
             assertEquals(expected, tokens.get(0).lexeme);
         }
@@ -909,7 +919,7 @@ public class ScannerTest
             TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.RIGHT_PAREN,
             TokenType.EOF};
         for (int i=0; i < types.length; i++) {
-            assertEquals(tokens.get(i).type, types[i]);
+            assertEquals(types[i], tokens.get(i).type);
         }
     }
 
