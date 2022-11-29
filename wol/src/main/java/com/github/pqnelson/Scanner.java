@@ -396,8 +396,13 @@ class Scanner {
      *
      * A number can look like:
      * <blockquote>{@code
-     *   number ::= '0[bBxXoO]\d+'     --- written in specific radix
-     *           |  '\d+\\.?\d+([eE][+-]?\d+)' --- floating point
+     *   number ::= '0[bBxXoO]\d+'             --- written in specific radix
+     *           |  '0[bBxXoO]\d+n'            --- bigint in specific radix
+     *           |  '0\d+'                     --- octal literal
+     *           |  '\d+\\.?\d+'               --- floating point
+     *           |  '\d+\\.?\d+[eE][+-]?\d+'   --- floating point with exponent
+     *           |  '[+-]\d+'                  --- integer literal
+     *           |  '[+-]\d+n'                 --- "big integer" literal
      * }</blockquote>
      * The default assumption is to treat a number as if it were floating
      * point.
@@ -420,12 +425,14 @@ class Scanner {
                 radixNumber(8, 'o', 'O');
                 return;
             default:
-                radixNumber(8, 'o', 'O');
+                tryScanningOctal();
+                // radixNumber(8, 'o', 'O');
                 return;
             }
         }
         floatingPointNumber();
     }
+
     /**
      * Javascript interprets all numbers as double precision. ES6 is starting
      * to change that. Should we follow pre-ES6 Javascript and parse numbers
@@ -459,10 +466,14 @@ class Scanner {
         return false;
     }
 
+    boolean isFloatExponent() {
+        return (('e' == peek() || 'E' == peek()) &&
+                ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext())));
+    }
+    
     boolean floatExponent() {
         boolean tokenIsFloat = false;
-        if (('e' == peek() || 'E' == peek()) &&
-            ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext()))) {
+        if (isFloatExponent()) {
             currentLexeme.appendCodePoint(advance());
             if (Character.isDigit(peek()) || Character.isDigit(peekNext())) {
                 currentLexeme.appendCodePoint(advance());
@@ -518,6 +529,37 @@ class Scanner {
                 ((lcLetterLowerBound <= c && c <= lcLetterUpperBound) ||
                  (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
         return withinBounds;
+    }
+    void tryScanningOctal() {
+        // build predicate to test if we're still in the right radix
+        IntPredicate withinBounds = radixBoundsFactory(8, 'o', 'O');
+        // CONSUME!
+        while (withinBounds.test((int)peek())) {
+            // Whoops, it's a floating-point number
+            if ('.' == peekNext()) {
+                floatingPointNumber();
+                return;
+            } else if (Character.isDigit(peekNext()) &&
+                       !withinBounds.test((int)peekNext())) {
+                // whoops, it currently looks like an integer
+                tryScanningInt();
+                return;
+            }
+            currentLexeme.appendCodePoint(advance());
+        }
+        tokenizeRadixNumberLexeme(8, 'o', 'O');
+    }
+
+    void tryScanningInt() {
+        while (Character.isDigit(peek())) {
+            currentLexeme.appendCodePoint(advance());
+            if (isFloatExponent()) {
+                floatExponent();
+                addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
+                return;
+            }
+        }
+        tokenizeRadixNumberLexeme(10, 'd', 'D');
     }
 
     void assembleRadixNumberLexeme(int base, char b, char B) {
