@@ -23,6 +23,8 @@ import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
 
+import java.util.InputMismatchException;
+
 public class ReaderTest
 {
     @Nested
@@ -125,6 +127,13 @@ public class ReaderTest
             }
             assertEquals(vec, v);
         }
+        @Test
+        public void readVectorTest5() {
+            String lexemes[] = {"1,", "2,", "3,", "4,"};
+            String lexeme = "["+String.join(" ", lexemes);
+            assertThrows(InputMismatchException.class,
+                         () -> Reader.readString(lexeme));
+        }
     }
 
     @Nested
@@ -201,6 +210,12 @@ public class ReaderTest
             assertThrows(java.util.InputMismatchException.class,
                          () -> Reader.readString(lexeme));
         }
+        @Test
+        public void readMapMissingRightDelimiterTest() {
+            String lexeme = "{:key 1 :spam 2";
+            assertThrows(java.util.InputMismatchException.class,
+                         () -> Reader.readString(lexeme));
+        }
     }
 
 
@@ -220,10 +235,31 @@ public class ReaderTest
 
     @Test
     public void readDef2Test3() {
-        String lexeme = "(def x2 (+ 5 (- 2 3)))";
+        String lexeme = "(def x2 (+ 5.0 (- 2 3)))";
         Seq s = (Seq)Reader.readString(lexeme);
         Symbol x2 = new Symbol("x2");
         assertTrue(s.get(1).isSymbol());
         assertEquals((Symbol)(s.get(1)), x2);
+    }
+
+    @Test
+    public void unexpectedDelimiterTest1() {
+        String lexeme = "} (def x2 (+ 5 (- 2 3)))";
+        assertThrows(java.util.InputMismatchException.class,
+                     () -> Reader.readString(lexeme));
+    }
+
+    @Test
+    public void unexpectedDelimiterTest2() {
+        String lexeme = ") (def x2 (+ 5 (- 2 3)))";
+        assertThrows(java.util.InputMismatchException.class,
+                     () -> Reader.readString(lexeme));
+    }
+
+    @Test
+    public void unexpectedDelimiterTest3() {
+        String lexeme = "] (def x2 (+ 5 (- 2 3)))";
+        assertThrows(java.util.InputMismatchException.class,
+                     () -> Reader.readString(lexeme));
     }
 }

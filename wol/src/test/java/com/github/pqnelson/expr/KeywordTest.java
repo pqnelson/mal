@@ -44,4 +44,9 @@ public class KeywordTest
         assertEquals(a, c);
     }
 
+    @Test
+    public void typeTest() {
+        Keyword s = new Keyword("");
+        assertEquals("Keyword", s.type());
+    }
 }

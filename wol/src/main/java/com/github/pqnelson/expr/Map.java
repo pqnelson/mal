@@ -85,7 +85,7 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
         if (this.isEmpty()) { return Seq.EMPTY; }
         Seq result = new Seq();
         for (java.util.Map.Entry<Expr, Expr> e : this.table.entrySet()) {
-            Seq kv = new Seq();
+            Vector kv = new Vector();
             kv.conj(e.getKey());
             kv.conj(e.getValue());
             result.conj(kv);

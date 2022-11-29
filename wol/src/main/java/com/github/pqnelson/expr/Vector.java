@@ -22,11 +22,11 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     }
 
     public Vector(Vector other) {
-        this.contents = List.copyOf(other.contents);
+        this.contents = new ArrayList<>(other.contents);
     }
 
     public Vector(Vector other, Map meta) {
-        this.contents = List.copyOf(other.contents);
+        this.contents = new ArrayList<>(other.contents);
         this.meta = meta;
     }
 
@@ -69,7 +69,7 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
 
 
     Expr _get(int i, Expr defaultValue) {
-        if (i < 0 || this.contents.size() >= i) return defaultValue;
+        if (i < 0 || this.contents.size() <= i) return defaultValue;
         return this.contents.get(i);
     }
 
@@ -87,7 +87,7 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
 
     public Expr seq() {
         if (this.isEmpty()) return Literal.NIL;
-        return new Seq(List.copyOf(this.contents));
+        return new Seq(new ArrayList<>(this.contents));
     }
 
     public void conj(Expr e) {

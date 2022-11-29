@@ -22,10 +22,10 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         this.meta = meta;
     }
     public Seq(Seq seq) {
-        this.contents = List.copyOf(seq.contents);
+        this.contents = new ArrayList<>(seq.contents);
     }
     public Seq(Seq seq, Map meta) {
-        this.contents = List.copyOf(seq.contents);
+        this.contents = new ArrayList<>(seq.contents);
         this.meta = meta;
     }
 
@@ -71,7 +71,7 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
     }
 
     public Expr get(int i, Expr defaultValue) {
-        if (this.contents.size() >= i) return defaultValue;
+        if (this.contents.size() <= i) return defaultValue;
         return this.contents.get(i);
     }
 
@@ -181,6 +181,7 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         if (obj.isNil()) return this;
         Seq other = (Seq)obj;
         if (other.isEmpty()) return this;
+        if (this.isEmpty()) return other;
         Seq result = new Seq(this);
         for (Expr e : other) {
             result.conj(e);

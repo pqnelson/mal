@@ -90,4 +90,10 @@ public class MapTest
         assertEquals (m.keys().size(), keys.size());
         assertEquals (m.keys().sort(), keys.sort());
     }
+
+    @Test
+    public void typeTest() {
+        Map s = new Map();
+        assertEquals("Map", s.type());
+    }
 }

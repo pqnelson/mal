@@ -35,13 +35,17 @@ public class Core {
             throw new NoSuchMethodException("Arity of function "+functionName+" is "+n+" but passed "+args.size()+" arguments");
         }
     }
-    private static String aritiesToStr(Set<Integer> arities) {
+    static String aritiesToStr(Set<Integer> arities) {
         StringBuffer buf = new StringBuffer("{");
         for (int i : arities) {
             buf.append(Integer.toString(i));
             buf.append(", ");
         }
-        buf.delete(buf.length()-2, buf.length()-1);
+        if (arities.size() > 0) {
+            for (int i=0; i < 2; i++) {
+                buf.deleteCharAt(buf.length()-1);
+            }
+        }
         buf.append("}");
         return buf.toString();
     }
@@ -136,9 +140,8 @@ public class Core {
     public static Expr first(Seq args) throws NoSuchMethodException {
         checkArity(1, args, "first");
         Expr arg = _seqArg(args.first());
-        if (arg.isList()) return ((Seq)arg).first();
         if (arg.isNil()) return arg;
-        throw new NoSuchMethodException("first called on unknown type "+arg.type());
+        return ((Seq)arg).first();
     }
 
     public static Expr rest(Seq args) throws NoSuchMethodException {
@@ -168,6 +171,7 @@ public class Core {
         Expr arg = args.first();
         if (args.isEmpty()) return Literal.NIL;
         Expr seqArg = _seqArg(arg);
+        if (1 == args.size()) return seqArg;
         if (seqArg.isNil()) seqArg = new Seq();
         Seq result = (Seq)seqArg;
         for (Expr e : args.slice(1)) {

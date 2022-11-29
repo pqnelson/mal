@@ -337,7 +337,7 @@ class Scanner {
         }
 
         if (isAtEnd()) {
-            error(line, "Unterminated string");
+            throw new InputMismatchException("Line "+line+": Unterminated string");
         }
 
         advance();
@@ -470,7 +470,7 @@ class Scanner {
         return (('e' == peek() || 'E' == peek()) &&
                 ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext())));
     }
-    
+
     boolean floatExponent() {
         boolean tokenIsFloat = false;
         if (isFloatExponent()) {
@@ -530,6 +530,7 @@ class Scanner {
                  (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
         return withinBounds;
     }
+    @VisibleForTesting
     void tryScanningOctal() {
         // build predicate to test if we're still in the right radix
         IntPredicate withinBounds = radixBoundsFactory(8, 'o', 'O');
@@ -564,11 +565,6 @@ class Scanner {
 
     void assembleRadixNumberLexeme(int base, char b, char B) {
         assert ('0' == peek());
-        if (!(((b == peekNext()) || (B == peekNext()) || Character.isDigit(peekNext())))) {
-            // We're scanning a zero
-            currentLexeme.appendCodePoint(advance());
-            return;
-        }
         currentLexeme.appendCodePoint(advance());
         if ((b == peek()) || (B == peek())) { // octal formats make this optional :(
             currentLexeme.appendCodePoint(advance());

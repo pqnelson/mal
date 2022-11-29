@@ -285,7 +285,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber2() {
                 String lexeme = "-0.36787944117"; // -exp(-1)
@@ -300,7 +300,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber3() {
                 String lexeme = "123e45";
@@ -315,7 +315,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber4() {
                 String lexeme = "123e-45";
@@ -330,7 +330,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber5() {
                 String lexeme = "-123e-45";
@@ -345,7 +345,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-        
+
             @Test
         public void scanFloatNumber6() {
                 String lexeme = "-123e45";
@@ -360,7 +360,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber7() {
                 String lexeme = "0.123";
@@ -375,7 +375,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber8() {
                 String lexeme = "123.456";
@@ -390,7 +390,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanFloatNumber9() {
                 String lexeme = "-123.456";
@@ -422,7 +422,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanOctalNumber2() {
                 String lexeme = "0001";
@@ -436,7 +436,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanOctalNumber3() {
                 String lexeme = "0o7777777777n";
@@ -450,7 +450,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanOctalNumber4() {
                 String lexeme = "0o7654x";
@@ -466,7 +466,7 @@ public class ScannerTest
                 t = tokens.get(2);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanOctalNumber5() {
                 String lexeme = "015n";
@@ -481,7 +481,7 @@ public class ScannerTest
                 assertEquals(TokenType.EOF, t.type);
             }
         }
-        
+
         @Nested
         class hexadecimalTests {
             @Test
@@ -497,7 +497,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanHexadecimalNumber2() {
                 String lexeme = "0x00111";
@@ -511,7 +511,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanHexadecimalNumber3() {
                 String lexeme = "0x123456789ABCDEFn";
@@ -525,7 +525,7 @@ public class ScannerTest
                 t = tokens.get(1);
                 assertEquals(TokenType.EOF, t.type);
             }
-            
+
             @Test
             public void scanHexadecimalNumber4() {
                 String lexeme = "-0x123456789ABCDEFn";
@@ -541,8 +541,37 @@ public class ScannerTest
                 assertEquals(TokenType.EOF, t.type);
             }
         }
+
+        @Test
+        public void tryScanningOctalTest1() {
+            String lexeme = "0123987";
+            long expected =  123987L;
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            assertEquals(2, tokens.size());
+            Token t = tokens.get(0);
+            assertEquals(TokenType.NUMBER, t.type);
+            assertEquals(lexeme, t.lexeme);
+            assertEquals(expected, t.literal);
+            t = tokens.get(1);
+            assertEquals(TokenType.EOF, t.type);
+        }
+
+        @Test
+        public void tryScanningIntTest2() {
+            String lexeme = "1234e5";
+            double expected = 1234e5;
+            Scanner s = new Scanner(lexeme);
+            s.tryScanningInt();
+            List<Token> tokens = s.scanTokens();
+            assertEquals(1, tokens.size());
+            Token t = tokens.get(0);
+            assertEquals(TokenType.NUMBER, t.type);
+            assertEquals(lexeme, t.lexeme);
+            assertEquals(expected, t.literal);
+        }
     }
-    
+
     @Nested
     class TokenizeIdentifierTests {
         @Test
@@ -905,6 +934,21 @@ public class ScannerTest
             TokenType types[] = {TokenType.STRING, TokenType.EOF};
             for (int i=0; i < types.length; i++) {
                 assertEquals(types[i], tokens.get(i).type);
+            }
+            assertEquals(expected, tokens.get(0).lexeme);
+        }
+        @Test
+        public void stringTest3() {
+            String naive = "{:abc \"val1\" :def \"val2\"}";
+            String expected = StringEscapeUtils.escapeJava(naive);
+            String lexeme = "\n\""+expected+"\"";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            TokenType types[] = {TokenType.STRING, TokenType.EOF};
+            int lines[] = {2, 2};
+            for (int i=0; i < types.length; i++) {
+                assertEquals(types[i], tokens.get(i).type);
+                assertEquals(lines[i], tokens.get(i).line);
             }
             assertEquals(expected, tokens.get(0).lexeme);
         }

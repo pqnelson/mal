@@ -22,13 +22,18 @@
   <dependencies>
     <dependency>
         <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-params</artifactId>
+        <artifactId>junit-jupiter</artifactId>
         <version>5.9.1</version>
         <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.9.1</version>
+    </dependency>
+    <dependency>
         <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
+        <artifactId>junit-jupiter-params</artifactId>
         <version>5.9.1</version>
         <scope>test</scope>
     </dependency>
@@ -63,10 +68,9 @@
             </compilerArgs>
           </configuration>
         </plugin>
-
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M5</version>
+          <version>3.0.0-M7</version>
           <!--  <version>2.22.1</version> -->
           <configuration>
             <!-- <argLine>-Dfile.encoding=UTF-8</argLine> -->
@@ -74,9 +78,14 @@
             <!--
             <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
             -->
+            <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
           </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>3.0.0-M7</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
