@@ -24,7 +24,21 @@ import static com.github.pqnelson.TokenType.*;
 /**
  * Lisp reader, assembling an abstract syntax tree.
  *
- * As per tradition, we refer to the parser as the "reader".
+ * <p>As per tradition, we refer to the parser as the "reader".</p>
+ *
+ * <p>If you want to read a stream, the trick is to do something like the following:
+ * <pre>
+ *   BufferedReader resource = new BufferedReader(inputReader)) {
+ *   Scanner scanner = new Scanner(resource);
+ *   scanner.preferParsingNumbersAsFloats = parserPrefersFloats;
+ *   Reader reader = new Reader(scanner.scanTokens());
+ *   ArrayList<Expr> exprs = new ArrayList<Expr>();
+ *   while(!reader.isAtEnd()) {
+ *       exprs.add(reader.readForm());
+ *   }
+ *   // do something with the List exprs
+ * </pre>
+ * This will read all the forms in the input reader.</p>
  */
 class Reader {
     private final List<Token> tokens;
@@ -38,6 +52,16 @@ class Reader {
         this.tokenIterator = this.tokens.listIterator();
     }
 
+    /**
+     * Tokenize and parse a string.
+     *
+     * <p>Given a string of Lisp code, assemble the abstract syntax tree
+     * for it. This will read exactly <b>one</b> form from the string, no more.
+     * This is not a bug. It is how <em>all Lisps</em> work.</p>
+     *
+     * @param str A string containing an S-expression.
+     * @return The {@code Expr} encoded in the input string.
+     */
     public static final Expr readString(String str) {
         Scanner scanner = new Scanner(str);
         Reader reader = new Reader(scanner.scanTokens());
