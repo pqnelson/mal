@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,10 +27,12 @@ import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -218,6 +221,20 @@ public class CoreTest {
         @Test
         public void failingEqualityTest() {
             Seq args = new Seq();
+            args.conj(new Int(13));
+            args.conj(new Int(31));
+            Expr expected = Literal.F;
+            try {
+                assertEquals(expected, Core.equality(args));
+            } catch (Throwable ex) {
+                assertTrue(false, ex.getMessage());
+            }
+        }
+        @Test
+        public void failingEqualityWithMultipleArgsTest() {
+            Seq args = new Seq();
+            args.conj(new Int(13));
+            args.conj(new Int(13));
             args.conj(new Int(13));
             args.conj(new Int(31));
             Expr expected = Literal.F;
@@ -598,6 +615,303 @@ public class CoreTest {
     }
 
     @Nested
+    class SymbolConstructorTest {
+        @Test
+        public void symbolRequiresAtLeastOneArgTest() {
+            Seq args = new Seq();
+            try {
+                assertThrows(NoSuchMethodException.class,
+                             () -> Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolRequiresNoMoreThanOneArgTest() {
+            Seq args = new Seq();
+            args.conj(new Str("symbol"));
+            args.conj(new Str("test"));
+            try {
+                assertThrows(NoSuchMethodException.class,
+                         () -> Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolOfSymbolTest1() {
+            Expr expected = new Symbol("symbol");
+            Seq args = new Seq();
+            args.conj(new Symbol("symbol"));
+            try {
+                assertEquals(expected, Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolOfSymbolShouldBeIdenticalTest() {
+            Expr expected = new Symbol("symbol");
+            Seq args = new Seq();
+            args.conj(expected);
+            try {
+                assertTrue(expected==Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolOfKeywordTest1() {
+            String name = "keyword";
+            Expr expected = new Symbol(name);
+            Seq args = new Seq();
+            args.conj(new Keyword(name));
+            try {
+                assertEquals(expected, Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolOfStrTest1() {
+            Expr expected = new Symbol("symbol");
+            Seq args = new Seq();
+            args.conj(new Str("symbol"));
+            try {
+                assertEquals(expected, Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void symbolOfVectorFailsTest1() {
+            Expr expected = new Symbol("symbol");
+            Seq args = new Seq();
+            args.conj(new Vector());
+            try {
+                assertThrows(IllegalArgumentException.class,
+                             () -> Core.symbol(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+    }
+
+    @Nested
+    class KeywordConstructorTest {
+        @Test
+        public void keywordRequiresAtLeastOneArgTest() {
+            Seq args = new Seq();
+            try {
+                assertThrows(NoSuchMethodException.class,
+                             () -> Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void keywordRequiresNoMoreThanOneArgTest() {
+            Seq args = new Seq();
+            args.conj(new Str("symbol"));
+            args.conj(new Str("test"));
+            try {
+                assertThrows(NoSuchMethodException.class,
+                         () -> Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void keywordOfSymbolTest1() {
+            Expr expected = new Keyword("symbol-arg");
+            Seq args = new Seq();
+            args.conj(new Symbol("symbol-arg"));
+            try {
+                assertEquals(expected, Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void keywordOfKeywordShouldBeIdenticalTest() {
+            Expr expected = new Keyword("expected-symbol");
+            Seq args = new Seq();
+            args.conj(expected);
+            try {
+                assertTrue(expected==Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void keywordOfStringTest1() {
+            String name = "keyword";
+            Expr expected = new Keyword(name);
+            Seq args = new Seq();
+            args.conj(new Str(name));
+            try {
+                assertEquals(expected, Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void keywordOfVectorFailsTest1() {
+            Expr expected = new Symbol("symbol");
+            Seq args = new Seq();
+            args.conj(new Vector());
+            try {
+                assertThrows(IllegalArgumentException.class,
+                             () -> Core.keyword(args));
+            } catch (IllegalArgumentException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+    }
+
+    @Nested
+    public class PrintlnTest {
+        private final PrintStream standardOut = System.out;
+        private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+        @BeforeEach
+        public void setUp() {
+            System.setOut(new PrintStream(outputStreamCaptor));
+        }
+
+        @AfterEach
+        public void tearDown() {
+            System.setOut(standardOut);
+        }
+
+        @Test
+        public void printlnNilTest() {
+            String expected = "nil";
+            Printer p = new Printer();
+            Seq args = new Seq();
+            args.conj(Literal.NIL);
+            try {
+                Core.println(args);
+                assertEquals(expected, outputStreamCaptor.toString().trim());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void printlnTrueTest() {
+            String expected = "true";
+            Printer p = new Printer();
+            Seq args = new Seq();
+            args.conj(Literal.T);
+            try {
+                Core.println(args);
+                assertEquals(expected, outputStreamCaptor.toString().trim());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void printlnFalseTest() {
+            String expected = "false";
+            Printer p = new Printer();
+            Seq args = new Seq();
+            args.conj(Literal.F);
+            try {
+                Core.println(args);
+                assertEquals(expected, outputStreamCaptor.toString().trim());
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+    }
+
+    @Nested
+    public class PrnTest {
+        private final PrintStream standardOut = System.out;
+        private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+        @BeforeEach
+        public void setUp() {
+            System.setOut(new PrintStream(outputStreamCaptor));
+        }
+
+        @AfterEach
+        public void tearDown() {
+            System.setOut(standardOut);
+        }
+
+        @Test
+        public void prnNilTest() {
+            Seq args = new Seq();
+            args.conj(Literal.NIL);
+            try {
+                Core.prn(args);
+                assertEquals(Core.pr_str(args),
+                             new Str(outputStreamCaptor.toString().trim()));
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+
+        @Test
+        public void prnTrueTest() {
+            Seq args = new Seq();
+            args.conj(Literal.T);
+            try {
+                Core.prn(args);
+                assertEquals(Core.pr_str(args),
+                             new Str(outputStreamCaptor.toString().trim()));
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+
+        @Test
+        public void prnFalseTest() {
+            Seq args = new Seq();
+            args.conj(Literal.F);
+            try {
+                Core.prn(args);
+                assertEquals(Core.pr_str(args),
+                             new Str(outputStreamCaptor.toString().trim()));
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+
+        @Test
+        public void prnTest1() {
+            Seq args = new Seq();
+            Vector v = new Vector();
+            v.conj(new Int(1));
+            v.conj(new Str("bcd"));
+            v.conj(new Float(45.67e8));
+            v.conj(new Map());
+            args.conj(v);
+            try {
+                Printer p = new Printer();
+                Core.prn(args);
+                assertEquals(Core.pr_str(args),
+                             new Str(outputStreamCaptor.toString().trim()));
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+    }
+
+    @Nested
     public class AssocTest {
         @Test
         public void assocRequiresAtLeastThreeArgs1Test() {
@@ -632,6 +946,22 @@ public class CoreTest {
             args.conj(new Keyword("foo"));
             assertThrows(NoSuchMethodException.class,
                          () -> Core.assoc(args));
+        }
+        @Test
+        public void assocProducesANewMapTest() {
+            Map m = new Map();
+            Keyword k = new Keyword("foobar");
+            Int val = new Int(3);
+            Seq args = new Seq();
+            args.conj(m);
+            args.conj(k);
+            args.conj(val);
+            try {
+                Expr result = Core.assoc(args);
+                assertTrue(m != result);
+            } catch (NoSuchMethodException e) {
+                assertTrue(false, e.getMessage());
+            }
         }
     }
 

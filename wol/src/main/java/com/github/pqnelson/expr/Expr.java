@@ -5,9 +5,6 @@ package com.github.pqnelson.expr;
  *
  * This more or less corresponds to "types.js".
  *
- * @TODO HashMap
- * @TODO Set
- * @TODO Atom(?)
  */
 public abstract class Expr {
     public abstract <T> T accept(Visitor<T> visitor);

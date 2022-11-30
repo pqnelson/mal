@@ -27,9 +27,21 @@ import static com.github.pqnelson.TokenType.*;
 /**
  * A simple scanner to produce {@code Token} instances.
  *
- * @see {@link https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/Scanner.java}
+ * <p>This is probably the most complex code in the codebase. We
+ * tokenize an input stream while keeping track of the position
+ * information, so we can inform the user where to locate any bugs in
+ * their code. If we were callous and omitted this information, we could
+ * have collapsed the Scanner and Reader into one class with regex
+ * magic.</p>
+ *
+ * <p>The basic flow is disarmingly simple: the constructor waits for the user
+ * to ask for {@link scanTokens()}, which iteratively invokes {@link scanToken()}
+ * until the input source is exhausted. If no input errors were found, then a
+ * list of {@link Token} objects is returned.</p>
+ *
+ * @see <a href="https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/Scanner.java">Scanner.java</a>
  */
-class Scanner {
+public class Scanner {
     private final List<Token> tokens = new ArrayList<Token>();
     private final BufferedReader source;
     @VisibleForTesting
@@ -222,7 +234,9 @@ class Scanner {
     /**
      * Tokenize the input stream.
      *
-     * If successful, its last element will always be an EOF Token.
+     * <p>If successful, its last element will always be an EOF Token.</p>
+     *
+     * @return A list of {@code Token} objects obtained from lexing the given source.
      */
     public List<Token> scanTokens() {
         if (!tokens.isEmpty()) return tokens;
@@ -260,22 +274,36 @@ class Scanner {
         tokens.add(new Token(type, lexeme, null, startLine));
     }
 
-    private void scanToken() {
-        int cp = peek();
-        // skip whitespace
-        if (Scanner.isSpace(cp) || ',' == cp) {
-            advance();
-            return;
-        }
-        if (Scanner.isNewline(cp)) {
-            advance();
-            line++;
-            return;
-        }
-        // otherwise, consume the character
-        // currentLexeme.appendCodePoint(cp);
-        char c = Character.toChars(cp)[0];
-        switch(c) {
+    private boolean skipWhitespace() {
+        boolean result;
+        do {
+            result = false;
+            while (Scanner.isSpace(peek()) || ',' == peek()) {
+                advance();
+                result = true;
+            }
+            if (Scanner.isNewline(peek())) {
+                advance();
+                line++;
+                result = true;
+            }
+            start = current;
+            startLine = line;
+        } while (result && !isAtEnd());
+        return result;
+    }
+
+    /**
+     * Scan the stream for the next token, pushing it to the growing list of tokens.
+     *
+     * <p>Basically this skips all possible whitespace, then delegates
+     * the flow to helper functions based on the top of the stream.</p>
+     */
+    void scanToken() {
+        skipWhitespace();
+        if (isAtEnd()) return;
+        char c = Character.toChars(peek())[0];
+        switch(peek()) {
         case ';': comment(); break;
         case '(': pushToken(LEFT_PAREN); break;
         case ')': pushToken(RIGHT_PAREN); break;
@@ -316,10 +344,9 @@ class Scanner {
         } while (!isNewline(cp) && !isAtEnd());
     }
 
+    // @TODO handle unescaping the string.
     /**
      * Tokenize a string, removing the quotation mark delimiters.
-     *
-     * @TODO handle unescaping the string.
      */
     @VisibleForTesting
     void string() {
@@ -331,9 +358,7 @@ class Scanner {
             currentLexeme.appendCodePoint(cp);
             if ('\\' == cp && '"' == peek()) {
                 currentLexeme.appendCodePoint(advance());
-                //} else {
             }
-                // }
         }
 
         if (isAtEnd()) {
@@ -356,10 +381,10 @@ class Scanner {
                 || isIdentifierLeadingChar(c));
     }
 
+    // @TODO munge names? Or handle unicode?
     /**
      * Tokenize an identifier.
      *
-     * @TODO munge names? Or handle unicode?
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers}
      */
     @VisibleForTesting
@@ -377,7 +402,7 @@ class Scanner {
     /**
      * Tokenize a keyword.
      *
-     * The lexeme is the keyword name (i.e., chops off the leading colon).
+     * <p>The lexeme is the keyword name (i.e., chops off the leading colon).</p>
      */
     @VisibleForTesting
     void keyword() {
@@ -394,18 +419,61 @@ class Scanner {
     /**
      * Tokenize a number.
      *
-     * A number can look like:
-     * <blockquote>{@code
-     *   number ::= '0[bBxXoO]\d+'             --- written in specific radix
-     *           |  '0[bBxXoO]\d+n'            --- bigint in specific radix
-     *           |  '0\d+'                     --- octal literal
-     *           |  '\d+\\.?\d+'               --- floating point
-     *           |  '\d+\\.?\d+[eE][+-]?\d+'   --- floating point with exponent
-     *           |  '[+-]\d+'                  --- integer literal
-     *           |  '[+-]\d+n'                 --- "big integer" literal
-     * }</blockquote>
-     * The default assumption is to treat a number as if it were floating
-     * point.
+     * <p>A number can look like, using the following BNF-ish grammar:</p>
+     * <blockquote>
+     * <dl>
+     * <dt><i>FloatValue:</i>
+     * <dd><i>Sign<sub>opt</sub></i> {@code [0-9]+ . [0-9]+}
+     * <dd><i>Sign<sub>opt</sub></i> {@code [0-9]+ [eE] [e-9]+}
+     * <dd><i>Sign<sub>opt</sub></i> {@code [0-9]+ . [0-9]+ [eE] [e-9]+}
+     * </dl>
+     * <dl>
+     * <dt><i>BinaryLiteral:</i>
+     * <dd><i>Sign<sub>opt</sub></i> {@code 0 [bB] [01]+}
+     * <dt><i>OctalLiteral:</i>
+     * <dd><i>Sign<sub>opt</sub></i> {@code 0 [0-7]+}
+     * <dd><i>Sign<sub>opt</sub></i> {@code 0 [oO] [0-7]+}
+     * <dt><i>HexadecimalLiteral:</i>
+     * <dd><i>Sign<sub>opt</sub></i> {@code 0 [xX] [0-9a-fA-F]+}
+     * <dt><i>SignedInteger</i>
+     * <dd><i>Sign<sub>opt</sub></i> {@code 0}
+     * <dd><i>Sign<sub>opt</sub></i> {@code [1-9][0-9]+}
+     * <dt><i>NumberInteger</i>
+     * <dd><i>BinaryLiteral</i>
+     * <dd><i>OctalLiteral</i>
+     * <dd><i>HexadecimalLiteral</i>
+     * <dd><i>SignedInteger</i>
+     * <dt><i>BigInteger</i>
+     * <dd><i>NumberInteger</i> {@code n}
+     * <dt><i>NumericLiteral</i>
+     * <dd><i>NumberInteger</i>
+     * <dd><i>BigInteger</i>
+     * <dd><i>Float</i>
+     * </dl>
+     * </blockquote>
+     * <p>Where <i>Sign<sub>opt</sub></i> is an optional {@code +} or {@code -}.
+     * A more readily consumable version of these statements:</p>
+     * <pre>
+     *   sign?       ::= '[+-]?'
+     *   digits      ::= '[0-9]+'
+     *   binary      ::= '0[bB][01]+'
+     *   octal       ::= '0[oO]?[0-7]+'
+     *   hexadecimal ::= '0[xX][0-9a-fA-F]+'
+     *   integer  ::= digits
+     *             |  binary
+     *             |  octal
+     *             |  hexadecimal
+     *   bigint   ::= integer 'n'    --- an integer literal suffixed by 'n'
+     *   exponent ::= '[eE]' sign? digits
+     *   float  ::= digits '.' digits
+     *           |  digits '.' digits exponent
+     *           |  digits exponent
+     *   number ::= sign? integer
+     *           |  sign? bigint
+     *           |  sign? float
+     * </pre>
+     * <p>The default assumption is to treat a number as if it were floating
+     * point.</p>
      */
     @VisibleForTesting
     void number() {
@@ -439,8 +507,16 @@ class Scanner {
      * as double-precision floats? ({@code true} is "yes, follow old-school JS")
      */
     public boolean preferParsingNumbersAsFloats = true;
+
     /**
      * Tokenize a number as a double.
+     *
+     * <p>We first try to tokenize the Mantissa, with {@code floatMantissa()}
+     * then check if there's an exponent part with {@code floatExponent()}.</p>
+     *
+     * <p>If it turns out this is an integer, then we parse the lexeme as an
+     * integer token <em>unless</em> the {@code preferParsingNumberAsFloat}
+     * flag has been set to {@code true}.</p>
      */
     void floatingPointNumber() {
         boolean mustParseAsFloat = floatMantissa();

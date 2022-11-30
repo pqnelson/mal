@@ -19,6 +19,17 @@ public class RT {
     static final Keyword TAG_KEY = new Keyword("tag");
     // This is the macro delegated by caret reader macros
     /**
+     * Read a caret to a metadata binding instruction.
+     *
+     * <p>This uses a "secret" macro to bind a keyword as metadata.
+     * Specifically, {@code (def ^:key term val)} means, roughly,
+     * {@code (def (with-meta term {:key true}) val)}.</p>
+     *
+     * <p>If we prefix a symbol or a string with a caret, then we set the
+     * {@code tag} metadata to the given symbol. For example,
+     * {@code (def ^my-tag term val)} means roughly
+     * {@code (def (with-meta term {:tag my-tag}) val)}.</p>
+     *
      * @see {@link https://github.com/clojure/clojure/blob/clojure-1.10.1/src/jvm/clojure/lang/LispReader.java#L943-L986}
      */
     public static final Fun metaReader =

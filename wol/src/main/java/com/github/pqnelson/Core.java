@@ -132,6 +132,17 @@ public class Core {
         throw new NoSuchMethodException("seq called on unknown type "+arg.type());
     }
 
+    /**
+     * Produce a list from the given argument.
+     *
+     * <p>Empty lists, empty maps, and empty vectors all yield {@code nil}.</p>
+     *
+     * @param args - The parameters as a list.
+     * @return Either a {@code Seq} instance or nil.
+     * @throws NoSuchMethodException if given anything other than a
+     * {@code Seq}, {@code Literal.NIL}, {@code Vector}, {@code Map}, or
+     * {@code String} object.
+     */
     public static Expr seq(Seq args) throws NoSuchMethodException {
         checkArity(1, args, "seq");
         return _seqArg(args.first());
@@ -147,9 +158,8 @@ public class Core {
     public static Expr rest(Seq args) throws NoSuchMethodException {
         checkArity(1, args, "rest");
         Expr arg = _seqArg(args.first());
-        if (arg.isList()) return ((Seq)arg).slice(1);
         if (arg.isNil()) return arg;
-        throw new NoSuchMethodException("rest called on unknown type "+arg.type());
+        return ((Seq)arg).slice(1);
     }
 
     public static Expr nth(Seq args) throws NoSuchMethodException {
@@ -160,11 +170,10 @@ public class Core {
         int i = ((Int)args.get(1)).value().intValue();
         Expr arg = args.first();
         Expr defaultValue = args.get(2, Literal.NIL);
-        if (arg.isMap() || arg.isString()) arg = _seqArg(arg);
         if (arg.isNil()) return defaultValue;
-        if (arg.isList()) return ((Seq)arg).get(i, defaultValue);
+        if (arg.isMap() || arg.isString()) arg = _seqArg(arg);
         if (arg.isVector()) return ((Vector)arg).get(((Int)args.get(1)), defaultValue);
-        throw new NoSuchMethodException("nth called on unknown type "+arg.type());
+        return ((Seq)arg).get(i, defaultValue);
     }
 
     public static Expr concat(Seq args) throws NoSuchMethodException {
