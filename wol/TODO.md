@@ -1,5 +1,12 @@
 - [ ] Unit test the evaluator thoroughly (or, at all)
-  - [ ] Test `keys` and `vals`
+  - [X] Test `keys` and `vals`
+  - [X] Test functions more, much much more.
+  - [X] `let`
+  - [X] `if`
+  - [ ] `macroexpand`
+  - [ ] `quasiquote-expand`
+  - [ ] `try`
+
 - [ ] Add more documentation
 - [ ] Add an `Emit` class to emit Javascript for some Lisp code.
 - [ ] The reader should convert tokens to expressions in a better

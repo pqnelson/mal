@@ -24,7 +24,8 @@ public class FunTest
     public void cloneTest1() {
         Seq body = new Seq();
         body.conj(Literal.T);
-        Fun constantlyTrue = new Fun((args) -> Literal.T, Vector.EMPTY, body);
+        Vector params = new Vector();
+        Fun constantlyTrue = new Fun((args) -> Literal.T, params, body);
         Fun clown = new Fun(constantlyTrue);
         assertTrue(clown.equals(constantlyTrue));
     }
@@ -32,7 +33,8 @@ public class FunTest
     public void cloneTest2() {
         Seq body = new Seq();
         body.conj(Literal.T);
-        Fun constantlyTrue = new Fun((args) -> Literal.T, Vector.EMPTY);
+        Vector params = new Vector();
+        Fun constantlyTrue = new Fun((args) -> Literal.T, params);
         Fun clown = new Fun(constantlyTrue.f, constantlyTrue.params, body);
         assertTrue(clown.equals(constantlyTrue));
     }
@@ -40,8 +42,39 @@ public class FunTest
     public void hasSameImplementationTest1() {
         Seq body = new Seq();
         body.conj(Literal.T);
-        Fun constantlyTrue = new Fun((args) -> Literal.T, Vector.EMPTY);
+        Vector params = new Vector();
+        Fun constantlyTrue = new Fun((args) -> Literal.T, params);
         Fun clown = new Fun(constantlyTrue.f, constantlyTrue.params, body);
         assertTrue(clown.hasSameImplementation(constantlyTrue));
+    }
+
+    @Test
+    public void toStringTest1() {
+        String expected = "(fn* [] (+ 1 2))";
+        Int x = new Int(1);
+        Int y = new Int(2);
+        Vector params = new Vector();
+        Seq body = new Seq();
+        body.conj(new Symbol("+"));
+        body.conj(x);
+        body.conj(y);
+        Fun f = new Fun(null, params, body);
+        assertEquals(expected, f.toString());
+    }
+
+    @Test
+    public void toStringTest2() {
+        String expected = "(fn* [x y] (+ x y))";
+        Symbol x = new Symbol("x");
+        Symbol y = new Symbol("y");
+        Vector params = new Vector();
+        params.conj(x);
+        params.conj(y);
+        Seq body = new Seq();
+        body.conj(new Symbol("+"));
+        body.conj(x);
+        body.conj(y);
+        Fun f = new Fun(null, params, body);
+        assertEquals(expected, f.toString());
     }
 }

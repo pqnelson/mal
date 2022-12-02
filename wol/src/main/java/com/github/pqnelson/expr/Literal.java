@@ -10,7 +10,7 @@ import static com.github.pqnelson.TokenType.NUMBER;
 
 public class Literal extends Expr {
     public final Token token;
-    public static final Literal NIL = new Literal(new Token(TokenType.NIL));
+    public static final Literal NIL = new Literal(new Token(TokenType.NIL, "nil", null));
     public static final Literal F = new Literal(new Token(TokenType.FALSE, "false", false));
     public static final Literal T = new Literal(new Token(TokenType.TRUE, "true", true));
     public static final Literal ZERO = new Int(0L);
@@ -58,7 +58,8 @@ public class Literal extends Expr {
         if (null == obj) return false;
         if (obj.getClass() != this.getClass()) return false;
         Literal rhs = (Literal)obj;
-        return (this.token.type == rhs.token.type) && (this.value().equals(rhs.value()));
+        return (this.token.type == rhs.token.type) &&
+            (null == this.value() ? null == rhs.value() : (this.value().equals(rhs.value())));
     }
     @Override
     public  int hashCode() {

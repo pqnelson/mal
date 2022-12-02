@@ -14,7 +14,7 @@ public enum TokenType {
     IDENTIFIER, NUMBER, STRING, KEYWORD,
 
     // special forms
-    DEF, DO, FN_STAR, IF, LET_STAR,
+    DEF, DEFMACRO, DO, FN_STAR, IF, LET_STAR,
     NIL, TRUE, FALSE,
 
     EOF

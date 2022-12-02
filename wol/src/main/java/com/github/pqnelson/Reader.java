@@ -103,10 +103,34 @@ class Reader {
         if (isAtEnd()) return null;
 
         switch(token.type) {
-        case QUOTE:
-        case BACKTICK:
-        case UNQUOTE:
-        case SPLICE:
+        case QUOTE: {
+            next();
+            Seq result = new Seq();
+            result.conj(Symbol.QUOTE);
+            result.conj(readForm());
+            return result;
+        }
+        case BACKTICK: {
+            next();
+            Seq result = new Seq();
+            result.conj(Symbol.QUASIQUOTE);
+            result.conj(readForm());
+            return result;
+        }
+        case UNQUOTE: {
+            next();
+            Seq result = new Seq();
+            result.conj(Symbol.UNQUOTE);
+            result.conj(readForm());
+            return result;
+        }
+        case SPLICE: {
+            next();
+            Seq result = new Seq();
+            result.conj(Symbol.SPLICE);
+            result.conj(readForm());
+            return result;
+        }
         case WITH_META: {
             next();
             Seq result = new Seq();
@@ -203,18 +227,13 @@ class Reader {
     Expr readAtom() {
         final Token token = this.next();
         switch(token.type) {
-        case KEYWORD:
-            return new Keyword(token);
-        case NUMBER:
-            return number(token, token.literal);
-        case STRING:
-            return new Str(token);
-        case NIL:
-        case TRUE:
-        case FALSE:
-            return new Literal(token);
-        default:
-            return new Symbol(token);
+        case KEYWORD: return new Keyword(token);
+        case NUMBER:  return number(token, token.literal);
+        case STRING:  return new Str(token);
+        case NIL:     return Literal.NIL;
+        case TRUE:    return Literal.T;
+        case FALSE:   return Literal.F;
+        default:      return new Symbol(token);
         }
     }
 }

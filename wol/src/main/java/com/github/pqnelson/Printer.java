@@ -18,7 +18,7 @@ import com.github.pqnelson.expr.Visitor;
 /**
  * A String printer for expressions.
  */
-class Printer implements Visitor<String> {
+public class Printer implements Visitor<String> {
     /**
      * "Readable" here means "We will handoff to System.out.println".
      */
@@ -33,19 +33,34 @@ class Printer implements Visitor<String> {
     }
 
     @Override
-    public String visitFun(Fun expr) {
-        return expr.toString();
+    public String visitFun(Fun f) {
+        if (f.isInterpreted()) {
+            StringBuffer buf = new StringBuffer("(fn* ");
+            if(!f.name().equals("")) {
+                buf.append(f.name());
+                buf.append(" ");
+            }
+            buf.append(f.visitParams(this));
+            buf.append(" ");
+            buf.append(f.visitBody(this));
+            buf.append(")");
+            return buf.toString();
+        } else {
+            return f.toObfuscatedString();
+        }
     }
 
     @Override
     public String visitVector(Vector vec) {
         StringBuffer buf = new StringBuffer();
         buf.append("[");
-        for (Expr e : vec) {
-            buf.append(e.accept(this));
-            buf.append(" ");
+        if (!vec.isEmpty()) {
+            for (Expr e : vec) {
+                buf.append(e.accept(this));
+                buf.append(" ");
+            }
+            buf.deleteCharAt(buf.length() - 1);
         }
-        buf.deleteCharAt(buf.length() - 1);
         buf.append("]");
         return buf.toString();
     }
@@ -54,11 +69,13 @@ class Printer implements Visitor<String> {
     public String visitSeq(Seq seq) {
         StringBuffer buf = new StringBuffer();
         buf.append("(");
-        for (Expr e : seq) {
-            buf.append(e.accept(this));
-            buf.append(" ");
+        if (!seq.isEmpty()) {
+            for (Expr e : seq) {
+                buf.append(e.accept(this));
+                buf.append(" ");
+            }
+            buf.deleteCharAt(buf.length() - 1);
         }
-        buf.deleteCharAt(buf.length() - 1);
         buf.append(")");
         return buf.toString();
     }

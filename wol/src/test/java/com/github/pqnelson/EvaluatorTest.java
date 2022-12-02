@@ -44,7 +44,7 @@ import java.io.IOException;
  * is, but it seems like it would require trusting various functions to work
  * as expected...which is the point of this test suite!
  */
-class EvaluatorTest {
+public class EvaluatorTest {
 
     static InputStream resource(String resourceName) {
         return EvaluatorTest.class.getClassLoader().getResourceAsStream(resourceName);
@@ -82,8 +82,23 @@ class EvaluatorTest {
         }
     }
 
+    @Test
+    public void quasiquoteOfEmptyListTest() {
+        try {
+            Expr expected = new Seq();
+            Env env = Evaluator.initialEnv();
+            Scanner scanner = new Scanner("`()");
+            scanner.preferParsingNumbersAsFloats = false;
+            Reader reader = new Reader(scanner.scanTokens());
+            Expr result = Evaluator.eval(reader.readForm(), env);
+            assertEquals(expected, result);
+        } catch (Throwable e) {
+            assertTrue(false, "Throwable "+e.toString()+" thrown");
+        }
+    }
+
     @Nested
-    class def1 {
+    public class def1Tests {
         static Env env;
         @BeforeAll
         static void loadDef1() throws Throwable {
@@ -92,13 +107,13 @@ class EvaluatorTest {
         }
 
         @Test
-        void evalTest1() {
+        public void evalTest1() {
             Symbol foo = new Symbol("foo");
             assertEquals(env, env.find(foo));
         }
 
         @Test
-        void evalTest2() {
+        public void evalTest2() {
             Float val = new Float(13);
             Symbol foo = new Symbol("foo");
             assertEquals(val, env.get(foo));
@@ -106,7 +121,7 @@ class EvaluatorTest {
     }
 
     @Nested
-    class def2 {
+    public class def2Tests {
         static Env env;
         @BeforeAll
         static void loadDef2() throws Throwable {
@@ -115,50 +130,50 @@ class EvaluatorTest {
         }
 
         @Test
-        void evalDef2Test1() {
+        public void evalDef2Test1() {
             Symbol x = new Symbol("x1");
             Int val = new Int(3);
             assertEquals(val, env.get(x));
         }
 
         @Test
-        void evalDef2Test2() {
+        public void evalDef2Test2() {
             Symbol x = new Symbol("x2");
             Int val = new Int(11);
             assertEquals(val, env.get(x));
         }
         @Test
-        void evalDef2Test3() {
+        public void evalDef2Test3() {
             Symbol x = new Symbol("x3");
             Int val = new Int(8);
             assertEquals(val, env.get(x));
         }
         @Test
-        void evalDef2Test4() {
+        public void evalDef2Test4() {
             Symbol x = new Symbol("x4");
             Int val = new Int(2);
             assertEquals(val, env.get(x));
         }
         @Test
-        void evalDef2Test5() {
+        public void evalDef2Test5() {
             Symbol x = new Symbol("x5");
             Int val = new Int(1010L);
             assertEquals(val, (Int)env.get(x));
         }
         @Test
-        void evalDef2Test6() {
+        public void evalDef2Test6() {
             Symbol x = new Symbol("x6");
             Int val = new Int(-18L);
             assertEquals(val, (Int)env.get(x));
         }
         @Test
-        void evalDef2Test7() {
+        public void evalDef2Test7() {
             Symbol x = new Symbol("x7");
             Int val = new Int(-994L);
             assertEquals(val, (Int)env.get(x));
         }
         @Test
-        void evalDef2Test8() {
+        public void evalDef2Test8() {
             Symbol x = new Symbol("x8");
             Vector val = new Vector();
             val.conj(new Int(1));
@@ -169,7 +184,7 @@ class EvaluatorTest {
     }
 
     @Nested
-    class def3 {
+    public class def3Tests {
         static Env env;
         @BeforeAll
         static void loadDef3() throws Throwable {
@@ -177,44 +192,44 @@ class EvaluatorTest {
             env = loadResource("def3.wol", false);
         }
         @Test
-        void evalDef3Test1() {
+        public void evalDef3Test1() {
             Symbol x = new Symbol("x1");
             Int val = new Int(3);
             assertEquals(val, env.get(x));
         }
         @Test
-        void evalDef3Test2() {
+        public void evalDef3Test2() {
             Symbol x = new Symbol("x2");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef3Test3() {
+        public void evalDef3Test3() {
             Symbol x = new Symbol("x3");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef3Test4() {
+        public void evalDef3Test4() {
             Symbol x = new Symbol("x4");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef3Test5() {
+        public void evalDef3Test5() {
             Symbol x = new Symbol("x5");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef3Test6() {
+        public void evalDef3Test6() {
             Symbol x = new Symbol("x6");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef3Test6_huh() {
+        public void evalDef3Test6_huh() {
             Symbol x = new Symbol("x6");
             assertTrue(env.get(x).isLiteral());
             assertTrue(Literal.exprIsTrue(env.get(x)));
         }
         @Test
-        void evalDef3Test7() {
+        public void evalDef3Test7() {
             Symbol x = new Symbol("x7");
             Int val = new Int(-1);
             assertEquals(val, env.get(x));
@@ -222,61 +237,63 @@ class EvaluatorTest {
     }
 
     @Nested
-    class def4 {
+    public class def4Tests {
         static Env env;
         @BeforeAll
         static void loadDef4() throws Throwable {
+            Evaluator.debug = false;
             env = loadResource("def4.wol", false);
         }
         @Test
-        void evalDef4Test1CheckType() {
+        public void evalDef4Test1CheckType() {
             Symbol x = new Symbol("x1");
             assertTrue(env.get(x).isMap());
         }
+
         @Test
-        void evalDef4Test1CheckSize() {
+        public void evalDef4Test1CheckSize() {
             Symbol x = new Symbol("x1");
             assertEquals(1, ((Map)env.get(x)).size());
         }
         @Test
-        void evalDef4Test1ContainsKey() {
+        public void evalDef4Test1ContainsKey() {
             Symbol x = new Symbol("x1");
             Keyword k = new Keyword("abcd");
             assertTrue(((Map)env.get(x)).contains(k));
         }
         @Test
-        void evalDef4Test1KeyIsBoundToVal() {
+        public void evalDef4Test1KeyIsBoundToVal() {
             Symbol x = new Symbol("x1");
             Int i = new Int(1234L);
             Keyword k = new Keyword("abcd");
             assertEquals(i, ((Map)env.get(x)).get(k));
         }
         @Test
-        void evalDef4Test2() {
+        public void evalDef4Test2() {
             Symbol x = new Symbol("x2");
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef4Test3() {
+        public void evalDef4Test3() {
             Symbol x = new Symbol("x3");
             assertEquals(Literal.F, env.get(x));
         }
         @ParameterizedTest
         @ValueSource(strings = {"x4-1", "x4-2", "x4-3", "x4-4", "x4-5",
                                 "x4-5", "x4-6", "x4-7", "x4-8"})
-        void evalDef4Test4(String subcase) {
+        public void evalDef4Test4(String subcase) {
             Symbol x = new Symbol(subcase);
             assertEquals(Literal.T, env.get(x), "Failed "+subcase);
         }
         @ParameterizedTest
         @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8})
-        void evalDef4Test5(int subcaseNumber) {
+        public void evalDef4Test5(int subcaseNumber) {
             String subcase = "x5-"+subcaseNumber;
             Symbol x = new Symbol(subcase);
             assertEquals(Literal.T, env.get(x), "Failed "+subcase);
         }
         @Test
-        void evalDef4Test6() {
+        public void evalDef4Test6() {
             Symbol s = new Symbol("s6");
             Symbol x = new Symbol("x6");
             Symbol ex = new Symbol("expected-x6");
@@ -284,7 +301,7 @@ class EvaluatorTest {
             assertEquals(Literal.T, env.get(x));
         }
         @Test
-        void evalDef4Test6what() {
+        public void evalDef4Test6what() {
             Symbol s = new Symbol("s6");
             Symbol x = new Symbol("x6");
             Symbol ex = new Symbol("expected-x6");
@@ -293,7 +310,7 @@ class EvaluatorTest {
         }
 
         @Test
-        void evalDef4Test7() {
+        public void evalDef4Test7() {
             Symbol s = new Symbol("s7");
             Symbol x = new Symbol("x7");
             Printer p = new Printer(true);
@@ -302,17 +319,267 @@ class EvaluatorTest {
         }
 
         @Test
-        void evalDef4Test8() {
+        public void evalDef4Test8() {
             Symbol s = new Symbol("s8");
             Symbol x = new Symbol("x8");
             Printer p = new Printer(true);
             assertEquals(env.get(x), new Str(env.get(s).accept(p)));
         }
         @Test
-        void evalDef4Test9() {
+        public void evalDef4Test9() {
             Symbol s = new Symbol("test9");
             Symbol x = new Symbol("x9");
             assertEquals(Literal.T, env.get(s));
         }
     }
+    @Nested
+    class FnTest {
+        static Env env;
+        @BeforeAll
+        static void loadFns() throws Throwable {
+            env = loadResource("fn.wol", false);
+            Evaluator.debug = false;
+        }
+        @Test
+        public void fun1Test() {
+            Symbol s = new Symbol("test1");
+            assertEquals(Literal.T, env.get(s));
+        }
+        @Test
+        public void fun2Test() {
+            Symbol s = new Symbol("test2");
+            Expr expected = new Int(0);
+            assertEquals(expected, env.get(s));
+        }
+        @Test
+        public void fun3Test() {
+            Symbol s = new Symbol("test3");
+            assertEquals(Literal.T, env.get(s));
+        }
+        @Test
+        public void fun4Test() {
+            Symbol s = new Symbol("test4");
+            Expr expected = new Int(24);
+            assertEquals(expected, env.get(s));
+        }
+        @Test
+        public void let1Test() {
+            Symbol s = new Symbol("let1");
+            assertEquals(new Int(3), env.get(s));
+        }
+        @Test
+        public void let2Test() {
+            Symbol s = new Symbol("let2");
+            assertEquals(new Int(9), env.get(s));
+        }
+        @Test
+        public void if1Test() {
+            Symbol s = new Symbol("if1");
+            Symbol x = new Symbol("x1");
+            Expr expected = new Keyword("fun");
+            assertEquals(expected, env.get(s));
+            assertEquals(new Int(0), env.get(x));
+        }
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 3, 4, 5})
+        public void ltTest(int i) {
+            Symbol s = new Symbol("lt"+i);
+            assertEquals(Literal.T, env.get(s), "Failed case "+i);
+        }
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 3, 4})
+        public void gtTest(int i) {
+            Symbol s = new Symbol("gt"+i);
+            assertEquals(Literal.T, env.get(s));
+        }
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 3, 4, 5})
+        public void leqTest(int i) {
+            Symbol s = new Symbol("leq"+i);
+            assertEquals(Literal.T, env.get(s), "Failed case "+i);
+        }
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 3, 4})
+        public void geqTest(int i) {
+            Symbol s = new Symbol("geq"+i);
+            assertEquals(Literal.T, env.get(s));
+        }
+        @ParameterizedTest
+        @ValueSource(strings = {"lt-fail", "leq-fail", "gt-fail", "geq-fail"})
+        public void failComparisonTests(String name) {
+            Symbol s = new Symbol(name);
+            assertEquals(Literal.F, env.get(s));
+        }
+
+    }
+    @Nested
+    class QuasiquoteTest {
+        static Env env;
+        @BeforeAll
+        static void loadQuasiquote() throws Throwable {
+            env = loadResource("quasiquote.wol", false);
+        }
+
+        @Test
+        public void simpleQuasiquoteTest1() {
+            Expr expected = Literal.NIL;
+            Symbol x = new Symbol("simple1");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void simpleQuasiquoteTest2() {
+            Expr expected = new Int(7);
+            Symbol x = new Symbol("simple2");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void simpleQuasiquoteTest3() {
+            Expr expected = new Symbol("a");
+            Symbol x = new Symbol("simple3");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void simpleQuasiquoteTest4() {
+            Expr expected = Literal.T;
+            Symbol x = new Symbol("simple4");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void seqQuasiquoteTest1() {
+            Seq expected = new Seq();
+            Symbol x = new Symbol("list1");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void seqQuasiquoteTest2() {
+            Seq expected = new Seq();
+            expected.conj(new Int(1));
+            expected.conj(new Int(2));
+            expected.conj(new Int(3));
+            Symbol x = new Symbol("list2");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void seqQuasiquoteTest3() {
+            Seq expected = new Seq();
+            expected.conj(new Symbol("a"));
+            Symbol x = new Symbol("list3");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void seqQuasiquoteTest4() {
+            Seq expected = new Seq();
+            expected.conj(new Int(1));
+            expected.conj(new Int(2));
+            Seq tmp = new Seq();
+            tmp.conj(new Int(3));
+            tmp.conj(new Int(4));
+            expected.conj(tmp);
+            Symbol x = new Symbol("list4");
+            assertEquals(expected, env.get(x));
+        }
+    }
+    @Nested
+    class UnquoteTest {
+        static Env env;
+        @BeforeAll
+        static void loadQuasiquote() throws Throwable {
+            Evaluator.debug = false;
+            env = loadResource("quasiquote.wol", false);
+            Evaluator.debug = false;
+        }
+        @Test
+        public void unquoteTest1() {
+            Expr expected = new Int(31);
+            Symbol x = new Symbol("unquote1");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void unquoteTest2() {
+            Expr expected = new Int(57);
+            Symbol x = new Symbol("unquote2");
+            assertEquals(expected, env.get(x));
+        }
+
+        @Test
+        public void unquoteTest3() {
+            Seq expected = new Seq();
+            expected.conj(new Int(1));
+            expected.conj(new Int(2));
+            Symbol x = new Symbol("unquote3");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void unquoteTest4() {
+            Expr expected = Literal.T;
+            Symbol x = new Symbol("unquote4");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void unquoteTest5() {
+            Seq expected = new Seq();
+            expected.conj(new Int(1));
+            expected.conj(new Int(1));
+            expected.conj(new Str("b"));
+            expected.conj(new Keyword("c"));
+            expected.conj(new Int(3));
+            Symbol x = new Symbol("unquote5");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void whenTest1() {
+            Seq expected = new Seq();
+            expected.conj(Symbol.IF);
+            expected.conj(Literal.T);
+            Seq tmp = new Seq();
+            tmp.conj(Symbol.DO);
+            Seq arg = new Seq();
+            arg.conj(new Symbol("+"));
+            arg.conj(new Int(1));
+            arg.conj(new Int(2));
+            tmp.conj(arg);
+            arg = new Seq();
+            arg.conj(new Symbol("*"));
+            arg.conj(new Int(3));
+            arg.conj(new Int(4));
+            tmp.conj(arg);
+            arg = new Seq();
+            arg.conj(new Symbol("/"));
+            arg.conj(new Int(8));
+            arg.conj(new Int(2));
+            tmp.conj(arg);
+            expected.conj(tmp);
+            expected.conj(Literal.NIL);
+            Symbol x = new Symbol("when1");
+            assertEquals(expected, env.get(x));
+        }
+        @Test
+        public void whenTest2() {
+            Expr expected = Literal.T;
+            Symbol x = new Symbol("when2");
+            assertEquals(expected, env.get(x));
+        }
+    }
+    @Nested
+    class MacrosTest {
+        static Env env;
+        @BeforeAll
+        static void loadMacros() throws Throwable {
+            env = loadResource("macros.wol", false);
+        }
+
+        @Test
+        public void macroExpandsToConstantTest() {
+            Expr expected = new Int(2);
+            Symbol t1 = new Symbol("t1");
+            assertEquals(expected, env.get(t1));
+        }
+    }
+    /*
+    */
 }

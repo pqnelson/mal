@@ -109,4 +109,13 @@ public class Float extends com.github.pqnelson.expr.Number {
     @Override public String type() {
         return "Float";
     }
+
+    @Override
+    public int compareTo(Number o) {
+        Number diff = this.subtract(o);
+        if (diff.isFloat())
+            return Double.valueOf(Math.signum(((Float)diff).value())).intValue();
+        if (diff.isBigInt()) return ((BigInt)diff).value().intValue();
+        return ((Int)diff).value().intValue();
+    }
 }

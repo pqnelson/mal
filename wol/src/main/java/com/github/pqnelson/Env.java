@@ -16,23 +16,14 @@ public class Env {
         this.outer = outer;
     }
 
-    public Env(Env outer, Seq vars, Seq exprs) {
-        assert (vars.size() == exprs.size());
-        this.outer = outer;
-        for (int i=0; i < vars.size(); i++) {
-            String s = ((Symbol)vars.get(i)).name();
-            if (s.equals("&")) {
-                String k = ((Symbol)vars.get(i+1)).name();
-                table.put(k, exprs.slice(i));
-                break;
-            } else {
-                table.put(s, exprs.get(i));
-            }
-        }
-    }
-
+    /**
+     * Extend an environment due to a function call or let-bindings.
+     *
+     * <p>Since these always use vectors for parameters (for functions) or
+     * for bindings (for {@code let*}), we always expect a vector of variables.
+     */
     public Env(Env outer, Vector vars, Seq exprs) {
-        assert (vars.size() == exprs.size());
+        // assert (vars.size() <= exprs.size());
         this.outer = outer;
         for (int i=0; i < vars.size(); i++) {
             String s = ((Symbol)vars.get(i)).name();

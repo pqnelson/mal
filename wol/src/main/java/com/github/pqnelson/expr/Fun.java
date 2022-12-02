@@ -3,6 +3,7 @@ package com.github.pqnelson.expr;
 import java.util.function.Function;
 
 import com.github.pqnelson.Env;
+import com.github.pqnelson.Printer;
 import com.github.pqnelson.Token;
 
 import com.github.pqnelson.annotations.VisibleForTesting;
@@ -15,12 +16,12 @@ import com.github.pqnelson.annotations.VisibleForTesting;
  */
 public class Fun extends Expr implements IObj {
     final Vector params;
-    final Seq body;
+    final Expr body;
     final Symbol name;
     private boolean macro;
     private Map meta = null;
     @VisibleForTesting
-    final IFn f;
+    IFn f;
 
     public Fun(IFn f) {
         this(f, null, null, null);
@@ -30,11 +31,11 @@ public class Fun extends Expr implements IObj {
         this(f, params, null, null);
     }
 
-    public Fun(IFn f, Vector params, Seq body) {
+    public Fun(IFn f, Vector params, Expr body) {
         this(f, params, body, null);
     }
 
-    public Fun(IFn f, Vector params, Seq body, Symbol funName) {
+    public Fun(IFn f, Vector params, Expr body, Symbol funName) {
         this.f = f;
         this.params = params;
         this.body = body;
@@ -105,6 +106,11 @@ public class Fun extends Expr implements IObj {
         this.macro = true;
     }
 
+    public void setIFn(IFn f) {
+        if (null == this.f)
+            this.f = f;
+    }
+
     public boolean isMacro() {
         return this.macro;
     }
@@ -129,18 +135,38 @@ public class Fun extends Expr implements IObj {
         return this.f.invoke(args);
     }
 
+    public Expr getBody() {
+        return this.body;
+    }
+
     @Override
     public <T> T accept(Visitor<T> visitor) {
         return visitor.visitFun(this);
     }
+    public <T> T visitParams(Visitor<T> visitor) {
+        return this.params.accept(visitor);
+    }
+    public <T> T visitBody(Visitor<T> visitor) {
+        return this.body.accept(visitor);
+    }
 
-    @Override
-    public String toString() {
+    public String toObfuscatedString() {
         if (null == name) {
             return "#function<"+(this.hashCode())+">";
         } else {
             return "#function<"+(this.name.name())+">";
         }
+    }
+
+    @Override
+    public String toString() {
+        if (null == body) return this.toObfuscatedString();
+        return Printer.print(this);
+    }
+
+    public String name() {
+        if (null == this.name) return "";
+        return this.name.name();
     }
 
     @Override public String type() {

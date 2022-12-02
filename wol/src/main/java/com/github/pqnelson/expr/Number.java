@@ -2,7 +2,7 @@ package com.github.pqnelson.expr;
 
 import com.github.pqnelson.Token;
 
-public abstract class Number extends Literal {
+public abstract class Number extends Literal implements Comparable<Number> {
     public Number(Token token) {
         super(token);
     }
@@ -14,7 +14,9 @@ public abstract class Number extends Literal {
     public boolean isInt() { return Int.class.isInstance(this); }
     public boolean isFloat() { return Float.class.isInstance(this); }
 
-    @Override public String type() {
+    @Override
+    public String type() {
         return "wol.Number";
     }
+    public abstract int compareTo(Number o);
 }

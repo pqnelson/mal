@@ -1,0 +1,5 @@
+(defmacro when [x & body]
+  `(if ~x (do ~@body) nil))
+
+(defmacro two [] 2)
+(def t1 (two))

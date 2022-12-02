@@ -6,7 +6,6 @@ import java.util.Iterator;
 
 public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
     private final HashMap<Expr, Expr> table;
-    public static final Map EMPTY = new Map();
     private Map meta = null;
 
     public Map() {
@@ -82,7 +81,6 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
     public int size() { return this.table.size(); }
 
     public Seq toSeq() {
-        if (this.isEmpty()) { return Seq.EMPTY; }
         Seq result = new Seq();
         for (java.util.Map.Entry<Expr, Expr> e : this.table.entrySet()) {
             Vector kv = new Vector();

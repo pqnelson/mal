@@ -262,4 +262,13 @@ public class ReaderTest
         assertThrows(java.util.InputMismatchException.class,
                      () -> Reader.readString(lexeme));
     }
+
+    @Test
+    public void readEmptyListTest() {
+        String lexeme = "`()";
+        Seq expected = new Seq();
+        expected.conj(Symbol.QUASIQUOTE);
+        expected.conj(new Seq());
+        assertEquals(expected, Reader.readString(lexeme));
+    }
 }

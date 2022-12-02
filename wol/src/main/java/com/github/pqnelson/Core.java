@@ -211,6 +211,82 @@ public class Core {
             return Literal.T;
         }
     }
+    public static Expr LT(Seq args) throws NoSuchMethodException {
+        switch (args.size()) {
+        case 0: return Literal.T;
+        case 1: return Literal.T;
+        case 2:
+            if (!args.get(0).isNumber() || !args.get(1).isNumber())
+                throw new NoSuchMethodException("< works on numbers");
+            return (((com.github.pqnelson.expr.Number)(args.get(0))).compareTo((com.github.pqnelson.expr.Number)(args.get(1))) < 0 ? Literal.T : Literal.F);
+        default:
+            for (int i = 0; i < args.size() - 1; i++) {
+                if (!args.get(i).isNumber() || !args.get(i+1).isNumber())
+                    throw new NoSuchMethodException("< works on numbers");
+                if (!(((com.github.pqnelson.expr.Number)(args.get(i))).compareTo((com.github.pqnelson.expr.Number)(args.get(i+1))) < 0)) {
+                    return Literal.F;
+                }
+            }
+            return Literal.T;
+        }
+    }
+    public static Expr LEQ(Seq args) throws NoSuchMethodException {
+        switch (args.size()) {
+        case 0: return Literal.T;
+        case 1: return Literal.T;
+        case 2:
+            if (!args.get(0).isNumber() || !args.get(1).isNumber())
+                throw new NoSuchMethodException("<= works on numbers");
+            return (((com.github.pqnelson.expr.Number)(args.get(0))).compareTo((com.github.pqnelson.expr.Number)(args.get(1))) <= 0 ? Literal.T : Literal.F);
+        default:
+            for (int i = 0; i < args.size() - 1; i++) {
+                if (!args.get(i).isNumber() || !args.get(i+1).isNumber())
+                    throw new NoSuchMethodException("<= works on numbers");
+                if (!(((com.github.pqnelson.expr.Number)(args.get(i))).compareTo((com.github.pqnelson.expr.Number)(args.get(i+1))) <= 0)) {
+                    return Literal.F;
+                }
+            }
+            return Literal.T;
+        }
+    }
+    public static Expr GT(Seq args) throws NoSuchMethodException {
+        switch (args.size()) {
+        case 0: return Literal.T;
+        case 1: return Literal.T;
+        case 2:
+            if (!args.get(0).isNumber() || !args.get(1).isNumber())
+                throw new NoSuchMethodException("> works on numbers");
+            return (((com.github.pqnelson.expr.Number)(args.get(0))).compareTo((com.github.pqnelson.expr.Number)(args.get(1))) > 0 ? Literal.T : Literal.F);
+        default:
+            for (int i = 0; i < args.size() - 1; i++) {
+                if (!args.get(i).isNumber() || !args.get(i+1).isNumber())
+                    throw new NoSuchMethodException("> works on numbers");
+                if (!(((com.github.pqnelson.expr.Number)(args.get(i))).compareTo((com.github.pqnelson.expr.Number)(args.get(i+1))) > 0)) {
+                    return Literal.F;
+                }
+            }
+            return Literal.T;
+        }
+    }
+    public static Expr GEQ(Seq args) throws NoSuchMethodException {
+        switch (args.size()) {
+        case 0: return Literal.T;
+        case 1: return Literal.T;
+        case 2:
+            if (!args.get(0).isNumber() || !args.get(1).isNumber())
+                throw new NoSuchMethodException(">= works on numbers");
+            return (((com.github.pqnelson.expr.Number)(args.get(0))).compareTo((com.github.pqnelson.expr.Number)(args.get(1))) >= 0 ? Literal.T : Literal.F);
+        default:
+            for (int i = 0; i < args.size() - 1; i++) {
+                if (!args.get(i).isNumber() || !args.get(i+1).isNumber())
+                    throw new NoSuchMethodException(">= works on numbers");
+                if (!(((com.github.pqnelson.expr.Number)(args.get(i))).compareTo((com.github.pqnelson.expr.Number)(args.get(i+1))) >= 0)) {
+                    return Literal.F;
+                }
+            }
+            return Literal.T;
+        }
+    }
     public static IFn nil_QMARK_ = predicateFactory("nil", Expr::isNil);
     public static IFn true_QMARK_ = predicateFactory("true", Literal::exprIsTrue);
     public static IFn false_QMARK_ = predicateFactory("false", Literal::exprIsFalse);
@@ -299,8 +375,9 @@ public class Core {
         throw new NoSuchMethodException("get applied to unexpected type '"+coll.type()+"'");
     }
     public static Expr assoc(Seq args) throws NoSuchMethodException {
-        if (3 > args.size()) throw new NoSuchMethodException("assoc requires at least a map, a key, a value; but received "+args.size()+" arguments");
-        if (1 != args.size() % 2) throw new NoSuchMethodException("assoc requires an even number of bindings");
+        if (args.size() < 3) throw new NoSuchMethodException("assoc requires at least a map, a key, a value; but received "+args.size()+" arguments");
+        int bindingsCount = args.size() - 1;
+        if (0 != bindingsCount % 2) throw new NoSuchMethodException("assoc requires an even number of bindings");
         Map map = new Map((Map)args.first());
         for (int i = 1; i < args.size(); i += 2) {
             map.assoc(args.get(i), args.get(i+1));
@@ -359,6 +436,9 @@ public class Core {
         Path file = Path.of(args.first().toString());
         String content = Files.readString(file);
         return new Str(content);
+    }
+    public static Expr list(Seq args) throws NoSuchMethodException {
+        return args;
     }
     // public static Expr (Seq args) throws NoSuchMethodException {}
 }

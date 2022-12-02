@@ -68,6 +68,7 @@ public class Scanner {
     static {
         keywords = new HashMap<>();
         keywords.put("def", DEF);
+        keywords.put("defmacro", DEFMACRO);
         keywords.put("do", DO);
         keywords.put("false", FALSE);
         keywords.put("fn*", FN_STAR);
@@ -293,6 +294,7 @@ public class Scanner {
         return result;
     }
 
+    private final char BACKTICK_CHAR = (char)60;
     /**
      * Scan the stream for the next token, pushing it to the growing list of tokens.
      *
@@ -311,8 +313,8 @@ public class Scanner {
         case ']': pushToken(RIGHT_BRACKET); break;
         case '{': pushToken(LEFT_BRACE); break;
         case '}': pushToken(RIGHT_BRACE); break;
-        case '\'': pushToken(QUOTE, "quote"); break;
         case '`': pushToken(BACKTICK, "quasiquote"); break;
+        case '\'': pushToken(QUOTE, "quote"); break;
         case '^': pushToken(WITH_META); break;
         case '"': string(); break;
         case ':': keyword(); break;
@@ -371,7 +373,7 @@ public class Scanner {
 
     @VisibleForTesting
     boolean isIdentifierLeadingChar(char c) {
-        return (Character.isLetter(c) || "_$*+!?<>=-/".indexOf(c) > -1) &&
+        return (Character.isLetter(c) || "&_$*+!?<>=-/".indexOf(c) > -1) &&
             !Character.isIdentifierIgnorable(c);
     }
 

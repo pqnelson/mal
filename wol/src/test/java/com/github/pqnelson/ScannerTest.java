@@ -853,6 +853,18 @@ public class ScannerTest
         }
 
         @Test
+        public void backtickEmptyListeTest() {
+            String lexeme = "`()";
+            Scanner s = new Scanner(lexeme);
+            List<Token> tokens = s.scanTokens();
+            TokenType types[] = {TokenType.BACKTICK, TokenType.LEFT_PAREN,
+                TokenType.RIGHT_PAREN, TokenType.EOF};
+            for (int i=0; i < types.length; i++) {
+                assertEquals(types[i], tokens.get(i).type);
+            }
+        }
+
+        @Test
         public void backtickWithSpliceTest() {
             String lexeme = "`(do ~@more stuff)";
             Scanner s = new Scanner(lexeme);

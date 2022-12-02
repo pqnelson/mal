@@ -1,0 +1,34 @@
+
+(def a (list 1 2))
+(def b (list 3 4))
+
+
+(def simple1 `nil)
+(def simple2 `7)
+(def simple3 `a)
+(def simple4 (= '{"a" b} `{"a" b} (hash-map "a" (symbol "b"))))
+
+(def list1 `())
+(def list2 `(1 2 3))
+(def list3 `(a))
+(def list4 `(1 2 (3 4)))
+
+(def unquote1 `~31)
+(def grothendieck-prime 57) ;p
+(def unquote2 `~grothendieck-prime)
+(def unquote3 `~a)
+(def unquote4 (= a `~a))
+;; (def test (= `{"a" ~a} {"a" a}))
+
+(def c '(1 "b" :c))
+
+(def unquote5 `(1 ~@c 3))
+(def condition true)
+(def body1 '((+ 1 2) (* 3 4) (/ 8 2)))
+
+(def when (fn* [test & body] `(if ~test (do ~@body) nil)))
+
+(def when1 (when condition '(+ 1 2) '(* 3 4) '(/ 8 2)))
+
+(def when2 (= (when condition '(+ 1 2) '(* 3 4) '(/ 8 2))
+             `(if ~condition (do ~@body1) nil)))

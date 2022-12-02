@@ -8,7 +8,6 @@ import java.util.List;
 
 public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
     final List<Expr> contents;
-    public static final Seq EMPTY = new Seq();
     private Map meta = null;
 
     public Seq() {
@@ -50,7 +49,7 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
         if (!this.contents.isEmpty()) {
             return this.get(0);
         } else {
-            return null;
+            return Literal.NIL;
         }
     }
 
@@ -60,9 +59,11 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
     }
 
     public Seq slice(int i) {
+        if (i >= this.size()) return new Seq();
         return new Seq(this.contents.subList(i, this.size()));
     }
     public Seq slice(int start, int end) {
+        if (start >= this.size()) return new Seq();
         return new Seq(this.contents.subList(start, end));
     }
 

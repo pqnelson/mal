@@ -11,7 +11,6 @@ import java.util.List;
 public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     final List<Expr> contents;
     private Map meta = null;
-    public final static Vector EMPTY = new Vector();
 
     public Vector() {
         this(new ArrayList<Expr>());
@@ -110,13 +109,15 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     public String toString() {
         StringBuffer buf = new StringBuffer();
         buf.append("[");
-        for (Expr e : this) {
-            buf.append(e.toString());
-            buf.append(" ");
+        if (!this.isEmpty()) {
+            for (Expr e : this) {
+                buf.append(e.toString());
+                buf.append(" ");
+            }
+            buf.deleteCharAt(buf.length() - 1);
         }
-        buf.deleteCharAt(buf.length() - 1);
         buf.append("]");
-        return buf.toString();
+        return buf.toString().trim();
     }
 
     @Override public String type() {

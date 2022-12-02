@@ -6,7 +6,13 @@ import com.github.pqnelson.TokenType;
 public class Symbol extends Expr implements IObj {
     final Token identifier;
     private Map meta = null;
-
+    public static final Symbol DO = new Symbol(new Token(TokenType.DO, "do"));
+    public static final Symbol FN_STAR = new Symbol(new Token(TokenType.FN_STAR, "fn*"));
+    public static final Symbol IF = new Symbol(new Token(TokenType.IF, "if"));
+    public static final Symbol QUASIQUOTE = new Symbol(new Token(TokenType.BACKTICK, "quasiquote"));
+    public static final Symbol QUOTE = new Symbol(new Token(TokenType.QUOTE, "quote"));
+    public static final Symbol SPLICE = new Symbol(new Token(TokenType.SPLICE, "splice"));
+    public static final Symbol UNQUOTE = new Symbol(new Token(TokenType.UNQUOTE, "unquote"));
     public Symbol(String name) {
         this.identifier = new Token(TokenType.IDENTIFIER, name);
     }

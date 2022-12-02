@@ -1,0 +1,47 @@
+(def test1 (= (+ 3 4)
+              ((fn* [a b] (+ a b)) 3 4)))
+(def test2 ((fn* [a] (+ a 1) (- a 1)) 1))
+(def test3 ((fn* [a & more] (list? more)) 1))
+;; recursive anonymous functions work!
+(def test4 ((fn* factorial [x]
+              (if (> x 0)
+                (* x (factorial (- x 1)))
+                1))
+            4))
+(def let1 (let* [f (fn* [] x)
+                 x 3]
+                 (f)))
+(def let2 (let* [x 3]
+            (+ x 1)
+            (- x 1)
+            (* x x)))
+
+;; Check the branch not taken really isn't executed
+(def x1 0)
+(def if1 (if false (def x1 1) :fun))
+
+
+(def lt1 (< 1 2.0 3 3.14159))
+(def lt2 (< 1 2.0))
+(def lt3 (< 2.0 3))
+(def lt4 (< 3))
+(def lt5 (<))
+(def gt1 (> 2 0 -0.333315))
+(def gt2 (> 2 1.999))
+(def gt3 (> 2))
+(def gt4 (>))
+(def geq1 (>= 2 0 -0.333315))
+(def geq2 (>= 2 1.999))
+(def geq3 (>= 2))
+(def geq4 (>=))
+
+(def leq1 (<= 1 2.0 3 3.14159))
+(def leq2 (<= 1 2.0))
+(def leq3 (<= 2.0 3))
+(def leq4 (<= 3))
+(def leq5 (<=))
+
+(def lt-fail (< 0 1 2 7 3))
+(def leq-fail (<= 0 1 2 7 3))
+(def gt-fail (> 9 8 7 6 5 33 2 1))
+(def geq-fail (>= 9 8 7 6 5 33 2 1))

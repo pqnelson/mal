@@ -131,7 +131,17 @@ public class Int extends com.github.pqnelson.expr.Number {
         return this.multiply((BigInt)rhs);
     }
 
-    @Override public String type() {
+    @Override
+    public String type() {
         return "Int";
+    }
+
+    @Override
+    public int compareTo(Number o) {
+        Number diff = this.subtract(o);
+        if (diff.isFloat())
+            return Double.valueOf(Math.signum(((Float)diff).value())).intValue();
+        if (diff.isBigInt()) return ((BigInt)diff).value().intValue();
+        return ((Int)diff).value().intValue();
     }
 }

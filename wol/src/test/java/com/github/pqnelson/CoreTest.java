@@ -912,6 +912,126 @@ public class CoreTest {
     }
 
     @Nested
+    public class GetTest {
+        @ParameterizedTest
+        @ValueSource(ints = {0, 1, 4, 5})
+        public void getArityCheckTest(int subcase) {
+            Seq args = new Seq();
+            for (int i=0; i < 0; i++) {
+                Expr e;
+                if (0 == i) {
+                    e = new Seq();
+                } else {
+                    e = new Int(i);
+                }
+                args.conj(e);
+            }
+            try {
+                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void getKeyFromMap1Test() {
+            Expr expected = new Str("foo");
+            Map m = new Map();
+            m.assoc(new Keyword("k"), new Str("foo"));
+            m.assoc(new Keyword("other-key"), new Vector());
+            Seq args = new Seq();
+            args.conj(m);
+            args.conj(new Keyword("k"));
+            try {
+                assertEquals(expected, Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void getKeyFromVector1Test() {
+            Expr expected = new Str("foo");
+            Int index = new Int(1);
+            Vector v = new Vector();
+            v.conj(new Keyword("k"));
+            v.conj(new Str("foo"));
+            v.conj(new Keyword("other-key"));
+            v.conj(new Vector());
+            Seq args = new Seq();
+            args.conj(v);
+            args.conj(index);
+            try {
+                assertEquals(expected, Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void getKeyFromVector2Test() {
+            Expr expected = new Keyword("default");
+            Expr defaultValue = new Keyword("default");
+            Int index = new Int(10);
+            Vector v = new Vector();
+            v.conj(new Keyword("k"));
+            v.conj(new Str("foo"));
+            v.conj(new Keyword("other-key"));
+            v.conj(new Vector());
+            Seq args = new Seq();
+            args.conj(v);
+            args.conj(index);
+            args.conj(defaultValue);
+            try {
+                assertEquals(expected, Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+        @Test
+        public void getKeyFromNilTest() {
+            Expr expected = new Keyword("default");
+            Expr defaultValue = new Keyword("default");
+            Int index = new Int(10);
+            Expr nil = Literal.NIL;
+            Seq args = new Seq();
+            args.conj(nil);
+            args.conj(index);
+            args.conj(defaultValue);
+            try {
+                assertEquals(expected, Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+
+        @Test
+        public void getFromIntIsExceptionTest() {
+            Expr arg = new Int(31);
+            Int index = new Int(1);
+            Seq args = new Seq();
+            args.conj(arg);
+            args.conj(index);
+            try {
+                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+
+        @Test
+        public void getFromKeywordIsExceptionTest() {
+            Expr arg = new Keyword("keyword");
+            Int index = new Int(1);
+            Seq args = new Seq();
+            args.conj(arg);
+            args.conj(index);
+            try {
+                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+            } catch (Throwable e) {
+                assertTrue(false, e.getMessage());
+            }
+        }
+    }
+
+    @Nested
     public class AssocTest {
         @Test
         public void assocRequiresAtLeastThreeArgs1Test() {
@@ -962,6 +1082,45 @@ public class CoreTest {
             } catch (NoSuchMethodException e) {
                 assertTrue(false, e.getMessage());
             }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2})
+    public void assocBangArityCheckTest(int subcase) {
+        Seq args = new Seq();
+        for (int i=0; i < 0; i++) {
+            Expr e;
+            if (0 == i) {
+                e = new Map();
+            } else {
+                e = new Int(i);
+            }
+            args.conj(e);
+        }
+        try {
+            assertThrows(NoSuchMethodException.class, () -> Core.assoc_BANG_(args));
+        } catch (Throwable e) {
+            assertTrue(false, e.getMessage());
+        }
+    }
+    @ParameterizedTest
+    @ValueSource(ints = {4, 6, 8, 10, 12, 14, 16, 18, 20})
+    public void assocBangRequiresEvenBindingsTest(int subcase) {
+        Seq args = new Seq();
+        for (int i=0; i < 0; i++) {
+            Expr e;
+            if (0 == i) {
+                e = new Map();
+            } else {
+                e = new Int(i);
+            }
+            args.conj(e);
+        }
+        try {
+            assertThrows(NoSuchMethodException.class, () -> Core.assoc_BANG_(args));
+        } catch (Throwable e) {
+            assertTrue(false, e.getMessage());
         }
     }
 
