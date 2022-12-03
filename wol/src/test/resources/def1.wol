@@ -1,1 +1,9 @@
 (def foo 13)
+
+(def x1 (/ 1.0 2.0))
+(def x2 (/ 2.0))
+(def x3 (/))
+
+(def if1 (if nil 1 2))
+(def if2 (if false 1 2))
+(def t1 (= if1 if2))

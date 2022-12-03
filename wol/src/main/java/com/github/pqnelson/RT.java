@@ -30,7 +30,7 @@ public class RT {
      * {@code (def ^my-tag term val)} means roughly
      * {@code (def (with-meta term {:tag my-tag}) val)}.</p>
      *
-     * @see {@link https://github.com/clojure/clojure/blob/clojure-1.10.1/src/jvm/clojure/lang/LispReader.java#L943-L986}
+     * @see <a href="https://github.com/clojure/clojure/blob/clojure-1.10.1/src/jvm/clojure/lang/LispReader.java#L943-L986">Clojure's <code>LispReader</code></a>
      */
     public static final Fun metaReader =
         new Fun((Seq args) -> {

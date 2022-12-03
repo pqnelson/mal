@@ -12,6 +12,7 @@ public abstract class Expr {
     public boolean isInt() { return isLiteral() && ((Literal)this).isInt(); }
     public boolean isKeyword() { return Keyword.class.isInstance(this); }
     public boolean isList() { return Seq.class.isInstance(this); }
+    public boolean isFalsy() { return this.isLiteral() && ((Literal)this).isFalsy(); }
     public boolean isLiteral() { return Literal.class.isInstance(this); }
     public boolean isMap() { return Map.class.isInstance(this); }
     public boolean isNumber() { return com.github.pqnelson.expr.Number.class.isInstance(this); }

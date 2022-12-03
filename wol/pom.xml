@@ -47,11 +47,16 @@
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
+        <!-- Generate the javadoc using
+             $ mvn javadoc:javadoc
+        -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <show>package</show>
+            <!-- suppress the "warning: missing documentation" -->
+            <doclint>all,-missing</doclint>
           </configuration>
           <executions>
             <execution>

@@ -2,6 +2,7 @@ package com.github.pqnelson;
 
 import java.util.HashMap;
 import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.LispException;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;

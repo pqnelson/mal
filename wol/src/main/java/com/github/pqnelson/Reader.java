@@ -26,19 +26,20 @@ import static com.github.pqnelson.TokenType.*;
  *
  * <p>As per tradition, we refer to the parser as the "reader".</p>
  *
- * <p>If you want to read a stream, the trick is to do something like the following:
+ * <p>If you want to read a stream, the trick is to do something like
+ * the following:</p>
  * <pre>
  *   BufferedReader resource = new BufferedReader(inputReader)) {
  *   Scanner scanner = new Scanner(resource);
  *   scanner.preferParsingNumbersAsFloats = parserPrefersFloats;
  *   Reader reader = new Reader(scanner.scanTokens());
- *   ArrayList<Expr> exprs = new ArrayList<Expr>();
+ *   ArrayList&lt;Expr&gt; exprs = new ArrayList&lt;Expr&gt;();
  *   while(!reader.isAtEnd()) {
  *       exprs.add(reader.readForm());
  *   }
  *   // do something with the List exprs
  * </pre>
- * This will read all the forms in the input reader.</p>
+ * <p>This will read all the forms in the input reader.</p>
  */
 class Reader {
     private final List<Token> tokens;
@@ -233,6 +234,10 @@ class Reader {
         case NIL:     return Literal.NIL;
         case TRUE:    return Literal.T;
         case FALSE:   return Literal.F;
+        case TRY:     return Symbol.TRY;
+        case CATCH:   return Symbol.CATCH;
+        case MACROEXPAND: return Symbol.MACROEXPAND;
+        case QUASIQUOTE_EXPAND: return Symbol.QUASIQUOTE_EXPAND;
         default:      return new Symbol(token);
         }
     }

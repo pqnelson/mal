@@ -1,0 +1,10 @@
+(def t1 (= 1 (try (+ 0 1) (catch e :fail))))
+
+(def t2 (= (try 123 (catch e 456))
+           123))
+
+(def t3 (= (try 123 (throw "exception") (catch e 456))
+           456))
+
+(def t4 (= (try 123 (throw "exception") (catch e e))
+           "exception"))

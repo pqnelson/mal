@@ -32,3 +32,11 @@
 
 (def when2 (= (when condition '(+ 1 2) '(* 3 4) '(/ 8 2))
              `(if ~condition (do ~@body1) nil)))
+
+(def quasiquoteexpand-test1
+     (= (quasiquote-expand (nil))
+        '(cons nil (list))))
+
+(def quasiquoteexpand-test2
+     (= (quasiquote-expand (1 () 2))
+        '(cons 1 (cons '() (cons 2 (list))))))

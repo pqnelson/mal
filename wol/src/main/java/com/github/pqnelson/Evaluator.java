@@ -3,6 +3,7 @@ package com.github.pqnelson;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.github.pqnelson.expr.Expr;
@@ -13,6 +14,7 @@ import com.github.pqnelson.expr.ICountable;
 import com.github.pqnelson.expr.IFn;
 import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.LispException;
 import com.github.pqnelson.expr.Literal;
 import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
@@ -255,38 +257,49 @@ public class Evaluator {
                 return macro;
             }
             case "try": {
-                // ast = (body (catch e catch-body...))
+                // ast = (body... (catch e catch-body...)+)
+                /* CAVEAT: it will process the body, which is the sublist of
+                   expressions UNTIL the first {@code catch} is encountered.
+                   This is a "bug". I really want to support a richer
+                   exception handling framework, but this is the current
+                   state of things.
+                */
+                Predicate<Expr> isCatchClause = (ex) ->
+                    ex.isList() && Symbol.CATCH == ((Seq)ex).first();
                 try {
-                    return eval(ast.first(), env);
+                    Seq body = ast.takeWhile(isCatchClause.negate());
+                    body.prepend(Symbol.DO);
+                    return eval(body, env);
                 } catch (Throwable e) {
                     // cases when the exception isn't handled
                     if (null == ast.get(1)) throw e;
                     if (!ast.get(1).isList()) throw e;
-                    Seq catchClause = (Seq)ast.get(1);
-                    if (!catchClause.first().isSymbol() ||
-                            !((Symbol)catchClause.first()).name().equals("catch"))
-                        throw e;
+
+                    Seq catchClauses = ast.filter(isCatchClause);
+                    if (catchClauses.isEmpty()) throw e;
 
                     // OK, so, ast handles the exception properly
-                    Expr catchBody = catchClause.get(2);
-                    Symbol exceptionId = (Symbol)catchClause.get(1);
+                    // catchClause ~ (catch e catch-body...)
+                    Seq catchClause = (Seq)(catchClauses.first());
                     String stacktrace = Arrays.stream(e.getStackTrace())
                         .map(line -> line.toString())
                         .collect(Collectors.joining("\n"));
+                    Map meta = new Map();
+                    meta.assoc(new Keyword("stacktrace"), new Str(stacktrace));
+                    Symbol exceptionId = (Symbol)catchClause.get(1);
+                    exceptionId = (Symbol)(exceptionId.withMeta(meta));
+                    // bind the exception identifier in a new Env
                     Env eenv = new Env(env);
-                    eenv.set(exceptionId, new Str(stacktrace));
-                    expr = catchBody;
+                    eenv.set(exceptionId, new Str(e.getMessage()));
                     env = eenv;
-                    break;
+                    // set the expr to `(do catch-body...)`
+                    Seq catchBody = catchClause.slice(2);
+                    catchBody.prepend(Symbol.DO);
+                    expr = catchBody;
                 }
+                break;
             }
             default: {
-                if (debug) {
-                    System.err.println("\n\n\n\n\n");
-                    System.err.println("rator="+Printer.print(rator));
-                    System.err.println("\n\n\n\n\n");
-                }
-
                 if (debug) System.out.println("evaluating args = "+ast.toString());
                 Seq args = (Seq)evalLiteral(ast, env);
                 if (debug) System.out.println("eval determining f = "+rator.toString());
@@ -358,6 +371,7 @@ public class Evaluator {
         env.set(new Symbol("read-string"), new Fun(Core::read_string));
         env.set(new Symbol("slurp"), new Fun(Core::slurp));
         env.set(new Symbol("list"), new Fun(Core::list));
+        env.set(new Symbol("throw"), new Fun(Core::_throw));
 
         return env;
     }

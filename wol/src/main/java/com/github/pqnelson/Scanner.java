@@ -67,6 +67,7 @@ public class Scanner {
     private static final Map<String, TokenType> keywords;
     static {
         keywords = new HashMap<>();
+        keywords.put("catch", CATCH);
         keywords.put("def", DEF);
         keywords.put("defmacro", DEFMACRO);
         keywords.put("do", DO);
@@ -74,9 +75,12 @@ public class Scanner {
         keywords.put("fn*", FN_STAR);
         keywords.put("if", IF);
         keywords.put("let*", LET_STAR);
+        keywords.put("macroexpand", MACROEXPAND);
         keywords.put("nil", NIL);
+        keywords.put("quasiquote-expand", QUASIQUOTE_EXPAND);
         keywords.put("quote", QUOTE);
         keywords.put("true", TRUE);
+        keywords.put("try", TRY);
     }
     /**
      * Create a scanner for code contained in a string.
@@ -387,7 +391,7 @@ public class Scanner {
     /**
      * Tokenize an identifier.
      *
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers}
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers">Lexical Grammar of Javascript</a>
      */
     @VisibleForTesting
     void identifier() {

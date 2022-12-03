@@ -15,7 +15,7 @@ public enum TokenType {
 
     // special forms
     DEF, DEFMACRO, DO, FN_STAR, IF, LET_STAR,
-    NIL, TRUE, FALSE,
+    NIL, TRUE, FALSE, TRY, CATCH, MACROEXPAND, QUASIQUOTE_EXPAND,
 
     EOF
 }

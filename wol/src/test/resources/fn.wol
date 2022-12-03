@@ -45,3 +45,8 @@
 (def leq-fail (<= 0 1 2 7 3))
 (def gt-fail (> 9 8 7 6 5 33 2 1))
 (def geq-fail (>= 9 8 7 6 5 33 2 1))
+
+(def lt-fail2 (< 73 9))
+(def leq-fail2 (<= 73 5))
+(def gt-fail2 (> 9 87))
+(def geq-fail2 (>= 9 81))

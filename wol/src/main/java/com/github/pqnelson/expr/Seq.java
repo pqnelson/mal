@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
     final List<Expr> contents;
@@ -197,5 +199,30 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable{
 
     public Vector vec() {
         return new Vector(new ArrayList<>(this.contents));
+    }
+
+    public Seq filter(Predicate<Expr> criteria) {
+        return new Seq(this.contents
+                       .stream()
+                       .filter(criteria)
+                       .collect(Collectors.<Expr>toList()));
+    }
+
+    public Seq remove(Predicate<Expr> criteria) {
+        return this.filter(criteria.negate());
+    }
+
+    public Seq takeWhile(Predicate<Expr> criteria) {
+        return new Seq(this.contents
+                       .stream()
+                       .takeWhile(criteria)
+                       .collect(Collectors.<Expr>toList()));
+    }
+
+    public Seq dropWhile(Predicate<Expr> criteria) {
+        return new Seq(this.contents
+                       .stream()
+                       .dropWhile(criteria)
+                       .collect(Collectors.<Expr>toList()));
     }
 }

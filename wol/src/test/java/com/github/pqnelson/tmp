@@ -1,0 +1,105 @@
+
+            @Test
+            public void geqFailsWithMultipleArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(>= 4 3 2 1 :i 0)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void geqFailsWithTwoArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(>= 1 :i)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void gtFailsWithMultipleArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(> 4 3 2 1 :i 0)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void gtFailsWithTwoArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(> 1 :i)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void ltFailsWithMultipleArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(< 1 2 3 :i 4)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void ltFailsWithTwoArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(< 1 :i)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void leqFailsWithMultipleArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(<= 1 2 3 :i 4)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }
+            @Test
+            public void leqFailsWithTwoArgsTest() {
+                try {
+                    Env env = Evaluator.initialEnv();
+                    Scanner scanner = new Scanner("(<= 1 :i)");
+                    scanner.preferParsingNumbersAsFloats = false;
+                    Reader reader = new Reader(scanner.scanTokens());
+                    assertThrows(NoSuchMethodException.class,
+                                 () -> Evaluator.eval(reader.readForm(), env));
+                } catch (Throwable e) {
+                    assertTrue(false, "Throwable "+e.toString()+" thrown");
+                }
+            }

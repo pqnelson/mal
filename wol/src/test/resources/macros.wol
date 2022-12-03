@@ -1,5 +1,14 @@
 (defmacro when [x & body]
   `(if ~x (do ~@body) nil))
 
+(defmacro when-not [x & body]
+  `(if ~x nil (do ~@body)))
+
 (defmacro two [] 2)
 (def t1 (two))
+
+(def t2 (= (macroexpand (when PRED step1 step2 step3 done))
+          '(if PRED (do step1 step2 step3 done) nil)))
+
+(def t3 (= (macroexpand (when-not PRED step1 step2 step3 done))
+          '(if PRED nil (do step1 step2 step3 done))))

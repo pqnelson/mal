@@ -19,6 +19,12 @@ import com.github.pqnelson.expr.Float;
 import com.github.pqnelson.expr.Fun;
 import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.LispException;
+import com.github.pqnelson.expr.LispIOException;
+import com.github.pqnelson.expr.LispIllegalArgumentException;
+import com.github.pqnelson.expr.LispError;
+import com.github.pqnelson.expr.LispNoSuchMethodException;
+import com.github.pqnelson.expr.LispThrowable;
 import com.github.pqnelson.expr.Literal;
 import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
@@ -76,8 +82,8 @@ public class CoreTest {
                 Expr result = Core.add(args);
                 assertTrue(result.isInt());
                 assertEquals((Int)result, k);
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
         @Test
@@ -94,8 +100,8 @@ public class CoreTest {
                 Expr result = Core.add(args);
                 assertTrue(result.isInt());
                 assertEquals((Int)result, expected);
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
         @Test
@@ -104,8 +110,8 @@ public class CoreTest {
             Seq args = new Seq();
             try {
                 assertEquals(expected, (Int)Core.add(args));
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
     }
@@ -118,7 +124,7 @@ public class CoreTest {
             Seq args = new Seq();
             try {
                 assertEquals(expected, (Int)Core.subtract(args));
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -137,8 +143,8 @@ public class CoreTest {
             try {
                 Expr result = Core.equality(args);
                 assertTrue(Literal.exprIsTrue(result));
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
         @Test
@@ -152,8 +158,8 @@ public class CoreTest {
             try {
                 Expr result = Core.equality(args);
                 assertTrue(Literal.exprIsTrue(result));
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
         @Test
@@ -171,8 +177,8 @@ public class CoreTest {
             try {
                 Expr result = Core.equality(args);
                 assertTrue(Literal.exprIsTrue(result));
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
         @Test
@@ -192,8 +198,8 @@ public class CoreTest {
                 args.conj(k);
                 result = Core.equality(args);
                 assertTrue(Literal.exprIsTrue(result));
-            } catch (NoSuchMethodException e) {
-                assertTrue(false, "NoSuchMethodException thrown?!");
+            } catch (LispException e) {
+                assertTrue(false, "LispException thrown?!");
             }
         }
 
@@ -445,7 +451,7 @@ public class CoreTest {
             Int i = new Int(3);
             Seq args = new Seq();
             args.conj(i);
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.seq(args));
         }
     }
@@ -479,7 +485,7 @@ public class CoreTest {
             Int i = new Int(3);
             Seq args = new Seq();
             args.conj(i);
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.first(args));
         }
     }
@@ -489,7 +495,7 @@ public class CoreTest {
         @Test
         public void checkArityOfRest1Test() {
             Seq args = new Seq();
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.rest(args));
         }
         @Test
@@ -497,7 +503,7 @@ public class CoreTest {
             Seq args = new Seq();
             args.conj(new Vector());
             args.conj(new Seq());
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.rest(args));
         }
         @Test
@@ -583,7 +589,7 @@ public class CoreTest {
         @Test
         public void consArity1Test() {
             Seq args = new Seq();
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.seq(args));
         }
         @Test
@@ -591,7 +597,7 @@ public class CoreTest {
             Seq args = new Seq();
             Expr e = new Int(33);
             args.conj(e);
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.seq(args));
         }
         @Test
@@ -620,7 +626,7 @@ public class CoreTest {
         public void symbolRequiresAtLeastOneArgTest() {
             Seq args = new Seq();
             try {
-                assertThrows(NoSuchMethodException.class,
+                assertThrows(LispException.class,
                              () -> Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
@@ -632,7 +638,7 @@ public class CoreTest {
             args.conj(new Str("symbol"));
             args.conj(new Str("test"));
             try {
-                assertThrows(NoSuchMethodException.class,
+                assertThrows(LispException.class,
                          () -> Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
@@ -647,7 +653,7 @@ public class CoreTest {
                 assertEquals(expected, Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -660,7 +666,7 @@ public class CoreTest {
                 assertTrue(expected==Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -674,7 +680,7 @@ public class CoreTest {
                 assertEquals(expected, Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -687,7 +693,7 @@ public class CoreTest {
                 assertEquals(expected, Core.symbol(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -697,9 +703,9 @@ public class CoreTest {
             Seq args = new Seq();
             args.conj(new Vector());
             try {
-                assertThrows(IllegalArgumentException.class,
+                assertThrows(LispIllegalArgumentException.class,
                              () -> Core.symbol(args));
-            } catch (IllegalArgumentException e) {
+            } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -711,7 +717,7 @@ public class CoreTest {
         public void keywordRequiresAtLeastOneArgTest() {
             Seq args = new Seq();
             try {
-                assertThrows(NoSuchMethodException.class,
+                assertThrows(LispException.class,
                              () -> Core.keyword(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
@@ -723,7 +729,7 @@ public class CoreTest {
             args.conj(new Str("symbol"));
             args.conj(new Str("test"));
             try {
-                assertThrows(NoSuchMethodException.class,
+                assertThrows(LispException.class,
                          () -> Core.keyword(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
@@ -738,7 +744,7 @@ public class CoreTest {
                 assertEquals(expected, Core.keyword(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -751,7 +757,7 @@ public class CoreTest {
                 assertTrue(expected==Core.keyword(args));
             } catch (IllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -763,9 +769,9 @@ public class CoreTest {
             args.conj(new Str(name));
             try {
                 assertEquals(expected, Core.keyword(args));
-            } catch (IllegalArgumentException e) {
+            } catch (LispIllegalArgumentException e) {
                 assertTrue(false, e.getMessage());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -775,9 +781,9 @@ public class CoreTest {
             Seq args = new Seq();
             args.conj(new Vector());
             try {
-                assertThrows(IllegalArgumentException.class,
+                assertThrows(LispIllegalArgumentException.class,
                              () -> Core.keyword(args));
-            } catch (IllegalArgumentException e) {
+            } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -806,7 +812,7 @@ public class CoreTest {
             try {
                 Core.println(args);
                 assertEquals(expected, outputStreamCaptor.toString().trim());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -819,7 +825,7 @@ public class CoreTest {
             try {
                 Core.println(args);
                 assertEquals(expected, outputStreamCaptor.toString().trim());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -832,7 +838,7 @@ public class CoreTest {
             try {
                 Core.println(args);
                 assertEquals(expected, outputStreamCaptor.toString().trim());
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -860,7 +866,7 @@ public class CoreTest {
                 Core.prn(args);
                 assertEquals(Core.pr_str(args),
                              new Str(outputStreamCaptor.toString().trim()));
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -873,7 +879,7 @@ public class CoreTest {
                 Core.prn(args);
                 assertEquals(Core.pr_str(args),
                              new Str(outputStreamCaptor.toString().trim()));
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -886,7 +892,7 @@ public class CoreTest {
                 Core.prn(args);
                 assertEquals(Core.pr_str(args),
                              new Str(outputStreamCaptor.toString().trim()));
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -905,7 +911,7 @@ public class CoreTest {
                 Core.prn(args);
                 assertEquals(Core.pr_str(args),
                              new Str(outputStreamCaptor.toString().trim()));
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -927,7 +933,7 @@ public class CoreTest {
                 args.conj(e);
             }
             try {
-                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+                assertThrows(LispException.class, () -> Core.get(args));
             } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
@@ -1010,7 +1016,7 @@ public class CoreTest {
             args.conj(arg);
             args.conj(index);
             try {
-                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+                assertThrows(LispException.class, () -> Core.get(args));
             } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
@@ -1024,7 +1030,7 @@ public class CoreTest {
             args.conj(arg);
             args.conj(index);
             try {
-                assertThrows(NoSuchMethodException.class, () -> Core.get(args));
+                assertThrows(LispException.class, () -> Core.get(args));
             } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
@@ -1040,7 +1046,7 @@ public class CoreTest {
             Int val = new Int(3);
             Seq args = new Seq();
             args.conj(m);
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.assoc(args));
         }
         @Test
@@ -1051,7 +1057,7 @@ public class CoreTest {
             Seq args = new Seq();
             args.conj(m);
             args.conj(k);
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.assoc(args));
         }
         @Test
@@ -1064,7 +1070,7 @@ public class CoreTest {
             args.conj(k);
             args.conj(val);
             args.conj(new Keyword("foo"));
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.assoc(args));
         }
         @Test
@@ -1079,7 +1085,7 @@ public class CoreTest {
             try {
                 Expr result = Core.assoc(args);
                 assertTrue(m != result);
-            } catch (NoSuchMethodException e) {
+            } catch (LispException e) {
                 assertTrue(false, e.getMessage());
             }
         }
@@ -1099,7 +1105,7 @@ public class CoreTest {
             args.conj(e);
         }
         try {
-            assertThrows(NoSuchMethodException.class, () -> Core.assoc_BANG_(args));
+            assertThrows(LispException.class, () -> Core.assoc_BANG_(args));
         } catch (Throwable e) {
             assertTrue(false, e.getMessage());
         }
@@ -1118,7 +1124,7 @@ public class CoreTest {
             args.conj(e);
         }
         try {
-            assertThrows(NoSuchMethodException.class, () -> Core.assoc_BANG_(args));
+            assertThrows(LispException.class, () -> Core.assoc_BANG_(args));
         } catch (Throwable e) {
             assertTrue(false, e.getMessage());
         }
@@ -1129,7 +1135,7 @@ public class CoreTest {
         @Test
         public void dissocRequiresSomeArgTest() {
             Seq args = new Seq();
-            assertThrows(NoSuchMethodException.class,
+            assertThrows(LispException.class,
                          () -> Core.dissoc(args));
         }
         @Test
@@ -1259,7 +1265,7 @@ public class CoreTest {
             args.conj(coll);
             args.conj(i);
             try {
-                assertThrows(NoSuchMethodException.class, () -> Core.nth(args));
+                assertThrows(LispException.class, () -> Core.nth(args));
             } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
@@ -1273,7 +1279,7 @@ public class CoreTest {
             args.conj(coll);
             args.conj(i);
             try {
-                assertThrows(NoSuchMethodException.class, () -> Core.nth(args));
+                assertThrows(LispException.class, () -> Core.nth(args));
             } catch (Throwable e) {
                 assertTrue(false, e.getMessage());
             }
