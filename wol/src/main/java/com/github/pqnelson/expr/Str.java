@@ -1,15 +1,13 @@
 package com.github.pqnelson.expr;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import com.github.pqnelson.Token;
 import com.github.pqnelson.TokenType;
 
 public class Str extends Literal {
-    public Str(Token token) {
+    public Str(final Token token) {
         super(token);
     }
-    public Str(String s) {
+    public Str(final String s) {
         super(new Token(TokenType.STRING, s));
     }
 
@@ -28,11 +26,17 @@ public class Str extends Literal {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (null == obj) return false;
-        if (obj.getClass() != this.getClass()) return false;
-        Str rhs = (Str)obj;
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (null == obj) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Str rhs = (Str) obj;
         return this.value().equals(rhs.value());
     }
 
@@ -41,15 +45,17 @@ public class Str extends Literal {
         return this.value().hashCode();
     }
 
-    public Str substring(int start, int end) {
+    public Str substring(final int start, final int end) {
         return new Str(this.value().substring(start, end));
     }
 
     public Expr seq() {
-        if (this.value().equals("")) return Literal.NIL;
+        if (this.value().equals("")) {
+            return Literal.NIL;
+        }
         Seq letters = new Seq();
         for (int i = 0; i < this.value().length(); i++) {
-            letters.conj(this.substring(i, i+1));
+            letters.conj(this.substring(i, i + 1));
         }
         return letters;
     }

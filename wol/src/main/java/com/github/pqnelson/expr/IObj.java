@@ -6,5 +6,5 @@ public interface IObj extends IMeta, Cloneable {
      * unless the new metadata is equal to the existing metadata...then
      * {@code this} should be returned.
      */
-    public IObj withMeta(Map meta);
+    IObj withMeta(Map meta);
 }

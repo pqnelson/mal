@@ -10,34 +10,46 @@ import static com.github.pqnelson.TokenType.NUMBER;
 
 public class Literal extends Expr {
     public final Token token;
-    public static final Literal NIL = new Literal(new Token(TokenType.NIL, "nil", null));
-    public static final Literal F = new Literal(new Token(TokenType.FALSE, "false", false));
-    public static final Literal T = new Literal(new Token(TokenType.TRUE, "true", true));
+    public static final Literal NIL
+        = new Literal(new Token(TokenType.NIL, "nil", null));
+    public static final Literal F
+        = new Literal(new Token(TokenType.FALSE, "false", false));
+    public static final Literal T
+        = new Literal(new Token(TokenType.TRUE, "true", true));
     public static final Literal ZERO = new Int(0L);
     public static final Literal ONE = new Int(1L);
 
-    public Literal(Token token) {
+    public Literal(final Token token) {
         this.token = token;
     }
 
-    public boolean isNil() { return TokenType.NIL == token.type; }
-
-    public boolean isTrue() { return TRUE == token.type; }
-    public static boolean exprIsTrue(Expr e) {
-        return e.isLiteral() && ((Literal)e).isTrue();
-    }
-    public boolean isFalse() { return FALSE == token.type; }
-
-    public static boolean exprIsFalse(Expr e) {
-        return e.isLiteral() && ((Literal)e).isFalse();
+    public boolean isNil() {
+        return TokenType.NIL == token.type;
     }
 
-    public boolean isFalsy() { return isFalse() || isNil(); }
-    public static boolean isFalsy(Expr e) { return e.isLiteral() && ((Literal)e).isFalsy(); }
+    public boolean isTrue() {
+        return TRUE == token.type;
+    }
 
-    public boolean isString() { return STRING == token.type; }
+    public static boolean exprIsTrue(final Expr e) {
+        return e.isLiteral() && ((Literal) e).isTrue();
+    }
 
-    public boolean isNumber() { return NUMBER == token.type; }
+    public boolean isFalse() {
+        return FALSE == token.type;
+    }
+
+    public static boolean exprIsFalse(final Expr e) {
+        return e.isLiteral() && ((Literal) e).isFalse();
+    }
+
+    public boolean isFalsy() {
+        return isFalse() || isNil();
+    }
+
+    public static boolean isFalsy(final Expr e) {
+        return e.isLiteral() && ((Literal) e).isFalsy();
+    }
 
     public Object value() {
         switch (this.token.type) {
@@ -53,8 +65,10 @@ public class Literal extends Expr {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (null == obj) return false;
         if (obj.getClass() != this.getClass()) return false;
         Literal rhs = (Literal)obj;

@@ -1,7 +1,5 @@
 package com.github.pqnelson;
 
-// Consider using java.util.InputMismatchException throwables?
-// https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/util/InputMismatchException.html
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.BufferedReader;
@@ -34,10 +32,11 @@ import static com.github.pqnelson.TokenType.*;
  * have collapsed the Scanner and Reader into one class with regex
  * magic.</p>
  *
- * <p>The basic flow is disarmingly simple: the constructor waits for the user
- * to ask for {@link scanTokens()}, which iteratively invokes {@link scanToken()}
- * until the input source is exhausted. If no input errors were found, then a
- * list of {@link Token} objects is returned.</p>
+ * <p>The basic flow is disarmingly simple: the constructor waits for
+ * the user to ask for {@link scanTokens()}, which iteratively invokes
+ * {@link scanToken()} until the input source is exhausted. If no input
+ * errors were found, then a list of {@link Token} objects is
+ * returned.</p>
  *
  * @see <a href="https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/Scanner.java">Scanner.java</a>
  */
@@ -59,7 +58,7 @@ public class Scanner {
                 try {
                     return source.read();
                 } catch (IOException e) {
-                    error(line, "nextCharFromSource error:"+e);
+                    error(line, "nextCharFromSource error:" + e);
                     return -222;
                 }
             }
@@ -85,15 +84,15 @@ public class Scanner {
     /**
      * Create a scanner for code contained in a string.
      */
-    public Scanner(String snippet) {
+    public Scanner(final String snippet) {
         this(new StringReader((null == snippet ? "" : snippet)));
     }
 
-    public Scanner(InputStream source) {
+    public Scanner(final InputStream source) {
         this(new InputStreamReader(source));
     }
 
-    public Scanner(Reader reader) {
+    public Scanner(final Reader reader) {
         this.source = new BufferedReader(reader);
     }
 
@@ -128,7 +127,7 @@ public class Scanner {
      * @return The code point for the next character in the input stream.
      */
     @VisibleForTesting
-    int advance() {
+    final int advance() {
         current++;
         int result = cachedNextChar.orElseGet(nextCharFromSource);
         shiftCachedNextChars();
@@ -145,7 +144,7 @@ public class Scanner {
      * @return True if the reader is finished, or an IOException has occurred.
      */
     @VisibleForTesting
-    boolean isAtEnd() {
+    final boolean isAtEnd() {
         try {
             if (cachedNextChar.isEmpty()) {
                 cachedNextChar = OptionalInt.of(source.read());
@@ -158,29 +157,39 @@ public class Scanner {
     }
 
     @VisibleForTesting
-    char peek() {
-        if (isAtEnd()) return '\0';
+    final char peek() {
+        if (isAtEnd()) {
+            return '\0';
+        }
         // post-condition for `isAtEnd`: cachedNextChar.isPresent();
-        if (-1 == cachedNextChar.getAsInt()) return '\0';
-        char c[] = Character.toChars(cachedNextChar.getAsInt());
+        if (-1 == cachedNextChar.getAsInt()) {
+            return '\0';
+        }
+        char[] c = Character.toChars(cachedNextChar.getAsInt());
         assert(1 == c.length) : "peek() has a surrogate pair?";
         return c[0];
     }
 
     @VisibleForTesting
-    char peekNext() {
-        if (isAtEnd()) return '\0';
+    final char peekNext() {
+        if (isAtEnd()) {
+            return '\0';
+        }
         if (cachedNextNextChar.isEmpty()) {
-            if (cachedNextChar.isEmpty()) { peek(); }
+            if (cachedNextChar.isEmpty()) {
+                peek();
+            }
             try {
                 cachedNextNextChar = OptionalInt.of(source.read());
             } catch (IOException e) {
                 cachedNextNextChar = OptionalInt.of(-1);
             }
         }
-        if (-1 == cachedNextNextChar.getAsInt()) return '\0';
-        char c[] = Character.toChars(cachedNextNextChar.getAsInt());
-        assert(1 == c.length) : "peekNext() has a surrogate pair?";
+        if (-1 == cachedNextNextChar.getAsInt()) {
+            return '\0';
+        }
+        final char[] c = Character.toChars(cachedNextNextChar.getAsInt());
+        assert (1 == c.length) : "peekNext() has a surrogate pair?";
         return c[0];
     }
 
@@ -189,49 +198,50 @@ public class Scanner {
         currentLexeme.delete(0, currentLexeme.length());
     }
 
-    private void addToken(TokenType type) {
+    private void addToken(final TokenType type) {
         addToken(type, null);
     }
 
     /**
-     * Pushes current lexeme as a token onto {@code tokens}. This also resets
-     * the current lexeme.
+     * Pushes current lexeme as a token onto {@code tokens}. This also
+     * resets the current lexeme.
      *
      * @param type The Token type for the current lexeme, must be non-null.
-     * @param literal The literal value for the current lexeme, optional argument.
+     * @param literal The literal value for the current lexeme, optional
+     * argument.
      */
-    private void addToken(TokenType type, Object literal) {
-        String lexeme = currentLexeme.toString();
+    private void addToken(final TokenType type, final Object literal) {
+        final String lexeme = currentLexeme.toString();
         resetCurrentLexeme();
         tokens.add(new Token(type, lexeme, literal, startLine));
     }
 
     // see https://github.com/openjdk/jdk/blob/590de37bd703bdae56e8b41c84f5fca5e5a00811/src/java.base/share/classes/java/lang/Character.java#L11232-L11237
-    static int SEPARATORS = ((1 << Character.LINE_SEPARATOR) |
-                             (1 << Character.PARAGRAPH_SEPARATOR));
-    private final static int CR_CODEPOINT = 0x000d;
-    private final static int LF_CODEPOINT = 0x000a;
-    private final static int NEL_CODEPOINT = 0x0085;  // NEL = Next Line
+    static final int SEPARATORS = ((1 << Character.LINE_SEPARATOR)
+                                   | (1 << Character.PARAGRAPH_SEPARATOR));
+    private static final int CR_CODEPOINT = 0x000d;
+    private static final int LF_CODEPOINT = 0x000a;
+    private static final int NEL_CODEPOINT = 0x0085;  // NEL = Next Line
 
     /**
      * Test for a newline, using the various system-dependent versions
      * for newlines.
      */
     @VisibleForTesting
-    static boolean isNewline(int codePoint) {
-        return (((SEPARATORS >> Character.getType(codePoint)) & 1) != 0) ||
-            (LF_CODEPOINT <= codePoint && codePoint <= CR_CODEPOINT) ||
-            (NEL_CODEPOINT == codePoint);
+    static final boolean isNewline(final int codePoint) {
+        return (((SEPARATORS >> Character.getType(codePoint)) & 1) != 0)
+            || (LF_CODEPOINT <= codePoint && codePoint <= CR_CODEPOINT)
+            || (NEL_CODEPOINT == codePoint);
     }
 
-    private final static int WHITESPACE = (1 << Character.SPACE_SEPARATOR);
-    private final static int TAB_CODEPOINT = Character.codePointAt("\t", 0);
+    private static final int WHITESPACE = (1 << Character.SPACE_SEPARATOR);
+    private static final int TAB_CODEPOINT = Character.codePointAt("\t", 0);
 
     /**
      * Test for whitespace, including tabs as "whitespace".
      */
     @VisibleForTesting
-    static boolean isSpace(int codePoint) {
+    static final boolean isSpace(final int codePoint) {
         return (((WHITESPACE >> Character.getType(codePoint)) & 1) != 0)
             || (TAB_CODEPOINT == codePoint);
     }
@@ -241,12 +251,15 @@ public class Scanner {
      *
      * <p>If successful, its last element will always be an EOF Token.</p>
      *
-     * @return A list of {@code Token} objects obtained from lexing the given source.
+     * @return A list of {@code Token} objects obtained from lexing the
+     * given source.
      */
     public List<Token> scanTokens() {
-        if (!tokens.isEmpty()) return tokens;
+        if (!tokens.isEmpty()) {
+            return tokens;
+        }
 
-        while(!isAtEnd()) {
+        while (!isAtEnd()) {
             start = current;
             startLine = line;
             scanToken();
@@ -255,26 +268,34 @@ public class Scanner {
         return Collections.unmodifiableList(tokens);
     }
 
-    void error(int line, String message) {
-        throw new InputMismatchException("Line "+line+": "+message);
+    private void error(final int line, final String message) {
+        throw new InputMismatchException("Line " + line + ": " + message);
         //report(line, "", message);
     }
 
-    void report(int lne, String where, String message) {
-        System.err.println("[line " + line + "] Error" + where + ": " + message);
+    private void report(final int lne,
+                        final String where,
+                        final String message) {
+        System.err.println("[line " + line + "] Error"
+                           + where + ": " + message);
     }
 
-    void pushToken(TokenType type) {
+    private void pushToken(final TokenType type) {
         advance();
         addToken(type);
     }
-    void pushToken(TokenType type, String lexeme) {
+    private void pushToken(final TokenType type, final String lexeme) {
         advance();
         resetCurrentLexeme();
         tokens.add(new Token(type, lexeme, null, startLine));
     }
-    void pushToken(TokenType type, String lexeme, int lexemeLength) {
-        for (int i=0; i < lexemeLength; i++) advance();
+
+    private void pushToken(final TokenType type,
+                           final String lexeme,
+                           final int lexemeLength) {
+        for (int i = 0; i < lexemeLength; i++) {
+            advance();
+        }
         resetCurrentLexeme();
         tokens.add(new Token(type, lexeme, null, startLine));
     }
@@ -283,7 +304,7 @@ public class Scanner {
         boolean result;
         do {
             result = false;
-            while (Scanner.isSpace(peek()) || ',' == peek()) {
+            while (Scanner.isSpace(peek()) || (',' == peek())) {
                 advance();
                 result = true;
             }
@@ -299,29 +320,57 @@ public class Scanner {
     }
 
     private final char BACKTICK_CHAR = (char)60;
+
     /**
-     * Scan the stream for the next token, pushing it to the growing list of tokens.
+     * Scan the stream for the next token, pushing it to the growing
+     * list of tokens.
      *
      * <p>Basically this skips all possible whitespace, then delegates
      * the flow to helper functions based on the top of the stream.</p>
      */
-    void scanToken() {
+    private void scanToken() {
         skipWhitespace();
-        if (isAtEnd()) return;
-        char c = Character.toChars(peek())[0];
+        if (isAtEnd()) {
+            return;
+        }
+        final char c = Character.toChars(peek())[0];
         switch(peek()) {
-        case ';': comment(); break;
-        case '(': pushToken(LEFT_PAREN); break;
-        case ')': pushToken(RIGHT_PAREN); break;
-        case '[': pushToken(LEFT_BRACKET); break;
-        case ']': pushToken(RIGHT_BRACKET); break;
-        case '{': pushToken(LEFT_BRACE); break;
-        case '}': pushToken(RIGHT_BRACE); break;
-        case '`': pushToken(BACKTICK, "quasiquote"); break;
-        case '\'': pushToken(QUOTE, "quote"); break;
-        case '^': pushToken(WITH_META); break;
-        case '"': string(); break;
-        case ':': keyword(); break;
+        case ';':
+            comment();
+            break;
+        case '(':
+            pushToken(LEFT_PAREN);
+            break;
+        case ')':
+            pushToken(RIGHT_PAREN);
+            break;
+        case '[':
+            pushToken(LEFT_BRACKET);
+            break;
+        case ']':
+            pushToken(RIGHT_BRACKET);
+            break;
+        case '{':
+            pushToken(LEFT_BRACE);
+            break;
+        case '}':
+            pushToken(RIGHT_BRACE);
+            break;
+        case '`':
+            pushToken(BACKTICK, "quasiquote");
+            break;
+        case '\'':
+            pushToken(QUOTE, "quote");
+            break;
+        case '^':
+            pushToken(WITH_META);
+            break;
+        case '"':
+            string();
+            break;
+        case ':':
+            keyword();
+            break;
         case '~':
             if ('@' == peekNext()) {
                 pushToken(SPLICE, "unsplice", 2);
@@ -342,8 +391,8 @@ public class Scanner {
     }
 
     // Right now, only single-line comments are supported.
-    void comment() {
-        assert(';' == peek());
+    private void comment() {
+        assert (';' == peek());
         int cp;
         do {
             cp = advance();
@@ -355,12 +404,14 @@ public class Scanner {
      * Tokenize a string, removing the quotation mark delimiters.
      */
     @VisibleForTesting
-    void string() {
+    final void string() {
         assert ('"' == peek());
         advance();
         while ('"' != peek() && !isAtEnd()) {
             int cp = advance();
-            if (isNewline(cp)) line++;
+            if (isNewline(cp)) {
+                line++;
+            }
             currentLexeme.appendCodePoint(cp);
             if ('\\' == cp && '"' == peek()) {
                 currentLexeme.appendCodePoint(advance());
@@ -368,22 +419,25 @@ public class Scanner {
         }
 
         if (isAtEnd()) {
-            throw new InputMismatchException("Line "+line+": Unterminated string");
+            throw new InputMismatchException("Line " + line
+                                             + ": Unterminated string");
         }
 
         advance();
-        addToken(STRING, StringEscapeUtils.unescapeJava(currentLexeme.toString()));
+        addToken(STRING,
+                 StringEscapeUtils.unescapeJava(currentLexeme.toString()));
     }
 
     @VisibleForTesting
-    boolean isIdentifierLeadingChar(char c) {
-        return (Character.isLetter(c) || "&_$*+!?<>=-/".indexOf(c) > -1) &&
-            !Character.isIdentifierIgnorable(c);
+    final boolean isIdentifierLeadingChar(final char c) {
+        return (Character.isLetter(c) || ("&_$*+!?<>=-/".indexOf(c) > -1))
+            && !Character.isIdentifierIgnorable(c);
     }
 
     @VisibleForTesting
-    boolean isIdentifierChar(char c) {
-        return (Character.isDigit(c) || "'".indexOf(c) > -1
+    final boolean isIdentifierChar(final char c) {
+        return (Character.isDigit(c)
+                || ("'".indexOf(c) > -1)
                 || isIdentifierLeadingChar(c));
     }
 
@@ -394,31 +448,35 @@ public class Scanner {
      * @see <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers">Lexical Grammar of Javascript</a>
      */
     @VisibleForTesting
-    void identifier() {
+    final void identifier() {
         assert (isIdentifierLeadingChar(peek()));
         while (isIdentifierChar(peek())) {
             currentLexeme.appendCodePoint(advance());
         }
-        String lexeme = currentLexeme.toString();
-        TokenType type = keywords.get(lexeme);
-        if (type != null) addToken(type);
-        else addToken(IDENTIFIER, currentLexeme.toString());
+        final String lexeme = currentLexeme.toString();
+        final TokenType type = keywords.get(lexeme);
+        if (type != null) {
+            addToken(type);
+        } else {
+            addToken(IDENTIFIER, currentLexeme.toString());
+        }
     }
 
     /**
      * Tokenize a keyword.
      *
-     * <p>The lexeme is the keyword name (i.e., chops off the leading colon).</p>
+     * <p>The lexeme is the keyword name (i.e., chops off the leading
+     * colon).</p>
      */
     @VisibleForTesting
-    void keyword() {
+    final void keyword() {
         assert (':' == peek());
         advance();
         assert (isIdentifierLeadingChar(peek()));
         while (isIdentifierChar(peek())) {
             currentLexeme.appendCodePoint(advance());
         }
-        String lexeme = currentLexeme.toString();
+        final String lexeme = currentLexeme.toString();
         addToken(KEYWORD, currentLexeme.toString());
     }
 
@@ -483,7 +541,9 @@ public class Scanner {
      */
     @VisibleForTesting
     void number() {
-        if ('+' == peek() || '-' == peek()) currentLexeme.appendCodePoint(advance());
+        if ('+' == peek() || '-' == peek()) {
+            currentLexeme.appendCodePoint(advance());
+        }
         if ('0' == peek() && '\0' != peekNext()) {
             switch (peekNext()) {
             case 'b':
@@ -524,21 +584,22 @@ public class Scanner {
      * integer token <em>unless</em> the {@code preferParsingNumberAsFloat}
      * flag has been set to {@code true}.</p>
      */
-    void floatingPointNumber() {
+    final void floatingPointNumber() {
         boolean mustParseAsFloat = floatMantissa();
         mustParseAsFloat = floatExponent() || mustParseAsFloat;
-        if (mustParseAsFloat || preferParsingNumbersAsFloats)
+        if (mustParseAsFloat || preferParsingNumbersAsFloats) {
             addToken(NUMBER, Double.parseDouble(currentLexeme.toString()));
-        else
+        } else {
             addToken(NUMBER, Long.parseLong(currentLexeme.toString()));
+        }
     }
 
-    boolean floatMantissa() {
+    final boolean floatMantissa() {
         while (Character.isDigit(peek())) {
             currentLexeme.appendCodePoint(advance());
         }
 
-        if('.' == peek() && Character.isDigit(peekNext())) {
+        if (('.' == peek()) && Character.isDigit(peekNext())) {
             currentLexeme.appendCodePoint(advance());
             while (Character.isDigit(peek())) {
                 currentLexeme.appendCodePoint(advance());
@@ -548,12 +609,14 @@ public class Scanner {
         return false;
     }
 
-    boolean isFloatExponent() {
-        return (('e' == peek() || 'E' == peek()) &&
-                ('+' == peekNext() || '-' == peekNext() || Character.isDigit(peekNext())));
+    final boolean isFloatExponent() {
+        return ((('e' == peek()) || ('E' == peek()))
+                && (('+' == peekNext())
+                    || ('-' == peekNext())
+                    || Character.isDigit(peekNext())));
     }
 
-    boolean floatExponent() {
+    final boolean floatExponent() {
         boolean tokenIsFloat = false;
         if (isFloatExponent()) {
             currentLexeme.appendCodePoint(advance());
@@ -577,7 +640,7 @@ public class Scanner {
      * Javascript indicates a BigInt by an {@code n} suffix.
      */
     private boolean isJavascriptBigintSuffix() {
-        return 'n'==peek();
+        return 'n' == peek();
     }
 
     /**
@@ -592,14 +655,16 @@ public class Scanner {
      * @param b The lowercase character of the radix separator.
      * @param B The uppercase character of the radix separator.
      */
-    private void radixNumber(int base, char b, char B) {
+    private void radixNumber(final int base, final char b, final char B) {
         assembleRadixNumberLexeme(base, b, B);
         tokenizeRadixNumberLexeme(base, b, B);
     }
 
     // Produce a predicate testing if a given character's codePoint is between
     // 0 and (whatever the number of digits in the radix is).
-    IntPredicate radixBoundsFactory(int base, char b, char B) {
+    final IntPredicate radixBoundsFactory(final int base,
+                                          final char b,
+                                          final char B) {
         final int upperBound = Math.min('9', '0' + base);
         final int lcLetterLowerBound = (base > 10 ? 'a' : '0');
         final int lcLetterUpperBound = (base > 10 ? ((base - 10) + 'a') : '0');
@@ -607,13 +672,14 @@ public class Scanner {
         // i.e., we're not in hexadecimal.
         final int ucLetterLowerBound = (base > 10 ? 'A' : '0');
         final int ucLetterUpperBound = (base > 10 ? ((base - 10) + 'A') : '0');
-        IntPredicate withinBounds = (c) -> (('0' <= c && c <= upperBound) ||
-                ((lcLetterLowerBound <= c && c <= lcLetterUpperBound) ||
-                 (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
+        IntPredicate withinBounds = (c) -> (('0' <= c && c <= upperBound)
+             || ((lcLetterLowerBound <= c && c <= lcLetterUpperBound)
+                 || (ucLetterLowerBound <= c && c <= ucLetterUpperBound)));
         return withinBounds;
     }
+
     @VisibleForTesting
-    void tryScanningOctal() {
+    final void tryScanningOctal() {
         // build predicate to test if we're still in the right radix
         IntPredicate withinBounds = radixBoundsFactory(8, 'o', 'O');
         // CONSUME!
@@ -633,7 +699,7 @@ public class Scanner {
         tokenizeRadixNumberLexeme(8, 'o', 'O');
     }
 
-    void tryScanningInt() {
+    final void tryScanningInt() {
         while (Character.isDigit(peek())) {
             currentLexeme.appendCodePoint(advance());
             if (isFloatExponent()) {
@@ -645,10 +711,13 @@ public class Scanner {
         tokenizeRadixNumberLexeme(10, 'd', 'D');
     }
 
-    void assembleRadixNumberLexeme(int base, char b, char B) {
+    final void assembleRadixNumberLexeme(final int base,
+                                         final char b,
+                                         final char B) {
         assert ('0' == peek());
         currentLexeme.appendCodePoint(advance());
-        if ((b == peek()) || (B == peek())) { // octal formats make this optional :(
+        if ((b == peek()) || (B == peek())) {
+            // octal formats make this optional :(
             currentLexeme.appendCodePoint(advance());
         }
         // build predicate to test if we're still in the right radix
@@ -659,25 +728,34 @@ public class Scanner {
         }
     }
 
-    void tokenizeRadixNumberLexeme(int base, char b, char B) {
-        int sign = ('-' == currentLexeme.charAt(0) ? -1 : 1);
-        int signOffset = ('-' == currentLexeme.charAt(0) || '+' == currentLexeme.charAt(0)) ? 1 : 0;
+    final void tokenizeRadixNumberLexeme(final int base,
+                                         final char b,
+                                         final char B) {
+        final int sign = ('-' == currentLexeme.charAt(0) ? -1 : 1);
+        final int signOffset = ('-' == currentLexeme.charAt(0)
+                                || '+' == currentLexeme.charAt(0))
+            ? 1 : 0;
         // check if it could possibly be a single digit number
         if (1 == currentLexeme.length()) {
-            Long literal = Long.parseLong(currentLexeme.substring(signOffset), base);
+            final Long literal
+                = Long.parseLong(currentLexeme.substring(signOffset), base);
             addToken(NUMBER, sign*literal);
             return;
         }
         // no? It must be a radix number
-        char radixSpec = currentLexeme.charAt(1+signOffset);
-        int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)+signOffset;
+        final char radixSpec = currentLexeme.charAt(1+signOffset);
+        final int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)
+            + signOffset;
         if (isJavascriptBigintSuffix()) {
             currentLexeme.appendCodePoint(advance());
-            BigInteger literal = new BigInteger(currentLexeme.substring(start, currentLexeme.length()-1), base);
+            final String lexeme = currentLexeme
+                .substring(start, currentLexeme.length() - 1);
+            final BigInteger literal
+                = new BigInteger(lexeme, base);
             addToken(NUMBER, (-1 == sign ? literal.negate() : literal));
         } else {
             Long literal = Long.parseLong(currentLexeme.substring(start), base);
-            addToken(NUMBER, sign*literal);
+            addToken(NUMBER, sign * literal);
         }
     }
 }

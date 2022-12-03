@@ -3,10 +3,6 @@ package com.github.pqnelson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 
 import com.github.pqnelson.expr.Expr;
 
@@ -19,20 +15,21 @@ import com.github.pqnelson.expr.Expr;
  * }</blockquote>
  *
  */
-public class App
-{
-    private static final Printer printer = new Printer();
-    private static String print(Expr e) {
-        return e.accept(printer);
+public final class App {
+    private static final Printer PRINTER = new Printer(true);
+
+    private App() { }
+
+    private static String print(final Expr e) {
+        return PRINTER.printStr(e);
     }
 
-    private static String rep(String line, Env env) throws Throwable {
+    private static String rep(final String line, final Env env)
+            throws Throwable {
         return print(Evaluator.eval(Reader.readString(line), env));
     }
 
-    public static void main( String[] args )
-    {
-        printer.isReadable = true;
+    public static void main(final String[] args) {
         Env env = Evaluator.initialEnv();
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader buf = new BufferedReader(input);
@@ -48,7 +45,8 @@ public class App
                     System.out.println(rep(line, env));
                 }
             } catch (Throwable e) {
-                System.err.println("Oh now, throwable thrown! I am calling it quits!");
+                System.err.println("Oh now, throwable thrown!");
+                System.err.println("I am calling it quits!");
                 System.err.println(e.getMessage());
                 e.printStackTrace(System.err);
                 isFinished = true;

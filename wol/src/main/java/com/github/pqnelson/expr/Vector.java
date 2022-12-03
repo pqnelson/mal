@@ -16,37 +16,49 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
         this(new ArrayList<Expr>());
     }
 
-    public Vector(List<Expr> contents) {
+    public Vector(final List<Expr> contents) {
         this.contents = contents;
     }
 
-    public Vector(Vector other) {
+    public Vector(final Vector other) {
         this.contents = new ArrayList<>(other.contents);
     }
 
-    public Vector(Vector other, Map meta) {
+    public Vector(final Vector other, final Map meta) {
         this.contents = new ArrayList<>(other.contents);
         this.meta = meta;
     }
 
     @Override
-    public Map meta() { return this.meta; }
+    public Map meta() {
+        return this.meta;
+    }
 
     @Override
-    public Vector withMeta(Map newMeta) {
+    public Vector withMeta(final Map newMeta) {
         if (this.meta.equals(newMeta)) return this;
         return new Vector(this, newMeta);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (null == obj) return false;
-        if (obj.getClass() != this.getClass()) return false;
-        Vector rhs = (Vector)obj;
-        if (this.size() != rhs.size()) return false;
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (null == obj) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Vector rhs = (Vector) obj;
+        if (this.size() != rhs.size()) {
+            return false;
+        }
         for (int i = 0; i < this.size(); i++) {
-            if (!this.get(i).equals(rhs.get(i))) return false;
+            if (!this.get(i).equals(rhs.get(i))) {
+                return false;
+            }
         }
         return true;
     }
@@ -62,46 +74,64 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     }
 
     @Override
-    public int size() { return contents.size(); }
+    public int size() {
+        return contents.size();
+    }
 
-    public Expr get(int i) { return contents.get(i); }
+    public Expr get(final int i) {
+        return contents.get(i);
+    }
 
 
-    Expr _get(int i, Expr defaultValue) {
-        if (i < 0 || this.contents.size() <= i) return defaultValue;
+    Expr _get(final int i, final Expr defaultValue) {
+        if ((i < 0) || (this.contents.size() <= i)) {
+            return defaultValue;
+        }
         return this.contents.get(i);
     }
 
 
-    public Expr get(Expr i, Expr defaultValue) throws NoSuchMethodException {
-        if (!i.isInt()) throw new NoSuchMethodException("Vector::get requires an integer index");
-        return this._get(((Int)i).value().intValue(), defaultValue);
+    public Expr get(final Expr i, final Expr defaultValue)
+            throws NoSuchMethodException {
+        if (!i.isInt()) {
+            throw new NoSuchMethodException("Vector::get requires "
+                                            +"an integer index");
+        }
+        return this._get(((Int) i).value().intValue(), defaultValue);
     }
 
-    public Expr last() { return contents.get(contents.size()-1); }
+    public Expr last() {
+        return contents.get(contents.size() - 1);
+    }
 
-    public Vector slice(int i) {
+    public Vector slice(final int i) {
         return new Vector(this.contents.subList(i, this.size()));
     }
 
     public Expr seq() {
-        if (this.isEmpty()) return Literal.NIL;
+        if (this.isEmpty()) {
+            return Literal.NIL;
+        }
         return new Seq(new ArrayList<>(this.contents));
     }
 
-    public void conj(Expr e) {
+    public void conj(final Expr e) {
         this.contents.add(e);
     }
 
     public Expr first() {
-        if (contents.isEmpty()) return null;
+        if (contents.isEmpty()) {
+            return null;
+        }
         return contents.get(0);
     }
 
-    public boolean isEmpty() { return contents.isEmpty(); }
+    public boolean isEmpty() {
+        return contents.isEmpty();
+    }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
+    public <T> T accept(final Visitor<T> visitor) {
         return visitor.visitVector(this);
     }
 
@@ -120,7 +150,8 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
         return buf.toString().trim();
     }
 
-    @Override public String type() {
+    @Override
+    public String type() {
         return "Vector";
     }
 }

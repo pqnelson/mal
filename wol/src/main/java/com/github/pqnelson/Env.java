@@ -2,19 +2,21 @@ package com.github.pqnelson;
 
 import java.util.HashMap;
 import com.github.pqnelson.expr.Expr;
-import com.github.pqnelson.expr.LispException;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
 
-public class Env {
-    Env outer = null;
-    HashMap<String, Expr> table = new HashMap<>();
+public final class Env {
+    private final Env outer;
+    private HashMap<String, Expr> table = new HashMap<>();
+    private static final Symbol AMPERSAND = new Symbol("&");
 
-    public Env() { }
+    public Env() {
+        this(null);
+    }
 
-    public Env(Env outer) {
-        this.outer = outer;
+    public Env(final Env parent) {
+        this.outer = parent;
     }
 
     /**
@@ -22,23 +24,29 @@ public class Env {
      *
      * <p>Since these always use vectors for parameters (for functions) or
      * for bindings (for {@code let*}), we always expect a vector of variables.
+     *
+     * @param parent The environment we are extending.
+     * @param vars A vector of symbols we are binding in the new Environment.
+     * @param exprs A list of associated values for the new bindings.
      */
-    public Env(Env outer, Vector vars, Seq exprs) {
-        // assert (vars.size() <= exprs.size());
-        this.outer = outer;
-        for (int i=0; i < vars.size(); i++) {
-            String s = ((Symbol)vars.get(i)).name();
-            if (s.equals("&")) {
-                String k = ((Symbol)vars.get(i+1)).name();
+    public Env(final Env parent, final Vector vars, final Seq exprs) {
+        /* assert ((vars.size() < exprs.size()
+                       && vars.get(vars.size()-2).equals(AMPERSAND))
+                   || (vars.size() == exprs.size())); */
+        this.outer = parent;
+        for (int i = 0; i < vars.size(); i++) {
+            final Symbol s = ((Symbol) vars.get(i));
+            if (s.equals(this.AMPERSAND)) {
+                String k = ((Symbol) vars.get(i + 1)).name();
                 table.put(k, exprs.slice(i));
                 break;
             } else {
-                table.put(s, exprs.get(i));
+                table.put(s.name(), exprs.get(i));
             }
         }
     }
 
-    public Env find(Symbol key) {
+    public Env find(final Symbol key) {
         if (table.containsKey(key.name())) {
             return this;
         } else if (null != outer) {
@@ -48,16 +56,16 @@ public class Env {
         }
     }
 
-    public Expr get(Symbol key) {
+    public Expr get(final Symbol key) {
         Env e = find(key);
         if (null == e) {
-            throw new RuntimeException("'"+key.name()+"' not found");
+            throw new RuntimeException("'" + key.name() + "' not found");
         } else {
             return e.table.get(key.name());
         }
     }
 
-    public Env set(Symbol key, Expr value) {
+    public Env set(final Symbol key, final Expr value) {
         table.put(key.name(), value);
         return this;
     }

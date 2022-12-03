@@ -5,5 +5,5 @@ package com.github.pqnelson.expr;
  */
 @FunctionalInterface
 public interface IFn {
-    public Expr invoke(Seq args) throws Throwable;
+    Expr invoke(Seq args) throws Throwable;
 }

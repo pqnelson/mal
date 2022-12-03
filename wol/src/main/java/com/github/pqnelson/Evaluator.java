@@ -1,36 +1,30 @@
 package com.github.pqnelson;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.github.pqnelson.expr.Expr;
-import com.github.pqnelson.expr.BigInt;
-import com.github.pqnelson.expr.Float;
 import com.github.pqnelson.expr.Fun;
-import com.github.pqnelson.expr.ICountable;
 import com.github.pqnelson.expr.IFn;
-import com.github.pqnelson.expr.Int;
 import com.github.pqnelson.expr.Keyword;
-import com.github.pqnelson.expr.LispException;
 import com.github.pqnelson.expr.Literal;
 import com.github.pqnelson.expr.Map;
 import com.github.pqnelson.expr.Seq;
 import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
-import com.github.pqnelson.TokenType;
 
 public class Evaluator {
 
-    static boolean ratorIs(Expr expr, Symbol s) {
+    private Evaluator() { }
+
+    static boolean ratorIs(final Expr expr, final Symbol s) {
         return  (expr.isList() && ((Seq)expr).size() > 0
                  && ((Seq)expr).first().equals(s));
     }
 
-    private static final Symbol symbol(String name) {
+    private static Symbol symbol(final String name) {
         return new Symbol(new Token(TokenType.IDENTIFIER, name, null, 0));
     }
 
@@ -38,18 +32,18 @@ public class Evaluator {
     static final Symbol concat = symbol("concat");
     static final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
 
-    static Expr quote(Expr e) {
+    static Expr quote(final Expr e) {
         Seq result = new Seq();
         result.conj(quote);
         result.conj(e);
         return result;
     }
 
-    static Seq qqProcess(Seq acc, Expr e) {
+    static Seq qqProcess(final Seq acc, final Expr e) {
         Seq result = new Seq();
         if (ratorIs(e, Symbol.SPLICE)) {
             result.conj(concat);
-            result.conj(((Seq)e).get(1));
+            result.conj(((Seq) e).get(1));
         } else {
             result.conj(cons);
             result.conj(quasiquote(e));
@@ -65,71 +59,85 @@ public class Evaluator {
      * basically what happens is that {@code `(1 2 3)} is interpreted as
      * {@code (cons 1 (cons 2 (cons 3 (list))))}. Compare this to Clojure, whic
      * would interpret it as {@code (concat (list 1) (list 2) (list 3))}.
-     * Probably that is much cleaner: {@code ast.map(l => (list quasiquote(l))).cons(concat)}.</p>
+     * Probably that is much cleaner:
+     * {@code ast.map(l => (list quasiquote(l))).cons(concat)}.</p>
      */
-    static Expr quasiquote(Expr ast) {
-        if (ast.isLiteral()) return ast;
+    static Expr quasiquote(final Expr ast) {
+        if (ast.isLiteral()) {
+            return ast;
+        } else if (ast.isSymbol() || ast.isMap()) {
         // BUG: a map should expand each key-value pair.
-        if (ast.isSymbol() || ast.isMap()) {
             return quote(ast);
-        }
-        if (ratorIs(ast, Symbol.UNQUOTE)) {
-            return ((Seq)ast).get(1);
-        }
-        if (ast.isList() || ast.isVector()) {
-            if ((ast.isList() && ((Seq)ast).isEmpty())
-                || (ast.isVector() && ((Vector)ast).isEmpty())) return quote(ast);
+        } else if (ratorIs(ast, Symbol.UNQUOTE)) {
+            return ((Seq) ast).get(1);
+        } else if (ast.isList() || ast.isVector()) {
+            if ((ast.isList() && ((Seq) ast).isEmpty())
+                || (ast.isVector() && ((Vector) ast).isEmpty())) {
+                return quote(ast);
+            }
             Seq acc = new Seq();
             acc.conj(new Symbol("list"));
-            Seq _ast = (Seq)ast;
-            for (int i = _ast.size()-1; i >= 0; i--) {
+            final Seq _ast = (Seq) ast;
+            for (int i = _ast.size() - 1; i >= 0; i--) {
                 Expr e = _ast.get(i);
                 acc = qqProcess(acc, e);
             }
-            if (ast.isVector()) acc.prepend(new Symbol("vec"));
+            if (ast.isVector()) {
+                acc.prepend(new Symbol("vec"));
+            }
             return acc;
+        } else {
+            // default case:
+            return ast;
         }
-        // default case:
-        return ast;
     }
 
-    static boolean isMacroCall(Expr _ast, Env env) {
-        if (!_ast.isList()) return false;
-        Seq ast = (Seq)_ast;
-        if (null == ast.first() || !(ast.first().isSymbol())) return false;
-        Symbol head = ((Symbol)ast.first());
+    static boolean isMacroCall(final Expr _ast, final Env env) {
+        if (!_ast.isList()) {
+            return false;
+        }
+        final Seq ast = (Seq) _ast;
+        if (null == ast.first() || !(ast.first().isSymbol())) {
+            return false;
+        }
+        final Symbol head = ((Symbol) ast.first());
         if (!head.isSpecialForm()) {
-            Expr e = env.get(head);
-            if (!e.isFunction()) return false;
-            return ((Fun)e).isMacro();
+            final Expr e = env.get(head);
+            if (!e.isFunction()) {
+                return false;
+            }
+            return ((Fun) e).isMacro();
         }
         return false;
     }
 
-    static Expr macroexpand(Expr ast, Env env) throws Throwable {
+    static Expr macroexpand(Expr ast, final Env env) throws Throwable {
         while(isMacroCall(ast, env)) {
-            Symbol rator = (Symbol)((Seq)ast).rator();
-            Fun macro = (Fun)env.get(rator);
-            ast = macro.invoke(((Seq)ast).slice(1));
+            final Symbol rator = (Symbol) ((Seq) ast).rator();
+            final Fun macro = (Fun) env.get(rator);
+            ast = macro.invoke(((Seq) ast).slice(1));
         }
         return ast;
     }
     public static boolean debug = false;
 
-    static Expr evalLiteral(Expr ast, Env env) throws Throwable {
+    static Expr evalLiteral(final Expr ast, final Env env) throws Throwable {
         if (ast.isSymbol()) {
-            if (debug) { System.out.println("evalLiteral() getting value of symbol '"+
-                                            ast.toString()+"' from environment"); }
-            return env.get((Symbol)ast);
+            if (debug) {
+                System.out.println("evalLiteral() getting value of symbol '"
+                                   + ast.toString()
+                                   + "' from environment");
+            }
+            return env.get((Symbol) ast);
         } else if (ast.isList()) {
             Seq result = new Seq();
-            for (Expr e : (Seq)ast) {
+            for (Expr e : (Seq) ast) {
                 result.conj(eval(e, env));
             }
             return result;
         } else if (ast.isVector()) {
             Vector result = new Vector();
-            for (Expr e : (Vector)ast) {
+            for (Expr e : (Vector) ast) {
                 result.conj(eval(e, env));
             }
             return result;
@@ -145,7 +153,9 @@ public class Evaluator {
      */
     public static Expr eval(Expr expr, Env env) throws Throwable {
         while (true) {
-            if (debug) { System.out.println("eval given expr = "+expr.toString()); }
+            if (debug) {
+                System.out.println("eval given expr = " + expr.toString());
+            }
             if (!expr.isList()) {
                 return evalLiteral(expr, env);
             }
@@ -155,32 +165,33 @@ public class Evaluator {
                 return evalLiteral(expr, env);
             }
             /* end macroexpansion */
-            Seq ast = ((Seq)expr).slice(1);
-            Expr rator = ((Seq)expr).rator();
-            String s = rator.isSymbol() ? ((Symbol)rator).name() : "";
-            switch(s) {
+            Seq ast = ((Seq) expr).slice(1);
+            Expr rator = ((Seq) expr).rator();
+            String s = rator.isSymbol() ? ((Symbol) rator).name() : "";
+            switch (s) {
             case "def": {
-                assert (2 == ast.size()) : "def has "+ast.size()+" operands instead of 2";
+                assert (2 == ast.size())
+                    : "def has " + ast.size() + " operands instead of 2";
                 /* the reader assembles (def ^:foo bar spam) as
                    (def (with-meta bar :foo) spam), where
                    (with-meta ...) is a secret macro. */
-                Symbol name = (Symbol)macroexpand(ast.first(), env);
-                Expr value = eval(ast.get(1), env);
+                final Symbol name = (Symbol) macroexpand(ast.first(), env);
+                final Expr value = eval(ast.get(1), env);
                 env.set(name, value);
                 return value;
             }
             case "let*": {
-                Vector bindings = (Vector)ast.first();
-                Seq body = ast.slice(1);
+                final Vector bindings = (Vector) ast.first();
+                final Seq body = ast.slice(1);
                 Symbol key;
                 Expr val;
                 Env letEnv = new Env(env);
-                for (int i=0; i < bindings.size(); i+=2) {
-                    key = (Symbol)bindings.get(i);
-                    val = bindings.get(i+1);
+                for (int i = 0; i < bindings.size(); i += 2) {
+                    key = (Symbol) bindings.get(i);
+                    val = bindings.get(i + 1);
                     letEnv.set(key, eval(val, letEnv));
                 }
-                for (int i=2; i < ast.size()-1; i++) {
+                for (int i = 2; i < ast.size() - 1; i++) {
                     eval(ast.get(i), letEnv);
                 }
                 expr = ast.last();
@@ -195,7 +206,7 @@ public class Evaluator {
             case "if": {
                 // ast = (test true-branch false-branch?)
                 Expr test = eval(ast.get(0), env);
-                if (test.isLiteral() && ((Literal)test).isFalsy()) {
+                if (test.isLiteral() && ((Literal) test).isFalsy()) {
                     expr = ast.get(2, Literal.NIL);
                 } else {
                     expr = ast.get(1);
@@ -204,38 +215,37 @@ public class Evaluator {
             }
             case "fn*": {
                 // ast ::= ([params] body) OR (name [params] body)
-                Symbol name = (ast.first().isSymbol() ? (Symbol)ast.first() : null);
-                final Vector params = (Vector)(null == name ? ast.first() : ast.get(1));
+                final Symbol name = (ast.first().isSymbol()
+                                     ? (Symbol) ast.first()
+                                     : null);
+                final Vector params = (Vector) (null == name
+                                                ? ast.first()
+                                                : ast.get(1));
                 Expr body;
-                int nameOffset = (null == name ? 0 : 1);
-                int bodyIndex = nameOffset + 1;
+                final int nameOffset = (null == name ? 0 : 1);
+                final int bodyIndex = nameOffset + 1;
                 if (1 + bodyIndex == ast.size()) {
                     body = ast.get(bodyIndex);
                 } else {
-                    body = (Seq)ast.slice(bodyIndex);
-                    ((Seq)body).prepend(Symbol.DO);
+                    body = (Seq) ast.slice(bodyIndex);
+                    ((Seq) body).prepend(Symbol.DO);
                 }
                 Env current = env;
                 Fun fn;
-                if (null != name) {
-                    // recursive functions use their own name
+                if (null != name) { // recursive functions use their own name
                     fn = new Fun (null, params, body, name);
                     current.set(name, fn);
                     IFn f = (args) -> eval(body, new Env(current, params, args));
                     fn.setIFn(f);
-                } else {
-                    // no name? no recursion!
+                } else { // no name? no recursion!
                     IFn f = (args) -> eval(body, new Env(current, params, args));
                     fn = new Fun (f, params, body, name);
                 }
                 return fn;
             }
-            case "macroexpand":
-                return macroexpand(ast.first(), env);
-            case "quote":
-                return ast.first();
-            case "quasiquote-expand":
-                return quasiquote(ast.first());
+            case "macroexpand":       return macroexpand(ast.first(), env);
+            case "quote":             return ast.first();
+            case "quasiquote-expand": return quasiquote(ast.first());
             case "quasiquote":
                 expr = quasiquote(ast.first());
                 break;
@@ -245,13 +255,11 @@ public class Evaluator {
                 assert (ast.get(1).isVector()) : "Args are not a vector";
                 assert (ast.size() >= 2) : "macro has no body";
                 PPrinter p = new PPrinter();
-                Symbol name = (Symbol)ast.first();
+                Symbol name = (Symbol) ast.first();
                 Seq littleMac = ast.slice(1); // = ([params] body)
-                System.out.println("littleMac initialized as: "+littleMac.accept(p));
                 littleMac.prepend(Symbol.FN_STAR);
-                System.out.println("prepending fn*: "+littleMac.accept(p));
-                Fun macro = (Fun)eval(littleMac, env); // = eval (fn* [params] body)
-                System.out.println("macro = "+macro.accept(p));
+                Fun macro = (Fun) eval(littleMac, env);
+                // macro = eval (fn* [params] body)
                 macro.setMacro();
                 env.set(name, macro);
                 return macro;
@@ -265,29 +273,32 @@ public class Evaluator {
                    state of things.
                 */
                 Predicate<Expr> isCatchClause = (ex) ->
-                    ex.isList() && Symbol.CATCH == ((Seq)ex).first();
+                    ex.isList() && Symbol.CATCH == ((Seq) ex).first();
                 try {
                     Seq body = ast.takeWhile(isCatchClause.negate());
                     body.prepend(Symbol.DO);
                     return eval(body, env);
                 } catch (Throwable e) {
                     // cases when the exception isn't handled
-                    if (null == ast.get(1)) throw e;
-                    if (!ast.get(1).isList()) throw e;
+                    if ((null == ast.get(1))
+                        || (!ast.get(1).isList())) {
+                        throw e;
+                    }
 
                     Seq catchClauses = ast.filter(isCatchClause);
-                    if (catchClauses.isEmpty()) throw e;
-
+                    if (catchClauses.isEmpty()) {
+                        throw e;
+                    }
                     // OK, so, ast handles the exception properly
                     // catchClause ~ (catch e catch-body...)
-                    Seq catchClause = (Seq)(catchClauses.first());
+                    Seq catchClause = (Seq) (catchClauses.first());
                     String stacktrace = Arrays.stream(e.getStackTrace())
                         .map(line -> line.toString())
                         .collect(Collectors.joining("\n"));
                     Map meta = new Map();
                     meta.assoc(new Keyword("stacktrace"), new Str(stacktrace));
-                    Symbol exceptionId = (Symbol)catchClause.get(1);
-                    exceptionId = (Symbol)(exceptionId.withMeta(meta));
+                    Symbol exceptionId = (Symbol) catchClause.get(1);
+                    exceptionId = (Symbol) (exceptionId.withMeta(meta));
                     // bind the exception identifier in a new Env
                     Env eenv = new Env(env);
                     eenv.set(exceptionId, new Str(e.getMessage()));
@@ -300,19 +311,11 @@ public class Evaluator {
                 break;
             }
             default: {
-                if (debug) System.out.println("evaluating args = "+ast.toString());
-                Seq args = (Seq)evalLiteral(ast, env);
-                if (debug) System.out.println("eval determining f = "+rator.toString());
-                Fun f = (Fun)(eval(rator, env));
-                if (debug) System.out.println("eval determined f as: "+f.toString());
+                Seq args = (Seq) evalLiteral(ast, env);
+                Fun f = (Fun) (eval(rator, env));
                 if (!f.isInterpreted()) { // "compiled" function
-                    if (debug) System.out.println("Executing a compiled function");
-                    if (debug) System.out.println("args = "+args.toString());
-                    Expr result = f.invoke(args);
-                    if (debug) System.out.println("Returning "+result.toString());
-                    return result;
+                    return f.invoke(args);
                 } else { // interpreted function
-                    if (debug) System.out.println("Executing an interpreted function: "+ast.toString());
                     expr = f.getBody();
                     env = f.genEnv(env, args);
                 }

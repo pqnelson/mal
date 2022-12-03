@@ -1,19 +1,7 @@
 package com.github.pqnelson;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import com.github.pqnelson.expr.Expr;
-import com.github.pqnelson.expr.BigInt;
-import com.github.pqnelson.expr.Float;
-import com.github.pqnelson.expr.Fun;
-import com.github.pqnelson.expr.Int;
-import com.github.pqnelson.expr.Keyword;
 import com.github.pqnelson.expr.Literal;
-import com.github.pqnelson.expr.Map;
-import com.github.pqnelson.expr.Seq;
-import com.github.pqnelson.expr.Str;
-import com.github.pqnelson.expr.Symbol;
-import com.github.pqnelson.expr.Vector;
 import com.github.pqnelson.expr.Visitor;
 
 /**
@@ -22,15 +10,15 @@ import com.github.pqnelson.expr.Visitor;
  * as from a {@code new Printer(true)}, but with quotation marks around
  * strings.
  */
-class PPrinter extends Printer implements Visitor<String> {
+public final class PPrinter extends Printer implements Visitor<String> {
 
     public PPrinter() {
         super(true);
-        assert (this.isReadable);
+        // assert (this.isReadable);
     }
 
     @Override
-    public String visitLiteral(Literal expr) {
+    public String visitLiteral(final Literal expr) {
         StringBuffer buf = new StringBuffer();
         if (expr.isString()) {
             buf.append("\"");
@@ -42,7 +30,7 @@ class PPrinter extends Printer implements Visitor<String> {
         return buf.toString();
     }
 
-    public static String print(Expr e) {
+    public static String print(final Expr e) {
         return e.accept(new PPrinter());
     }
 
