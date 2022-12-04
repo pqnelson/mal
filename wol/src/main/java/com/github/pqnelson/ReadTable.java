@@ -24,7 +24,7 @@ public class ReadTable {
     /**
      * Mapping of character [code points] to reader macros.
      */
-    private Map<Integer, ReaderMacro<ReadTable>> table;
+    private Map<Integer, ReaderMacro> table;
     /**
      * The underlying input reader source.
      */
@@ -42,7 +42,7 @@ public class ReadTable {
      * Example of a reader macro: increment the {@code line} variable
      * but return nothing.
      */
-    private final ReaderMacro<ReadTable> newlineReader = (s, r) -> {
+    private final ReaderMacro newlineReader = (s, r) -> {
         line++;
         return null;
     };
@@ -58,7 +58,7 @@ public class ReadTable {
     }
 
     public ReadTable(final Reader reader) {
-        this.table = new HashMap<Integer, ReaderMacro<ReadTable>>();
+        this.table = new HashMap<Integer, ReaderMacro>();
         this.input = new PushbackReader(new BufferedReader(reader));
 
         this.table.put((int) '(', delimitedReaderFactory(")"));
@@ -74,8 +74,8 @@ public class ReadTable {
      * @return A {@code ReaderMacro} which accumulates all objects read
      * in until the token matches the specific right delimiter.
      */
-    private ReaderMacro<ReadTable> delimitedReaderFactory(final String until) {
-        final ReaderMacro<ReadTable> result = (s, rdr) -> {
+    private ReaderMacro delimitedReaderFactory(final String until) {
+        final ReaderMacro result = (s, rdr) -> {
             ArrayList<Object> coll = new ArrayList<Object>();
             Object token = rdr.read();
             while (!token.equals(until)) {
@@ -97,11 +97,11 @@ public class ReadTable {
      * singleton token.
      * @return A reader macro for the operation.
      */
-    private ReaderMacro<ReadTable> singleCharReader(final int c) {
+    private ReaderMacro singleCharReader(final int c) {
         StringBuffer buf = new StringBuffer();
         buf.appendCodePoint(c);
         final String token = buf.toString();
-        final ReaderMacro<ReadTable> result = (s, r) -> token;
+        final ReaderMacro result = (s, r) -> token;
         return result;
     }
 

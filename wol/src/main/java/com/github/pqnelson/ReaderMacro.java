@@ -10,7 +10,7 @@ import java.io.Reader;
  * invoked upon reading {@code '('}, which then assembles a list of
  * objects until the closing delimiter {@code ')'} is encountered.</p>
  */
-interface ReaderMacro<R> {
+interface ReaderMacro {
     /**
      * Execute a reader macro, consuming characters from the input
      * stream, optionally returning an object.
@@ -19,5 +19,5 @@ interface ReaderMacro<R> {
      * @param reader The Reader instance which is calling the reader macro.
      * @return A (possibly null) object read from the input stream.
      */
-    Object read(Reader stream, R reader);
+    Object read(Reader stream, ReadTable reader);
 }
