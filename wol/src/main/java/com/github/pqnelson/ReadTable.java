@@ -123,6 +123,10 @@ public class ReadTable {
         DelimiterReaderMacro.register('}', this);
     }
 
+    public final int getLineNumber() {
+        return this.line;
+    }
+
     public void addMacro(char c, ReaderMacro macro) {
         this.addMacro((int) c, macro);
     }

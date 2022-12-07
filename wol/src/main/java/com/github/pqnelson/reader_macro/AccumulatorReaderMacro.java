@@ -75,26 +75,25 @@ public class AccumulatorReaderMacro implements ReaderMacro {
         if (table.isFinished()) {
             return null;
         }
-
+        int line = table.getLineNumber();
         List<Expr> coll = new ArrayList<>();
         Expr entry;
         while (!table.isFinished()) {
             try {
                 entry = table.read();
                 if (this.stopToken.equals(entry)) {
-                    break;
+                    return this.reduce.apply(coll);
                 } else {
                     coll.add(entry);
                 }
             } catch (InputMismatchException e) {
                 if (e.getMessage().equals(this.stopToken.name())) {
-                    break;
+                    return this.reduce.apply(coll);
                 } else {
                     throw e;
                 }
             }
         }
-
-        return this.reduce.apply(coll);
+        throw new InputMismatchException("Runaway collection started on line "+line);
     }
 }
