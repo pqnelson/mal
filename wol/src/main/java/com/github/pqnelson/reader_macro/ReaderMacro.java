@@ -1,6 +1,9 @@
-package com.github.pqnelson;
+package com.github.pqnelson.reader_macro;
 
 import java.io.Reader;
+
+import com.github.pqnelson.ReadTable;
+import com.github.pqnelson.expr.Expr;
 
 /**
  * A functional interface for reader macros.
@@ -10,14 +13,15 @@ import java.io.Reader;
  * invoked upon reading {@code '('}, which then assembles a list of
  * objects until the closing delimiter {@code ')'} is encountered.</p>
  */
-interface ReaderMacro {
+public interface ReaderMacro {
     /**
      * Execute a reader macro, consuming characters from the input
      * stream, optionally returning an object.
      *
      * @param stream The input stream used by the reader macro.
      * @param reader The Reader instance which is calling the reader macro.
+     * @param cp The codepoint for the character bound to the reader macro.
      * @return A (possibly null) object read from the input stream.
      */
-    Object read(Reader stream, ReadTable reader);
+    Expr apply(Reader stream, ReadTable reader, int cp);
 }

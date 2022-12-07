@@ -9,8 +9,31 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
+import com.github.pqnelson.expr.Expr;
+import com.github.pqnelson.expr.Keyword;
+import com.github.pqnelson.expr.Literal;
+import com.github.pqnelson.expr.Seq;
+import com.github.pqnelson.expr.Str;
+import com.github.pqnelson.expr.Symbol;
+import com.github.pqnelson.expr.Vector;
+import com.github.pqnelson.reader_macro.AccumulatorReaderMacro;
+import com.github.pqnelson.reader_macro.DelimiterReaderMacro;
+import com.github.pqnelson.reader_macro.KeywordReaderMacro;
+import com.github.pqnelson.reader_macro.ReaderMacro;
+import com.github.pqnelson.reader_macro.SingleCharReaderMacro;
+import com.github.pqnelson.reader_macro.SpecialFormReaderMacro;
+import com.github.pqnelson.reader_macro.UnquoteReaderMacro;
+
+/*
+ * TODO 1: have a reader macro to handle strings.
+ * TODO 2: have a reader macro for numbers. It's probably best to have a
+ *         NumberReadTable subclass which will specifically handle reading
+ *         numbers, and once finished return control to the calling table.
+ */
 /**
  * A read-table driven Lisp reader.
  *
@@ -25,6 +48,19 @@ public class ReadTable {
      * Mapping of character [code points] to reader macros.
      */
     private Map<Integer, ReaderMacro> table;
+
+    private static final Map<String, Expr> literals;
+    static {
+        literals = new HashMap<String, Expr>();
+        literals.put("false", Literal.F);
+        literals.put("nil", Literal.NIL);
+        literals.put("true", Literal.T);
+        literals.put("try", Symbol.TRY);
+        literals.put("catch", Symbol.CATCH);
+        literals.put("macroexpand", Symbol.MACROEXPAND);
+        literals.put("quasiquote-expand", Symbol.QUASIQUOTE_EXPAND);
+    }
+
     /**
      * The underlying input reader source.
      */
@@ -42,7 +78,7 @@ public class ReadTable {
      * Example of a reader macro: increment the {@code line} variable
      * but return nothing.
      */
-    private final ReaderMacro newlineReader = (s, r) -> {
+    private final ReaderMacro newlineReader = (s, r, cp) -> {
         line++;
         return null;
     };
@@ -60,49 +96,39 @@ public class ReadTable {
     public ReadTable(final Reader reader) {
         this.table = new HashMap<Integer, ReaderMacro>();
         this.input = new PushbackReader(new BufferedReader(reader));
+        this.initializeMacros();
+    }
 
-        this.table.put((int) '(', delimitedReaderFactory(")"));
-        this.table.put((int) ')', singleCharReader((int) ')'));
+    private void initializeMacros() {
         this.table.put((int) '\n', newlineReader);
+        /* special forms */
+        addMacro('\'', new SpecialFormReaderMacro('\'', Symbol.QUOTE));
+        addMacro('`', new SpecialFormReaderMacro('`', Symbol.QUASIQUOTE));
+        addMacro('~', new UnquoteReaderMacro());
+        addMacro(':', new KeywordReaderMacro());
+        /* parsing collections */
+        addMacro('(', new AccumulatorReaderMacro(")", Seq::new));
+        DelimiterReaderMacro.register(')', this);
+
+        addMacro('[', new AccumulatorReaderMacro("]", Vector::new));
+        DelimiterReaderMacro.register(']', this);
+
+        addMacro('{', new AccumulatorReaderMacro("}", (List<Expr> coll) -> {
+                    try {
+                        return Core.hash_map(new Seq(coll));
+                    } catch (final Exception e) {
+                        throw new RuntimeException(e);
+                    }
+        }));
+        DelimiterReaderMacro.register('}', this);
     }
 
-    /**
-     * Accumulate all objects read in until the token is the specific
-     * right delimiter.
-     *
-     * @param until The right delimiter as a string.
-     * @return A {@code ReaderMacro} which accumulates all objects read
-     * in until the token matches the specific right delimiter.
-     */
-    private ReaderMacro delimitedReaderFactory(final String until) {
-        final ReaderMacro result = (s, rdr) -> {
-            ArrayList<Object> coll = new ArrayList<Object>();
-            Object token = rdr.read();
-            while (!token.equals(until)) {
-                coll.add(token);
-                token = rdr.read();
-            }
-            return coll;
-        };
-        return result;
+    public void addMacro(char c, ReaderMacro macro) {
+        this.addMacro((int) c, macro);
     }
 
-    /**
-     * Treat a given character as a single-character token.
-     *
-     * <p>For example, {@code ")"} is a token to signal the end of the
-     * list. So we need a reader which will emit this token.</p>
-     *
-     * @param c The code point for the character we're identifying as a
-     * singleton token.
-     * @return A reader macro for the operation.
-     */
-    private ReaderMacro singleCharReader(final int c) {
-        StringBuffer buf = new StringBuffer();
-        buf.appendCodePoint(c);
-        final String token = buf.toString();
-        final ReaderMacro result = (s, r) -> token;
-        return result;
+    public void addMacro(int codepoint, ReaderMacro macro) {
+        this.table.put(codepoint, macro);
     }
 
     /**
@@ -137,7 +163,7 @@ public class ReadTable {
      * @return Returns true if there is nothing more from the input
      * stream to read.
      */
-    private boolean isAtEnd() {
+    public boolean isFinished() {
         if (!finished) {
             final int c = next();
             if (-1 == c) {
@@ -150,6 +176,13 @@ public class ReadTable {
     }
 
     private void pass() {
+    }
+
+    Expr asLiteralOrSymbol(String token) {
+        if (ReadTable.literals.containsKey(token)) {
+            return ReadTable.literals.get(token);
+        }
+        return new Symbol(token);
     }
 
     /**
@@ -168,15 +201,15 @@ public class ReadTable {
      *
      * @return The object encoded in the stream.
      */
-    public final Object read() {
-        Object result = null;
+    public final Expr read() {
+        Expr result = null;
         while (true) {
-            if (isAtEnd()) {
+            if (isFinished()) {
                 return result;
             }
             int c = next();
             if (table.containsKey(c)) {
-                result = table.get(c).read(this.input, this);
+                result = table.get(c).apply(this.input, this, c);
                 if (null != result) {
                     return result;
                 }
@@ -197,20 +230,20 @@ public class ReadTable {
      * @param cp The initial character's code point for the new token.
      * @return The object encoded by the token.
      */
-    private Object readToken(final int cp) {
+    private Expr readToken(final int cp) {
         StringBuffer buf = new StringBuffer();
         buf.appendCodePoint(cp);
-        while (!isAtEnd()) {
+        while (!isFinished()) {
             int c = next();
             if (this.table.containsKey(c)) {
                 unread(c);
-                return buf.toString();
+                return asLiteralOrSymbol(buf.toString());
             } else if (Character.isWhitespace(c)) {
-                return buf.toString();
+                return asLiteralOrSymbol(buf.toString());
             } else {
                 buf.appendCodePoint(c);
             }
         }
-        return buf.toString();
+        return asLiteralOrSymbol(buf.toString());
     }
 }
