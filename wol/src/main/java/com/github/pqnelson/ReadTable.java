@@ -279,7 +279,7 @@ public class ReadTable extends AbstractReader {
             } else if (isNumber(c)) {
                 return number(c);
             } else {
-                return readToken(c);
+                return finishToken(Character.toString(c));
             }
         }
     }
@@ -303,8 +303,11 @@ public class ReadTable extends AbstractReader {
 
     @Override
     public final String nextToken(int cp) {
-        StringBuffer buf = new StringBuffer();
-        buf.appendCodePoint(cp);
+        return this.nextToken(Character.toString(cp));
+    }
+
+    public final String nextToken(String tokenFragment) {
+        StringBuffer buf = new StringBuffer(tokenFragment);
         while (!isFinished()) {
             int c = next();
             if (this.table.containsKey(c)) {
@@ -325,27 +328,12 @@ public class ReadTable extends AbstractReader {
      * <p>When the reader encounters a character bound to a reader
      * macro, or whitespace, then we finish constructing the token.</p>
      *
-     * @param cp The initial character's code point for the new token.
+     * @param tokenFragment The initial fragment of the token.
      * @return The object encoded by the token.
      */
-    private Expr readToken(final int cp) {
-        return this.finishToken(Character.toString(cp));
-    }
-
     @Override
     public Expr finishToken(final String tokenFragment) {
-        StringBuffer buf = new StringBuffer(tokenFragment);
-        while (!isFinished()) {
-            int c = next();
-            if (this.table.containsKey(c)) {
-                unread(c);
-                return asLiteralOrSymbol(buf.toString());
-            } else if (Character.isWhitespace(c)) {
-                return asLiteralOrSymbol(buf.toString());
-            } else {
-                buf.appendCodePoint(c);
-            }
-        }
-        return asLiteralOrSymbol(buf.toString());
+        String token = this.nextToken(tokenFragment);
+        return asLiteralOrSymbol(token);
     }
 }
