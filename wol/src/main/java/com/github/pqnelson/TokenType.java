@@ -11,7 +11,7 @@ public enum TokenType {
     QUOTE, BACKTICK, WITH_META, SPLICE, UNQUOTE,
 
     // Literals.
-    IDENTIFIER, NUMBER, STRING, KEYWORD,
+    IDENTIFIER, NUMBER, STRING, KEYWORD, CHAR,
 
     // special forms
     DEF, DEFMACRO, DO, FN_STAR, IF, LET_STAR,

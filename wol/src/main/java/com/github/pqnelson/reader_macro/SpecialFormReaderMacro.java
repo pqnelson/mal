@@ -11,7 +11,7 @@ import com.github.pqnelson.expr.Symbol;
 
 /**
  * Macro for special forms like quotes {@literal 'expr}, backticks
- * {@literla `expr}, unquotes {@literal ~expr}, and splice {@literal ~@expr}.
+ * {@literal `expr}, unquotes {@literal ~expr}, and splice {@literal ~@expr}.
  */
 public class SpecialFormReaderMacro implements ReaderMacro {
     /**

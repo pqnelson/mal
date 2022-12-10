@@ -5,6 +5,7 @@ import com.github.pqnelson.Token;
 import com.github.pqnelson.TokenType;
 import static com.github.pqnelson.TokenType.TRUE;
 import static com.github.pqnelson.TokenType.FALSE;
+import static com.github.pqnelson.TokenType.CHAR;
 import static com.github.pqnelson.TokenType.STRING;
 import static com.github.pqnelson.TokenType.NUMBER;
 
@@ -21,6 +22,10 @@ public class Literal extends Expr {
 
     public Literal(final Token token) {
         this.token = token;
+    }
+
+    public static final Literal Char(char c) {
+        return new Literal(new Token(TokenType.CHAR, Character.toString(c), c));
     }
 
     public boolean isNil() {

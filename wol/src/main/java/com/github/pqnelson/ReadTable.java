@@ -21,8 +21,10 @@ import com.github.pqnelson.expr.Str;
 import com.github.pqnelson.expr.Symbol;
 import com.github.pqnelson.expr.Vector;
 import com.github.pqnelson.reader_macro.AccumulatorReaderMacro;
+import com.github.pqnelson.reader_macro.ClojureCharReaderMacro;
 import com.github.pqnelson.reader_macro.DelimiterReaderMacro;
 import com.github.pqnelson.reader_macro.KeywordReaderMacro;
+import com.github.pqnelson.reader_macro.NumberReader;
 import com.github.pqnelson.reader_macro.ReaderMacro;
 import com.github.pqnelson.reader_macro.SingleCharReaderMacro;
 import com.github.pqnelson.reader_macro.SpecialFormReaderMacro;
@@ -30,9 +32,7 @@ import com.github.pqnelson.reader_macro.UnquoteReaderMacro;
 
 /*
  * TODO 1: have a reader macro to handle strings.
- * TODO 2: have a reader macro for numbers. It's probably best to have a
- *         NumberReadTable subclass which will specifically handle reading
- *         numbers, and once finished return control to the calling table.
+ * TODO 2: unit test reading numbers further
  */
 /**
  * A read-table driven Lisp reader.
@@ -43,7 +43,7 @@ import com.github.pqnelson.reader_macro.UnquoteReaderMacro;
  * whitespace or a character triggering a reader macro. "Reader macros"
  * are precisely instances of {@link ReaderMacro ReaderMacro}.</p>
  */
-public class ReadTable {
+public class ReadTable extends AbstractReader {
     /**
      * Mapping of character [code points] to reader macros.
      */
@@ -95,12 +95,13 @@ public class ReadTable {
 
     public ReadTable(final Reader reader) {
         this.table = new HashMap<Integer, ReaderMacro>();
-        this.input = new PushbackReader(new BufferedReader(reader));
+        this.input = new PushbackReader(new BufferedReader(reader), 32);
         this.initializeMacros();
     }
 
     private void initializeMacros() {
         this.table.put((int) '\n', newlineReader);
+        addMacro('\\', new ClojureCharReaderMacro());
         /* special forms */
         addMacro('\'', new SpecialFormReaderMacro('\'', Symbol.QUOTE));
         addMacro('`', new SpecialFormReaderMacro('`', Symbol.QUASIQUOTE));
@@ -121,6 +122,11 @@ public class ReadTable {
                     }
         }));
         DelimiterReaderMacro.register('}', this);
+    }
+
+    @Override
+    public boolean isBoundToMacro(int codepoint) {
+        return this.table.containsKey(codepoint);
     }
 
     public final int getLineNumber() {
@@ -167,6 +173,7 @@ public class ReadTable {
      * @return Returns true if there is nothing more from the input
      * stream to read.
      */
+    @Override
     public boolean isFinished() {
         if (!finished) {
             final int c = next();
@@ -179,9 +186,6 @@ public class ReadTable {
         return finished;
     }
 
-    private void pass() {
-    }
-
     Expr asLiteralOrSymbol(String token) {
         if (ReadTable.literals.containsKey(token)) {
             return ReadTable.literals.get(token);
@@ -189,6 +193,26 @@ public class ReadTable {
         return new Symbol(token);
     }
 
+    private int peek() {
+        final int result = next();
+        unread(result);
+        return result;
+    }
+
+    private boolean isNumber(char c) {
+        return Character.isDigit(c) ||
+            (('-' == c || '+' == c) && Character.isDigit(peek()));
+    }
+
+    private boolean isNumber(int cp) {
+        return Character.isDigit(cp) ||
+            (('-' == cp || '+' == cp) && Character.isDigit(peek()));
+    }
+
+    private Expr number(int cp) {
+        NumberReader reader = new NumberReader(this.input, this, cp);
+        return reader.read();
+    }
     /**
      * Read the next object encoded in the reader's input stream.
      *
@@ -205,6 +229,7 @@ public class ReadTable {
      *
      * @return The object encoded in the stream.
      */
+    @Override
     public final Expr read() {
         Expr result = null;
         while (true) {
@@ -218,11 +243,48 @@ public class ReadTable {
                     return result;
                 }
             } else if (Character.isWhitespace(c)) {
-                pass(); // skip whitespace
+                continue;
+            } else if (isNumber(c)) {
+                return number(c);
             } else {
                 return readToken(c);
             }
         }
+    }
+
+    @Override
+    public final String nextToken() {
+        while (true) {
+            if (isFinished()) {
+                return "";
+            }
+            int c = next();
+            if (table.containsKey(c)) {
+                return Character.toString(c);
+            } else if (Character.isWhitespace(c)) {
+                continue;
+            } else {
+                return this.nextToken(c);
+            }
+        }
+    }
+
+    @Override
+    public final String nextToken(int cp) {
+        StringBuffer buf = new StringBuffer();
+        buf.appendCodePoint(cp);
+        while (!isFinished()) {
+            int c = next();
+            if (this.table.containsKey(c)) {
+                unread(c);
+                break;
+            } else if (Character.isWhitespace(c)) {
+                break;
+            } else {
+                buf.appendCodePoint(c);
+            }
+        }
+        return buf.toString();
     }
 
     /**
@@ -235,8 +297,12 @@ public class ReadTable {
      * @return The object encoded by the token.
      */
     private Expr readToken(final int cp) {
-        StringBuffer buf = new StringBuffer();
-        buf.appendCodePoint(cp);
+        return this.finishToken(Character.toString(cp));
+    }
+
+    @Override
+    public Expr finishToken(final String tokenFragment) {
+        StringBuffer buf = new StringBuffer(tokenFragment);
         while (!isFinished()) {
             int c = next();
             if (this.table.containsKey(c)) {

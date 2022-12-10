@@ -8,6 +8,10 @@ import static com.github.pqnelson.TokenType.NUMBER;
 public class BigInt extends com.github.pqnelson.expr.Number {
     private final BigInteger value;
 
+    public BigInt(final BigInteger value) {
+        this(new Token(NUMBER), value);
+    }
+
     public BigInt(final Token token, final BigInteger value) {
         super(token);
         this.value = value;
