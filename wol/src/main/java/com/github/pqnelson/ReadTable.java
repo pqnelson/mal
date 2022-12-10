@@ -28,12 +28,9 @@ import com.github.pqnelson.reader_macro.NumberReader;
 import com.github.pqnelson.reader_macro.ReaderMacro;
 import com.github.pqnelson.reader_macro.SingleCharReaderMacro;
 import com.github.pqnelson.reader_macro.SpecialFormReaderMacro;
+import com.github.pqnelson.reader_macro.StringReaderMacro;
 import com.github.pqnelson.reader_macro.UnquoteReaderMacro;
 
-/*
- * TODO 1: have a reader macro to handle strings.
- * TODO 2: unit test reading numbers further
- */
 /**
  * A read-table driven Lisp reader.
  *
@@ -44,21 +41,33 @@ import com.github.pqnelson.reader_macro.UnquoteReaderMacro;
  * are precisely instances of {@link ReaderMacro ReaderMacro}.</p>
  */
 public class ReadTable extends AbstractReader {
+    public boolean preferParsingNumbersAsFloats = true;
     /**
      * Mapping of character [code points] to reader macros.
      */
     private Map<Integer, ReaderMacro> table;
 
+    //private
     private static final Map<String, Expr> literals;
     static {
         literals = new HashMap<String, Expr>();
+        literals.put("catch", Symbol.CATCH);
+        literals.put("def", Symbol.DEF);
+        literals.put("defmacro", Symbol.DEFMACRO);
+        literals.put("do", Symbol.DO);
         literals.put("false", Literal.F);
+        literals.put("fn*", Symbol.FN_STAR);
+        literals.put("if", Symbol.IF);
+        literals.put("let*", Symbol.LET_STAR);
+        literals.put("macroexpand", Symbol.MACROEXPAND);
         literals.put("nil", Literal.NIL);
+        literals.put("quote", Symbol.QUOTE);
+        literals.put("quasiquote", Symbol.QUASIQUOTE);
+        literals.put("quasiquote-expand", Symbol.QUASIQUOTE_EXPAND);
+        literals.put("splice", Symbol.SPLICE);
         literals.put("true", Literal.T);
         literals.put("try", Symbol.TRY);
-        literals.put("catch", Symbol.CATCH);
-        literals.put("macroexpand", Symbol.MACROEXPAND);
-        literals.put("quasiquote-expand", Symbol.QUASIQUOTE_EXPAND);
+        literals.put("unquote", Symbol.UNQUOTE);
     }
 
     /**
@@ -83,6 +92,17 @@ public class ReadTable extends AbstractReader {
         return null;
     };
 
+    private final ReaderMacro commaAsWhitespaceReader = (s, r, cp) -> {
+        return null;
+    };
+
+    private final ReaderMacro commentReader = (s, r, cp) -> {
+        while (!isFinished() && '\n' != peek()) {
+            next();
+        }
+        return null;
+    };
+
     public ReadTable(final String snippet) {
         this(new StringReader("" + snippet));
         // If snippet is null, then StringReader(null) throws an error,
@@ -90,17 +110,20 @@ public class ReadTable extends AbstractReader {
     }
 
     public ReadTable(final InputStream stream) {
-        this(new InputStreamReader(stream));
+        this(new BufferedReader(new InputStreamReader(stream)));
     }
 
     public ReadTable(final Reader reader) {
         this.table = new HashMap<Integer, ReaderMacro>();
-        this.input = new PushbackReader(new BufferedReader(reader), 32);
+        this.input = new PushbackReader(reader, 32);
         this.initializeMacros();
     }
 
     private void initializeMacros() {
-        this.table.put((int) '\n', newlineReader);
+        // this.table.put((int) '\n', newlineReader);
+        addMacro('\n', newlineReader);
+        addMacro(',', commaAsWhitespaceReader);
+        addMacro(';', commentReader);
         addMacro('\\', new ClojureCharReaderMacro());
         /* special forms */
         addMacro('\'', new SpecialFormReaderMacro('\'', Symbol.QUOTE));
@@ -122,6 +145,8 @@ public class ReadTable extends AbstractReader {
                     }
         }));
         DelimiterReaderMacro.register('}', this);
+
+        addMacro('"', new StringReaderMacro());
     }
 
     @Override
@@ -131,6 +156,10 @@ public class ReadTable extends AbstractReader {
 
     public final int getLineNumber() {
         return this.line;
+    }
+
+    public void incLineNumber() {
+        this.line++;
     }
 
     public void addMacro(char c, ReaderMacro macro) {
@@ -177,7 +206,9 @@ public class ReadTable extends AbstractReader {
     public boolean isFinished() {
         if (!finished) {
             final int c = next();
-            if (-1 == c) {
+            // Pushback reader returns 65535 sometimes
+            // char is unsigned; 65535 = 0xFFFF = -1
+            if (-1 == c || 65535 == c) {
                 finished = true;
             } else {
                 unread(c);
@@ -211,6 +242,7 @@ public class ReadTable extends AbstractReader {
 
     private Expr number(int cp) {
         NumberReader reader = new NumberReader(this.input, this, cp);
+        reader.preferParsingNumbersAsFloats = this.preferParsingNumbersAsFloats;
         return reader.read();
     }
     /**

@@ -1,5 +1,7 @@
 package com.github.pqnelson.reader_macro;
 
+import java.io.IOException;
+import java.io.PushbackReader;
 import java.io.Reader;
 
 import com.github.pqnelson.ReadTable;
@@ -23,8 +25,9 @@ public class UnquoteReaderMacro implements ReaderMacro {
     public Expr apply(final Reader stream, final ReadTable reader, final int cp) {
         if (reader.isFinished()) return null;
         int peek;
+        PushbackReader input = (PushbackReader) stream;
         try {
-            peek = stream.read();
+            peek = input.read();
         } catch (Exception e) {
             peek = -1;
         }
@@ -32,6 +35,10 @@ public class UnquoteReaderMacro implements ReaderMacro {
         if ('@' == peek) {
             result.conj(Symbol.SPLICE);
         } else {
+            try {
+                input.unread(peek);
+            } catch (IOException e) {
+            }
             result.conj(Symbol.UNQUOTE);
         }
         result.conj((Expr) reader.read());

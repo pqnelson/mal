@@ -573,7 +573,8 @@ public final class Core {
     public static Expr read_string(final Seq args) throws LispException {
         checkArity(1, args, "read-string");
         final Str s = (Str) args.first();
-        return Reader.readString(s.toString());
+        ReadTable reader = new ReadTable(s.toString());
+        return reader.read();
     }
     public static Expr slurp(final Seq args) throws LispException {
         try {

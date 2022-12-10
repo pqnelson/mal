@@ -6,20 +6,26 @@ import com.github.pqnelson.TokenType;
 public class Symbol extends Expr implements IObj {
     private final Token identifier;
     private Map meta = null;
-    public static final Symbol QUASIQUOTE_EXPAND
-        = new Symbol(new Token(TokenType.QUASIQUOTE_EXPAND, "quasiquote-expand"));
-    public static final Symbol MACROEXPAND
-        = new Symbol(new Token(TokenType.MACROEXPAND, "macroexpand"));
     public static final Symbol CATCH
         = new Symbol(new Token(TokenType.CATCH, "catch"));
+    public static final Symbol DEF
+        = new Symbol(new Token(TokenType.DEF, "def"));
+    public static final Symbol DEFMACRO
+        = new Symbol(new Token(TokenType.DEFMACRO, "defmacro"));
     public static final Symbol DO
         = new Symbol(new Token(TokenType.DO, "do"));
     public static final Symbol FN_STAR
         = new Symbol(new Token(TokenType.FN_STAR, "fn*"));
     public static final Symbol IF
         = new Symbol(new Token(TokenType.IF, "if"));
+    public static final Symbol LET_STAR
+        = new Symbol(new Token(TokenType.LET_STAR, "let*"));
+    public static final Symbol MACROEXPAND
+        = new Symbol(new Token(TokenType.MACROEXPAND, "macroexpand"));
     public static final Symbol QUASIQUOTE
         = new Symbol(new Token(TokenType.BACKTICK, "quasiquote"));
+    public static final Symbol QUASIQUOTE_EXPAND
+        = new Symbol(new Token(TokenType.QUASIQUOTE_EXPAND, "quasiquote-expand"));
     public static final Symbol QUOTE
         = new Symbol(new Token(TokenType.QUOTE, "quote"));
     public static final Symbol SPLICE
@@ -28,6 +34,9 @@ public class Symbol extends Expr implements IObj {
         = new Symbol(new Token(TokenType.TRY, "try"));
     public static final Symbol UNQUOTE
         = new Symbol(new Token(TokenType.UNQUOTE, "unquote"));
+
+
+
     public Symbol(final String name) {
         this.identifier = new Token(TokenType.IDENTIFIER, name);
     }

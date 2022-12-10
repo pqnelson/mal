@@ -80,7 +80,7 @@ public class NumberReader extends AbstractReader {
     public boolean isFinished() {
         if (!finished) {
             final int c = next();
-            if (-1 == c) {
+            if (-1 == c || 65535 == c) {
                 finished = true;
             } else {
                 unread(c);
@@ -158,12 +158,27 @@ public class NumberReader extends AbstractReader {
         char peek = currentLexeme.charAt(0);
         char peekNext = (char) peek();
         if ('+' == peek || '-' == peek) {
-            currentLexeme.appendCodePoint(next());
             peek = peekNext;
             peekNext = (char) peekNext();
+            if (Character.isDigit(peek)) {
+                next();
+                currentLexeme.appendCodePoint(peek);
+            } else {
+                return this.finishToken(this.currentLexeme.toString());
+            }
+        }
+        // @assert Character.isDigit(peek)
+        if (Character.isWhitespace(peekNext)
+            || this.caller.isBoundToMacro(peekNext)
+            || isFinished()
+            || caller.isFinished()) {
+            if (preferParsingNumbersAsFloats) {
+                return new Float(Double.parseDouble(currentLexeme.toString()));
+            }
+            return tokenizeRadixNumberLexeme(10, 'd', 'D');
         }
         try {
-            if ('0' == peek && '\0' != peekNext) {
+            if ('0' == peek && (-1 != peekNext && 65535 != peekNext)) {
                 switch (peekNext) {
                 case 'b':
                 case 'B':
@@ -205,7 +220,6 @@ public class NumberReader extends AbstractReader {
         boolean mustParseAsFloat = floatMantissa();
         mustParseAsFloat = floatExponent() || mustParseAsFloat;
         if (mustParseAsFloat || preferParsingNumbersAsFloats) {
-            System.out.println("Current lexeme: "+currentLexeme.toString());
             return new Float(Double.parseDouble(currentLexeme.toString()));
         } else {
             return new Int(Long.parseLong(currentLexeme.toString()));
@@ -318,14 +332,15 @@ public class NumberReader extends AbstractReader {
         IntPredicate withinBounds = radixBoundsFactory(8, 'o', 'O');
         // CONSUME!
         do {
-            if ('.' == peek()) {
+            int c = peek();
+            if ('.' == c) {
                 return floatingPointNumber();
-            } else if (Character.isDigit(peek()) &&
-                       !withinBounds.test((int) peek())) {
+            } else if (Character.isDigit(c) &&
+                       !withinBounds.test((int) c)) {
                 // whoops, it currently looks like an integer
                 return tryScanningInt();
-            } else if (Character.isDigit(peek()) &&
-                       withinBounds.test((int) peek())) {
+            } else if (Character.isDigit(c) &&
+                       withinBounds.test((int) c)) {
                 currentLexeme.appendCodePoint(next());
             } else {
                 throw new InputMismatchException();
@@ -352,7 +367,9 @@ public class NumberReader extends AbstractReader {
     final void assembleRadixNumberLexeme(final int base,
                                          final char b,
                                          final char B) {
-        assert ('0' == currentLexeme.charAt(0));
+        assert ('0' == currentLexeme.charAt(0)
+                || (('+' == currentLexeme.charAt(0) || '-' == currentLexeme.charAt(0))
+                    && ('0' == currentLexeme.charAt(1))));
         if ((b == peek()) || (B == peek())) {
             // octal formats make this optional :(
             currentLexeme.appendCodePoint(next());
@@ -363,7 +380,28 @@ public class NumberReader extends AbstractReader {
         while (withinBounds.test((int) peek())) {
             currentLexeme.appendCodePoint(next());
         }
-        checkForValidBreak();
+
+        if (!isJavascriptBigintSuffix()) {
+            checkForValidBreak();
+        }
+    }
+
+    private final Expr parseLong(final String lexeme, final int base) {
+        return parseLong(lexeme, base, 1);
+    }
+
+    /**
+     * Try parsing the lexeme as a {@code Long}, but if it's too big, return a
+     * {@code BigInteger}.
+     */
+    private final Expr parseLong(final String lexeme, final int base, final int sign) {
+        try {
+            Long literal = sign*Long.parseLong(lexeme, base);
+            return new Int(literal);
+        } catch (NumberFormatException e) {
+            final BigInteger literal = new BigInteger(lexeme, base);
+            return new BigInt(-1 == sign ? literal.negate() : literal);
+        }
     }
 
     final Expr tokenizeRadixNumberLexeme(final int base,
@@ -374,9 +412,10 @@ public class NumberReader extends AbstractReader {
                                 || '+' == currentLexeme.charAt(0))
             ? 1 : 0;
         // check if it could possibly be a single digit number
-        if (1 == currentLexeme.length()) {
+        if (1 == currentLexeme.length()
+            || currentLexeme.length() <= 1 + signOffset) {
             final Long literal
-                = Long.parseLong(currentLexeme.substring(signOffset), base);
+                = Long.parseLong(currentLexeme.toString(), base);
             return new Int(literal);
         }
         // no? It must be a radix number
@@ -384,15 +423,13 @@ public class NumberReader extends AbstractReader {
         final int start = ((b == radixSpec || B == radixSpec) ? 2 : 1)
             + signOffset;
         if (isJavascriptBigintSuffix()) {
-            currentLexeme.appendCodePoint(next());
-            final String lexeme = currentLexeme
-                .substring(start, currentLexeme.length() - 1);
+            next();
+            final String lexeme = currentLexeme.substring(start);
             final BigInteger literal
                 = new BigInteger(lexeme, base);
             return new BigInt(-1 == sign ? literal.negate() : literal);
         } else {
-            Long literal = Long.parseLong(currentLexeme.substring(start), base);
-            return new Int(literal);
+            return parseLong(currentLexeme.substring(start), base, sign);
         }
     }
 

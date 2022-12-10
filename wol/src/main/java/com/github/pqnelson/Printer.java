@@ -121,6 +121,10 @@ public class Printer implements Visitor<String> {
         return e.accept(new Printer());
     }
 
+    public static String print(final Expr e, boolean readably) {
+        return e.accept(new Printer(readably));
+    }
+
     public String printStr(final Expr e) {
         return e.accept(this);
     }

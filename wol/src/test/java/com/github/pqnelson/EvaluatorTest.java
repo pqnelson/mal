@@ -60,15 +60,18 @@ public class EvaluatorTest {
         return loadResource(resourceName, true);
     }
 
-    static Env loadResource(String resourceName, boolean parserPrefersFloats) throws Throwable {
+    static Env loadResource(String resourceName, boolean parserPrefersFloats)
+            throws Throwable {
+
         Env env = Evaluator.initialEnv();
-        try (InputStreamReader r = new InputStreamReader(resource(resourceName));
-            BufferedReader resource = new BufferedReader(r)) {
-            Scanner scanner = new Scanner(resource);
-            scanner.preferParsingNumbersAsFloats = parserPrefersFloats;
-            Reader reader = new Reader(scanner.scanTokens());
-            while(!reader.isAtEnd()) {
-                Evaluator.eval(reader.readForm(), env);
+
+        try (InputStreamReader r = new InputStreamReader(resource(resourceName))) {
+            ReadTable reader = new ReadTable(r);
+            reader.preferParsingNumbersAsFloats = parserPrefersFloats;
+            while(!reader.isFinished()) {
+                Expr e = reader.read();
+                if (null == e) continue;
+                Evaluator.eval(e, env);
             }
             return env;
         }
@@ -78,10 +81,10 @@ public class EvaluatorTest {
     public void oneEqualsItself() {
         try {
             Env env = Evaluator.initialEnv();
-            Scanner scanner = new Scanner("(= 1 1)");
-            scanner.preferParsingNumbersAsFloats = false;
-            Reader reader = new Reader(scanner.scanTokens());
-            Expr result = Evaluator.eval(reader.readForm(), env);
+            ReadTable reader = new ReadTable("(= 1 1)");
+            reader.preferParsingNumbersAsFloats = false;
+
+            Expr result = Evaluator.eval(reader.read(), env);
             assertTrue(Literal.exprIsTrue(result));
         } catch (Throwable e) {
             assertTrue(false, "Throwable "+e.toString()+" thrown");
@@ -93,10 +96,10 @@ public class EvaluatorTest {
         try {
             Expr expected = new Seq();
             Env env = Evaluator.initialEnv();
-            Scanner scanner = new Scanner("`()");
-            scanner.preferParsingNumbersAsFloats = false;
-            Reader reader = new Reader(scanner.scanTokens());
-            Expr result = Evaluator.eval(reader.readForm(), env);
+            ReadTable reader = new ReadTable("`()");
+            reader.preferParsingNumbersAsFloats = false;
+
+            Expr result = Evaluator.eval(reader.read(), env);
             assertEquals(expected, result);
         } catch (Throwable e) {
             assertTrue(false, "Throwable "+e.toString()+" thrown");
@@ -355,7 +358,7 @@ public class EvaluatorTest {
             Symbol s = new Symbol("s8");
             Symbol x = new Symbol("x8");
             Printer p = new Printer(true);
-            assertEquals(env.get(x), new Str(env.get(s).accept(p)));
+            assertEquals(env.get(x), env.get(s));
         }
         @Test
         public void evalDef4Test9() {
@@ -451,11 +454,11 @@ public class EvaluatorTest {
             public void geqFailsWithMultipleArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(>= 4 3 2 1 :i 0)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(>= 4 3 2 1 :i 0)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -464,11 +467,11 @@ public class EvaluatorTest {
             public void geqFailsWithMultipleArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(>= :err 4 3 2 1 :i 0)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(>= :err 4 3 2 1 :i 0)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -477,11 +480,11 @@ public class EvaluatorTest {
             public void geqFailsWithTwoArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(>= 1 :i)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(>= 1 :i)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -490,11 +493,11 @@ public class EvaluatorTest {
             public void geqFailsWithTwoArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(>= :i 1)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(>= :i 1)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -503,11 +506,11 @@ public class EvaluatorTest {
             public void gtFailsWithMultipleArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(> 4 3 2 1 :i 0)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(> 4 3 2 1 :i 0)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -516,11 +519,11 @@ public class EvaluatorTest {
             public void gtFailsWithMultipleArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(> :spam 4 3 2 1 :i 0)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(> :spam 4 3 2 1 :i 0)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -529,11 +532,11 @@ public class EvaluatorTest {
             public void gtFailsWithTwoArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(> 1 :i)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(> 1 :i)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -542,11 +545,11 @@ public class EvaluatorTest {
             public void gtFailsWithTwoArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(> :i 1)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(> :i 1)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -555,11 +558,11 @@ public class EvaluatorTest {
             public void ltFailsWithMultipleArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(< 1 2 3 :i 4)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(< 1 2 3 :i 4)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -569,11 +572,11 @@ public class EvaluatorTest {
             public void ltFailsWithMultipleArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(< :spam1 2 3 :i 4)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(< :spam1 2 3 :i 4)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -582,11 +585,11 @@ public class EvaluatorTest {
             public void ltFailsWithTwoArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(< :i 1)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(< :i 1)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -595,11 +598,11 @@ public class EvaluatorTest {
             public void ltFailsWithTwoArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(< 1 :i)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(< 1 :i)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -608,11 +611,11 @@ public class EvaluatorTest {
             public void leqFailsWithMultipleArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(<= 1 2 3 :i 4)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(<= 1 2 3 :i 4)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -621,11 +624,10 @@ public class EvaluatorTest {
             public void leqFailsWithMultipleArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(<= :foo1 2 3 :i 4)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(<= :foo1 2 3 :i 4)");
+                    reader.preferParsingNumbersAsFloats = false;
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -634,11 +636,10 @@ public class EvaluatorTest {
             public void leqFailsWithTwoArgsTest() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(<= 1 :i)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(<= 1 :i)");
+                    reader.preferParsingNumbersAsFloats = false;
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }
@@ -647,11 +648,11 @@ public class EvaluatorTest {
             public void leqFailsWithTwoArgs2Test() {
                 try {
                     Env env = Evaluator.initialEnv();
-                    Scanner scanner = new Scanner("(<= :i 1)");
-                    scanner.preferParsingNumbersAsFloats = false;
-                    Reader reader = new Reader(scanner.scanTokens());
+                    ReadTable reader = new ReadTable("(<= :i 1)");
+                    reader.preferParsingNumbersAsFloats = false;
+
                     assertThrows(LispException.class,
-                                 () -> Evaluator.eval(reader.readForm(), env));
+                                 () -> Evaluator.eval(reader.read(), env));
                 } catch (Throwable e) {
                     assertTrue(false, "Throwable "+e.toString()+" thrown");
                 }

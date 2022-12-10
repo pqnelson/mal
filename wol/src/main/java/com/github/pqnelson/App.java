@@ -26,7 +26,8 @@ public final class App {
 
     private static String rep(final String line, final Env env)
             throws Throwable {
-        return print(Evaluator.eval(Reader.readString(line), env));
+        ReadTable reader = new ReadTable(line);
+        return print(Evaluator.eval(reader.read(), env));
     }
 
     public static void main(final String[] args) {

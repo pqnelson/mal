@@ -154,7 +154,7 @@ public class Evaluator {
     public static Expr eval(Expr expr, Env env) throws Throwable {
         while (true) {
             if (debug) {
-                System.out.println("eval given expr = " + expr.toString());
+                System.out.println("eval given expr = " + expr);
             }
             if (!expr.isList()) {
                 return evalLiteral(expr, env);
