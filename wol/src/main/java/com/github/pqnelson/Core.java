@@ -421,6 +421,8 @@ public final class Core {
 
     public static IFn fn_QMARK_ = predicateFactory("fn", Expr::isFunction);
 
+    public static IFn macro_QMARK_ = predicateFactory("macro", Expr::isMacro);
+
     public static Expr println(final Seq args) throws LispException {
         StringBuffer buf = new StringBuffer();
         final Printer p = new Printer();

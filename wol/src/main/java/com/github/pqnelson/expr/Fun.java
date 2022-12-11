@@ -125,7 +125,7 @@ public class Fun extends Expr implements IObj {
         }
     }
 
-    public boolean isMacro() {
+    public boolean getMacro() {
         return this.macro;
     }
 

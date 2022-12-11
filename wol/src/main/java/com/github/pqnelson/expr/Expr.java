@@ -18,6 +18,10 @@ public abstract class Expr {
     public final boolean isFunction() {
         return Fun.class.isInstance(this);
     }
+    public final boolean isMacro() {
+        return Fun.class.isInstance(this)
+            && ((Fun) this).getMacro();
+    }
     public final boolean isInt() {
         return Int.class.isInstance(this);
     }
