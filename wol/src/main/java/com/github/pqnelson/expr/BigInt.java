@@ -2,29 +2,19 @@ package com.github.pqnelson.expr;
 
 import java.math.BigInteger;
 
-import com.github.pqnelson.Token;
-import static com.github.pqnelson.TokenType.NUMBER;
-
 public class BigInt extends com.github.pqnelson.expr.Number {
-    private final BigInteger value;
-
     public BigInt(final BigInteger value) {
-        this(new Token(NUMBER), value);
-    }
-
-    public BigInt(final Token token, final BigInteger value) {
-        super(token);
-        this.value = value;
+        super(value);
     }
 
     @Override
     public BigInteger value() {
-        return this.value;
+        return (BigInteger) super.value();
     }
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return this.value().toString();
     }
 
     /**
@@ -35,31 +25,26 @@ public class BigInt extends com.github.pqnelson.expr.Number {
     }
 
     public BigInt add(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().add(rhs.value()));
+        return new BigInt(this.value().add(rhs.value()));
     }
 
     public Float add(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value().doubleValue() + rhs.value());
+        return new Float(this.value().doubleValue() + rhs.value());
     }
 
     /**
      * Subtraction
      */
     public BigInt subtract(final Int rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().subtract(BigInteger.valueOf(rhs.value())));
+        return new BigInt(this.value().subtract(BigInteger.valueOf(rhs.value())));
     }
 
     public BigInt subtract(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().subtract(rhs.value()));
+        return new BigInt(this.value().subtract(rhs.value()));
     }
 
     public Float subtract(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value().doubleValue() - rhs.value());
+        return new Float(this.value().doubleValue() - rhs.value());
     }
     /**
      * Multiplication
@@ -69,30 +54,25 @@ public class BigInt extends com.github.pqnelson.expr.Number {
     }
 
     public BigInt multiply(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().multiply(rhs.value()));
+        return new BigInt(this.value().multiply(rhs.value()));
     }
 
     public Float multiply(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value().doubleValue() * rhs.value());
+        return new Float(this.value().doubleValue() * rhs.value());
     }
     /**
      * Division
      */
     public BigInt divide(final Int rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().divide(BigInteger.valueOf(rhs.value())));
+        return new BigInt(this.value().divide(BigInteger.valueOf(rhs.value())));
     }
 
     public BigInt divide(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          this.value().divide(rhs.value()));
+        return new BigInt(this.value().divide(rhs.value()));
     }
 
     public Float divide(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value().doubleValue() / rhs.value());
+        return new Float(this.value().doubleValue() / rhs.value());
     }
 
     @Override

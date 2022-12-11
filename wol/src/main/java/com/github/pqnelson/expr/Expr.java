@@ -56,6 +56,8 @@ public abstract class Expr {
         return Vector.class.isInstance(this);
     }
 
+    public abstract Expr clone();
+
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {

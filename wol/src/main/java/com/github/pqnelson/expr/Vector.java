@@ -30,6 +30,14 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
     }
 
     @Override
+    public Vector clone() {
+        ArrayList<Expr> copy = new ArrayList<>();
+        for (Expr item : this.contents) {
+            copy.add(item.clone());
+        }
+        return new Vector(copy);
+    }
+    @Override
     public Map meta() {
         return this.meta;
     }

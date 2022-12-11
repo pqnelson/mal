@@ -1,28 +1,18 @@
 package com.github.pqnelson.expr;
 
-import com.github.pqnelson.Token;
-import static com.github.pqnelson.TokenType.NUMBER;
-
 public class Float extends com.github.pqnelson.expr.Number {
-    private final double value;
-
     public Float(final double value) {
-        this(new Token(NUMBER, Double.toString(value), value), value);
-    }
-
-    public Float(final Token token, final double value) {
-        super(token);
-        this.value = value;
+        super(value);
     }
 
     @Override
     public Double value() {
-        return Double.valueOf(this.value);
+        return (Double) super.value(); // Double.valueOf(value);
     }
 
     @Override
     public String toString() {
-        return String.valueOf(this.value);
+        return String.valueOf(this.value());
     }
     /**
      * Addition with possible overflow.
@@ -31,24 +21,22 @@ public class Float extends com.github.pqnelson.expr.Number {
         return rhs.add(this);
     }
     public Float add(final Float rhs) {
-        return new Float(new Token(NUMBER), this.value() + rhs.value());
+        return new Float(this.value() + rhs.value());
     }
     public Float add(final BigInt rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() + rhs.value().doubleValue());
+        return new Float(this.value() + rhs.value().doubleValue());
     }
     /**
      * Subtraction
      */
     public Float subtract(final Int rhs) {
-        return new Float(new Token(NUMBER), this.value() - rhs.value());
+        return new Float(this.value() - rhs.value());
     }
     public Float subtract(final BigInt rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() - rhs.value().doubleValue());
+        return new Float(this.value() - rhs.value().doubleValue());
     }
     public Float subtract(final Float rhs) {
-        return new Float(new Token(NUMBER), this.value() - rhs.value());
+        return new Float(this.value() - rhs.value());
     }
     /**
      * Multiplication
@@ -57,26 +45,22 @@ public class Float extends com.github.pqnelson.expr.Number {
         return rhs.multiply(this);
     }
     public Float multiply(final BigInt rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() * rhs.value().doubleValue());
+        return new Float(this.value() * rhs.value().doubleValue());
     }
     public Float multiply(final Float rhs) {
-        return new Float(new Token(NUMBER), this.value() * rhs.value());
+        return new Float(this.value() * rhs.value());
     }
     /**
      * Division
      */
     public Float divide(final Int rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() / rhs.value());
+        return new Float(this.value() / rhs.value());
     }
     public Float divide(final BigInt rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() / (rhs.value().doubleValue()));
+        return new Float(this.value() / (rhs.value().doubleValue()));
     }
     public Float divide(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() / rhs.value());
+        return new Float(this.value() / rhs.value());
     }
 
     @Override
@@ -128,7 +112,7 @@ public class Float extends com.github.pqnelson.expr.Number {
             return false;
         }
         final Float rhs = (Float) obj;
-        return Double.valueOf(this.value).equals(Double.valueOf(rhs.value()));
+        return Double.valueOf(this.value()).equals(Double.valueOf(rhs.value()));
     }
     @Override
     public int hashCode() {

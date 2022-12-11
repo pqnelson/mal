@@ -25,7 +25,7 @@ public class Evaluator {
     }
 
     private static Symbol symbol(final String name) {
-        return new Symbol(new Token(TokenType.IDENTIFIER, name, null, 0));
+        return new Symbol(name);
     }
 
     static final Symbol cons = symbol("cons");

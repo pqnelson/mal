@@ -1,8 +1,5 @@
 package com.github.pqnelson.expr;
 
-import com.github.pqnelson.Token;
-import com.github.pqnelson.TokenType;
-
 public class Symbol extends Expr implements IObj {
     public static final Symbol CATCH = specialForm("catch");
     public static final Symbol DEF = specialForm("def");
@@ -27,13 +24,7 @@ public class Symbol extends Expr implements IObj {
     public Symbol(final String name) {
         this(name, true, null);
     }
-
-    public Symbol(final Token identifier) {
-        this(identifier.lexeme,
-             (TokenType.IDENTIFIER == identifier.type),
-             null);
-    }
-
+    
     public Symbol(final String name, Map meta) {
         this(name, true, meta);
     }
@@ -47,7 +38,7 @@ public class Symbol extends Expr implements IObj {
     private Symbol(final String name, boolean isIdentifier, Map meta) {
         this.name = name;
         this.isIdentifier = isIdentifier;
-        this.meta = meta;
+        this.meta = (null == meta ? meta : meta.immutableCopy());
     }
 
     // Helper function to make the creation of the constants above
@@ -62,6 +53,12 @@ public class Symbol extends Expr implements IObj {
 
     public boolean isSpecialForm() {
         return !this.isIdentifier;
+    }
+
+    @Override
+    public Symbol clone() {
+        if (this.isSpecialForm()) return this;
+        return new Symbol(this.name, this.isIdentifier, this.meta);
     }
 
     @Override
@@ -101,8 +98,7 @@ public class Symbol extends Expr implements IObj {
             return false;
         }
         Symbol rhs = (Symbol) obj;
-        // Since Symbols are used for any identifier (like "do" and "fn*"),
-        // check the TokenTypes are the same
+        
         return (this.isIdentifier == rhs.isIdentifier) &&
             (this.name.equals(rhs.name));
     }

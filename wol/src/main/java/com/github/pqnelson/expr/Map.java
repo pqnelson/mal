@@ -1,34 +1,61 @@
 package com.github.pqnelson.expr;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
     private final HashMap<Expr, Expr> table;
-    private Map meta = null;
+    private final Map meta;
 
     public Map() {
         this.table = new HashMap<Expr, Expr>();
+        this.meta = null;
     }
 
     public Map(final Map other) {
         this.table = new HashMap<Expr, Expr>(other.table);
+        this.meta = null;
     }
 
-    public Map(final Map other, Map meta) {
+    public Map(final Map other, final Map meta) {
         this.table = new HashMap<Expr, Expr>(other.table);
-        this.meta = meta;
+        this.meta = (null == meta ? null : meta.immutableCopy());
     }
 
     public Map(final java.util.Map<Expr, Expr> other) {
         this.table = new HashMap<Expr, Expr>(other);
+        this.meta = null;
+    }
+
+    public Map(final java.util.Map<Expr, Expr> other, final Map meta) {
+        this.table = new HashMap<Expr, Expr>(other);
+        this.meta = (null == meta ? null : meta.immutableCopy());
     }
 
     public Map(final Expr key, final Expr val) {
         this.table = new HashMap<Expr, Expr>();
+        this.meta = null;
         this.table.put(key, val);
     }
 
+    public Map immutableCopy() {
+        HashMap<Expr, Expr> copy = new HashMap<>();
+        for (Expr k : this.table.keySet()) {
+            copy.put(k.clone(), this.table.get(k).clone());
+        }
+        return new Map(Collections.unmodifiableMap(copy));
+    }
+
+    @Override
+    public Map clone() {
+        HashMap<Expr, Expr> copy = new HashMap<>();
+        for (Expr k : this.table.keySet()) {
+            copy.put(k.clone(), this.table.get(k).clone());
+        }
+        return new Map(copy, this.meta.immutableCopy());
+    }
+    
     @Override
     public Map meta() {
         return this.meta;

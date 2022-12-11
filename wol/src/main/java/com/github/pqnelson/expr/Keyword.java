@@ -1,20 +1,18 @@
 package com.github.pqnelson.expr;
 
-import com.github.pqnelson.Token;
-import com.github.pqnelson.TokenType;
-
 public class Keyword extends Expr {
-    private final Token identifier;
+    private final String identifier;
 
     public Keyword(final String name) {
-        this(new Token(TokenType.KEYWORD, name));
+        this.identifier = name;
     }
-    public Keyword(final Token identifier) {
-        this.identifier = identifier;
+    @Override
+    public Keyword clone() {
+        return this;
     }
 
     public final String name() {
-        return this.identifier.lexeme;
+        return this.identifier;
     }
 
     private static final int MAGIC = 0x9e3779b9;

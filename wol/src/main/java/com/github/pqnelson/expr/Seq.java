@@ -30,6 +30,15 @@ public class Seq extends Expr implements Iterable<Expr>, IObj, ICountable {
         this.meta = metadata;
     }
 
+    @Override
+    public Seq clone() {
+        ArrayList<Expr> copy = new ArrayList<>();
+        for (Expr item : this.contents) {
+            copy.add(item.clone());
+        }
+        return new Seq(copy, this.meta.immutableCopy());
+    }
+    
     public static Seq singleton(final Expr e) {
         Seq coll = new Seq();
         coll.conj(e);

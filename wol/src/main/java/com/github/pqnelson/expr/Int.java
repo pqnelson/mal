@@ -2,24 +2,14 @@ package com.github.pqnelson.expr;
 
 import java.math.BigInteger;
 
-import com.github.pqnelson.Token;
-import static com.github.pqnelson.TokenType.NUMBER;
-
 public class Int extends com.github.pqnelson.expr.Number {
-    private final long value;
-
     public Int(final long value) {
-        this(new Token(NUMBER, Long.toString(value), value), value);
-    }
-
-    public Int(final Token token, final long value) {
-        super(token);
-        this.value = value;
+        super(value);
     }
 
     @Override
     public Long value() {
-        return this.value;
+        return (Long) super.value();
     }
 
     @Override
@@ -45,93 +35,81 @@ public class Int extends com.github.pqnelson.expr.Number {
 
     @Override
     public String toString() {
-        return Long.toString(this.value, 10);
+        return Long.toString(this.value(), 10);
     }
 
     public String toString(final int radix) {
-        return Long.toString(this.value, radix);
+        return Long.toString(this.value(), radix);
     }
 
     public String toBinaryString() {
-        return Long.toHexString(this.value);
+        return Long.toHexString(this.value());
     }
 
     public String toOctalString() {
-        return Long.toOctalString(this.value);
+        return Long.toOctalString(this.value());
     }
 
     public String toHexString() {
-        return Long.toHexString(this.value);
+        return Long.toHexString(this.value());
     }
 
     /**
      * Addition with possible overflow.
      */
     public Number add(final Int rhs) {
-        return new Int(new Token(NUMBER),
-                       this.value() + rhs.value());
+        return new Int(this.value() + rhs.value());
     }
     public BigInt add(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          BigInteger.valueOf(this.value()).add(rhs.value()));
+        return new BigInt(BigInteger.valueOf(this.value()).add(rhs.value()));
     }
     public Float add(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() + rhs.value());
+        return new Float(this.value() + rhs.value());
     }
 
     /**
      * Subtraction
      */
     public Int subtract(final Int rhs) {
-        return new Int(new Token(NUMBER),
-                       this.value() - rhs.value());
+        return new Int(this.value() - rhs.value());
     }
     public BigInt subtract(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          BigInteger.valueOf(this.value())
+        return new BigInt(BigInteger.valueOf(this.value())
                                     .subtract(rhs.value()));
     }
     public Float subtract(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() - rhs.value());
+        return new Float(this.value() - rhs.value());
     }
 
     /**
      * Multiplication
      */
     public Int multiply(final Int rhs) {
-        return new Int(new Token(NUMBER),
-                       this.value() * rhs.value());
+        return new Int(this.value() * rhs.value());
     }
 
     public BigInt multiply(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          BigInteger.valueOf(this.value())
+        return new BigInt(BigInteger.valueOf(this.value())
                                     .multiply(rhs.value()));
     }
 
     public Float multiply(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() * rhs.value());
+        return new Float(this.value() * rhs.value());
     }
 
     /**
      * Division
      */
     public Int divide(final Int rhs) {
-        return new Int(new Token(NUMBER),
-                       this.value() / rhs.value());
+        return new Int(this.value() / rhs.value());
     }
 
     public BigInt divide(final BigInt rhs) {
-        return new BigInt(new Token(NUMBER),
-                          BigInteger.valueOf(this.value()).divide(rhs.value()));
+        return new BigInt(BigInteger.valueOf(this.value()).divide(rhs.value()));
     }
 
     public Float divide(final Float rhs) {
-        return new Float(new Token(NUMBER),
-                         this.value() / rhs.value());
+        return new Float(this.value() / rhs.value());
     }
 
     @Override

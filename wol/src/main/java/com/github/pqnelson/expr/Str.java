@@ -1,24 +1,23 @@
 package com.github.pqnelson.expr;
 
-import com.github.pqnelson.Token;
-import com.github.pqnelson.TokenType;
-
 public class Str extends Literal {
-    public Str(final Token token) {
-        super(token);
-    }
     public Str(final String s) {
-        super(new Token(TokenType.STRING, s));
+        super((Object) s);
     }
 
     @Override
+    public Str clone() {
+        return new Str(new String(this.value()));
+    }
+    
+    @Override
     public String value() {
-        return this.token.lexeme;
+        return (String) super.value();
     }
 
     @Override
     public String toString() {
-        return this.token.lexeme;
+        return this.value();
     }
 
     public Str enquote() {

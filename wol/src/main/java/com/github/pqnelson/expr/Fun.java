@@ -56,7 +56,12 @@ public class Fun extends Expr implements IObj {
      */
     public Fun(final Fun fn, final Map meta) {
         this(fn);
-        this.meta = meta;
+        this.meta = meta.immutableCopy();
+    }
+
+    @Override
+    public Fun clone() {
+        return this;
     }
 
     @Override

@@ -1,39 +1,30 @@
 package com.github.pqnelson.expr;
 
-
-import com.github.pqnelson.Token;
-import com.github.pqnelson.TokenType;
-import static com.github.pqnelson.TokenType.TRUE;
-import static com.github.pqnelson.TokenType.FALSE;
-import static com.github.pqnelson.TokenType.CHAR;
-import static com.github.pqnelson.TokenType.STRING;
-import static com.github.pqnelson.TokenType.NUMBER;
-
 public class Literal extends Expr {
-    public final Token token;
-    public static final Literal NIL
-        = new Literal(new Token(TokenType.NIL, "nil", null));
-    public static final Literal F
-        = new Literal(new Token(TokenType.FALSE, "false", false));
-    public static final Literal T
-        = new Literal(new Token(TokenType.TRUE, "true", true));
+    public static final Literal NIL = new Literal();
+    public static final Literal F = new Literal(false);
+    public static final Literal T = new Literal(true);
     public static final Literal ZERO = new Int(0L);
     public static final Literal ONE = new Int(1L);
+    private final Object value;
 
-    public Literal(final Token token) {
-        this.token = token;
+    private Literal() {
+        this.value = null;
+    }
+    Literal(final Object val) {
+        this.value = val;
     }
 
     public static final Literal Char(char c) {
-        return new Literal(new Token(TokenType.CHAR, Character.toString(c), c));
+        return new Char(c);
     }
 
     public boolean isNil() {
-        return TokenType.NIL == token.type;
+        return (NIL == this);
     }
 
     public boolean isTrue() {
-        return TRUE == token.type;
+        return (T == this);
     }
 
     public static boolean exprIsTrue(final Expr e) {
@@ -41,7 +32,7 @@ public class Literal extends Expr {
     }
 
     public boolean isFalse() {
-        return FALSE == token.type;
+        return F == this;
     }
 
     public static boolean exprIsFalse(final Expr e) {
@@ -57,11 +48,12 @@ public class Literal extends Expr {
     }
 
     public Object value() {
-        switch (this.token.type) {
-        case TRUE: return Boolean.TRUE;
-        case FALSE: return Boolean.FALSE;
-        default: return null;
-        }
+        return this.value;
+    }
+
+    @Override
+    public Literal clone() {
+        return this;
     }
 
     @Override
@@ -77,14 +69,15 @@ public class Literal extends Expr {
         if (null == obj) return false;
         if (obj.getClass() != this.getClass()) return false;
         Literal rhs = (Literal)obj;
-        return (this.token.type == rhs.token.type) &&
-            (null == this.value() ? null == rhs.value() : (this.value().equals(rhs.value())));
+        if (null == this.value()) return null == rhs.value();
+        return (this.value().equals(rhs.value()));
     }
+    
     @Override
-    public  int hashCode() {
+    public int hashCode() {
+        if (null == this.value()) return 0;
         return this.value().hashCode();
     }
-
 
     @Override
     public String toString() {
