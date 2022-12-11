@@ -1,7 +1,7 @@
 package com.github.pqnelson.expr;
 
 public abstract class Number extends Literal implements Comparable<Number> {
-    Number(final Object value) {
+    protected Number(final Object value) {
         super(value);
     }
     public abstract com.github.pqnelson.expr.Number add(com.github.pqnelson.expr.Number rhs);

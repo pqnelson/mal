@@ -19,6 +19,8 @@ public abstract class AbstractReader {
      * @return The Lisp data as a Java object.
      */
     public abstract Object read();
+    public abstract int next();
+    public abstract void unread(int c);
 
     public abstract String nextToken();
     public abstract String nextToken(int codepoint);

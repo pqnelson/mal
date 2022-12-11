@@ -4,38 +4,42 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
+public class Map extends Expr implements Iterable<Expr>, IObj<Map>, ICountable {
     private final HashMap<Expr, Expr> table;
     private final Map meta;
-
+    private final boolean isImmutable;
     public Map() {
-        this.table = new HashMap<Expr, Expr>();
-        this.meta = null;
+        this(new HashMap<Expr, Expr>(), null, false);
     }
 
     public Map(final Map other) {
-        this.table = new HashMap<Expr, Expr>(other.table);
-        this.meta = null;
+        this(other.table, null, other.isImmutable);
     }
 
     public Map(final Map other, final Map meta) {
-        this.table = new HashMap<Expr, Expr>(other.table);
-        this.meta = (null == meta ? null : meta.immutableCopy());
+        this(other.table, meta, other.isImmutable);
     }
 
     public Map(final java.util.Map<Expr, Expr> other) {
-        this.table = new HashMap<Expr, Expr>(other);
-        this.meta = null;
+        this(other, null, false);
     }
 
     public Map(final java.util.Map<Expr, Expr> other, final Map meta) {
+        this(other, meta, false);
+    }
+
+    public Map(final java.util.Map<Expr, Expr> other,
+               final Map meta,
+               final boolean immutable) {
         this.table = new HashMap<Expr, Expr>(other);
         this.meta = (null == meta ? null : meta.immutableCopy());
+        this.isImmutable = immutable;
     }
 
     public Map(final Expr key, final Expr val) {
         this.table = new HashMap<Expr, Expr>();
         this.meta = null;
+        this.isImmutable = false;
         this.table.put(key, val);
     }
 
@@ -44,7 +48,7 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
         for (Expr k : this.table.keySet()) {
             copy.put(k.clone(), this.table.get(k).clone());
         }
-        return new Map(Collections.unmodifiableMap(copy));
+        return new Map(java.util.Map.copyOf(copy), null, true);
     }
 
     @Override
@@ -63,14 +67,12 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
 
     @Override
     public Map withMeta(final Map newMeta) {
-        if (this.meta.equals(newMeta)) {
-            return this;
-        }
+        if ((null != this.meta) && (this.meta.equals(newMeta))) return this;
         return new Map(this, newMeta);
     }
 
     public Expr get(final Expr k) {
-            return this.table.get(k);
+        return this.table.get(k);
     }
 
     public Expr get(final Expr k, final Expr defaultValue) {
@@ -78,6 +80,9 @@ public class Map extends Expr implements Iterable<Expr>, IObj, ICountable {
     }
 
     public void assoc(final Expr k, final Expr v) {
+        if (this.isImmutable) {
+            throw new RuntimeException("Trying to assoc an immutable map");
+        }
         this.table.put(k, v);
     }
 

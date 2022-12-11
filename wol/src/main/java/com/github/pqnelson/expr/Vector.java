@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * A vector, i.e., ordered tuple.
  */
-public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
+public class Vector extends Expr implements Iterable<Expr>, IObj<Vector>, ICountable {
     final List<Expr> contents;
     private Map meta = null;
 
@@ -44,7 +44,7 @@ public class Vector extends Expr implements Iterable<Expr>, IObj, ICountable {
 
     @Override
     public Vector withMeta(final Map newMeta) {
-        if (this.meta.equals(newMeta)) return this;
+        if ((null != this.meta) && (this.meta.equals(newMeta))) return this;
         return new Vector(this, newMeta);
     }
 

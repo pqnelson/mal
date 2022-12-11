@@ -584,7 +584,7 @@ public class ReadTableTest {
             Expr expected = new Str(lexeme.substring(1, lexeme.length()-1));
             InputMismatchException e = assertThrows(InputMismatchException.class,
                                                     () -> r.read());
-            assertEquals("Line 1: Unterminated string", e.getMessage());
+            assertEquals("Line [1,1]: Unterminated string", e.getMessage());
         }
 
         @Test

@@ -64,6 +64,7 @@ public class StringReaderMacro implements ReaderMacro {
         PushbackReader input = (PushbackReader) stream;
         StringBuffer currentLexeme = new StringBuffer();
         final long line = reader.getLineNumber();
+        final long offset = reader.getOffset();
         while ('"' != peek(input) && !reader.isFinished()) {
             final int cp = next(input);
             if (isNewline(cp)) {
@@ -76,8 +77,9 @@ public class StringReaderMacro implements ReaderMacro {
         }
 
         if (reader.isFinished()) {
-            throw new InputMismatchException("Line " + Long.toString(line)
-                                             + ": Unterminated string");
+            throw new InputMismatchException("Line [" + Long.toString(line)
+                                             + "," + Long.toString(offset)
+                                             + "]: Unterminated string");
         }
 
         next(input);

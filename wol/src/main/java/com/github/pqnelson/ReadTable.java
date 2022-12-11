@@ -78,6 +78,7 @@ public class ReadTable extends AbstractReader {
      * The line number, for debugging information.
      */
     private int line = 1;
+    private int offset = 0;
     /**
      * Have we finished processing all characters in our input stream?
      */
@@ -89,6 +90,7 @@ public class ReadTable extends AbstractReader {
      */
     private final ReaderMacro newlineReader = (s, r, cp) -> {
         line++;
+        offset = 0;
         return null;
     };
 
@@ -131,15 +133,15 @@ public class ReadTable extends AbstractReader {
         addMacro('~', new UnquoteReaderMacro());
         addMacro(':', new KeywordReaderMacro());
         /* parsing collections */
-        addMacro('(', new AccumulatorReaderMacro(")", Seq::new));
+        addMacro('(', new AccumulatorReaderMacro<Seq>(")", Seq::new));
         DelimiterReaderMacro.register(')', this);
 
-        addMacro('[', new AccumulatorReaderMacro("]", Vector::new));
+        addMacro('[', new AccumulatorReaderMacro<Vector>("]", Vector::new));
         DelimiterReaderMacro.register(']', this);
 
-        addMacro('{', new AccumulatorReaderMacro("}", (List<Expr> coll) -> {
+        addMacro('{', new AccumulatorReaderMacro<com.github.pqnelson.expr.Map>("}", (List<Expr> coll) -> {
                     try {
-                        return Core.hash_map(new Seq(coll));
+                        return ((com.github.pqnelson.expr.Map) Core.hash_map(new Seq(coll)));
                     } catch (final Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -152,6 +154,10 @@ public class ReadTable extends AbstractReader {
     @Override
     public boolean isBoundToMacro(int codepoint) {
         return this.table.containsKey(codepoint);
+    }
+
+    public final int getOffset() {
+        return this.offset;
     }
 
     public final int getLineNumber() {
@@ -176,9 +182,12 @@ public class ReadTable extends AbstractReader {
      * @return The code point for the next character in the input stream,
      * and {@code -1} if there's nothing left to read.
      */
-    private int next() {
+    @Override
+    public int next() {
         try {
-            return input.read();
+            int result = input.read();
+            offset++;
+            return result;
         } catch (IOException e) {
             return -1;
         }
@@ -189,9 +198,11 @@ public class ReadTable extends AbstractReader {
      *
      * @param c The code point for the character.
      */
-    private void unread(final int c) {
+    @Override
+    public void unread(final int c) {
         try {
             input.unread(c);
+            offset--;
         } catch (IOException e) {
         }
     }

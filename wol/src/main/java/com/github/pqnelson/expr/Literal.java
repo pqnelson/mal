@@ -11,7 +11,7 @@ public class Literal extends Expr {
     private Literal() {
         this.value = null;
     }
-    Literal(final Object val) {
+    protected Literal(final Object val) {
         this.value = val;
     }
 

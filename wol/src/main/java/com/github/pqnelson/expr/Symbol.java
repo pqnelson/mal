@@ -1,6 +1,6 @@
 package com.github.pqnelson.expr;
 
-public class Symbol extends Expr implements IObj {
+public class Symbol extends Expr implements IObj<Symbol> {
     public static final Symbol CATCH = specialForm("catch");
     public static final Symbol DEF = specialForm("def");
     public static final Symbol DEFMACRO = specialForm("defmacro");

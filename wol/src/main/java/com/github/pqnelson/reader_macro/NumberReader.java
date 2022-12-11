@@ -42,6 +42,11 @@ public class NumberReader extends AbstractReader {
      * @return The code point for the next character in the input stream,
      * and {@code -1} if there's nothing left to read.
      */
+    @Override
+    public int next() {
+        return this.caller.next();
+    }
+    /*
     private int next() {
         if (this.finished || this.caller.isFinished()) return -1;
         try {
@@ -50,19 +55,25 @@ public class NumberReader extends AbstractReader {
             return -1;
         }
     }
-
+    */
     /**
      * Put the specific code point back into the input stream.
      *
      * @param c The code point for the character.
      */
+    @Override
+    public void unread(final int c) {
+        this.caller.unread(c);
+    }
+    /*
     private void unread(final int c) {
         try {
             input.unread(c);
         } catch (IOException e) {
         }
     }
-
+    */
+    
     private int peek() {
         final int result = this.next();
         this.unread(result);
