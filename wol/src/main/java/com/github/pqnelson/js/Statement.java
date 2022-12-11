@@ -108,22 +108,17 @@ package com.github.pqnelson.js;
 public abstract class Statement {
     public abstract <T> T accept(final Visitor<T> visitor);
 
+    private boolean export;
+
+    public void setExport(boolean val) {
+        this.export = val;
+    }
+
+    public boolean getExport() {
+        return this.export;
+    }
+
     public String toJavascriptCode() {
-        return this.toString();
+        return (this.export ? "export " : "") + this.toString();
     }
-    /*
-    static final class EmptyStatement extends Statement {
-        private EmptyStatement() { }
-        @Override
-        public abstract <T> T accept(final StatementVisitor<T> visitor);
-        @Override
-        public String toString() { return ";"; }
-        @Override
-        public String toJavascriptCode() { return ";"; }
-    }
-    *
-     * The empty statement.
-     *
-    public static final Statement EMPTY = new EmptyStatement();
-    */
 }

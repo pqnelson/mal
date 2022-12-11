@@ -19,7 +19,7 @@ public class FunctionCallExpr extends Expr {
         this.args = new ArrayList<>(Arrays.asList(arguments));
     }
     public FunctionCallExpr(LambdaExpr functionExpr, Expr... arguments) {
-        this.function = functionName;
+        this.function = functionExpr;
         this.args = new ArrayList<>(Arrays.asList(arguments));
     }
 
