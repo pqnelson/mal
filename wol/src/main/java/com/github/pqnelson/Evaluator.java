@@ -30,11 +30,10 @@ public class Evaluator {
 
     static final Symbol cons = symbol("cons");
     static final Symbol concat = symbol("concat");
-    static final Symbol quote = new Symbol(new Token(TokenType.QUOTE, "quote"));
 
     static Expr quote(final Expr e) {
         Seq result = new Seq();
-        result.conj(quote);
+        result.conj(Symbol.QUOTE);
         result.conj(e);
         return result;
     }
