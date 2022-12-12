@@ -23,6 +23,6 @@ package com.github.pqnelson.js;
  * </dl>
  * </blockquote>
  */
-public abstract class Expr {
-    public abstract <T> T accept(final Visitor<T> visitor);
+public abstract class JsExpr {
+    public abstract <T> T accept(final ExprVisitor<T> visitor);
 }

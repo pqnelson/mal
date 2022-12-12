@@ -1,6 +1,6 @@
 package com.github.pqnelson.js;
 
-public class BinaryOpExpr extends Expr {
+public class BinaryOpExpr extends JsExpr {
     public enum BinaryOp {
         MULTIPLY("*", 0),
         DIVIDE("/", 1),
@@ -26,17 +26,17 @@ public class BinaryOpExpr extends Expr {
             return this.stringValue;
         }
     };
-    private Expr lhs, rhs;
+    private JsExpr lhs, rhs;
     private BinaryOp op;
 
-    public BinaryOpExpr(BinaryOp operator, Expr lhs, Expr rhs) {
+    public BinaryOpExpr(BinaryOp operator, JsExpr lhs, JsExpr rhs) {
         this.op = operator;
         this.lhs = lhs;
         this.rhs = rhs;
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitBinaryOpExpr(this);
     }
 

@@ -1,7 +1,7 @@
 package com.github.pqnelson.js;
 
 public class ReturnStatement extends Statement {
-    private final Expr result;
+    private final JsExpr result;
     private final boolean inferred;
 
     public ReturnStatement() {
@@ -9,7 +9,7 @@ public class ReturnStatement extends Statement {
         this.inferred = true;
     }
 
-    public ReturnStatement(Expr expr) {
+    public ReturnStatement(JsExpr expr) {
         this.result = expr;
         this.inferred = false;
     }

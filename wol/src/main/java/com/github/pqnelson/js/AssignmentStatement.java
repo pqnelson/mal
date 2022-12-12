@@ -2,9 +2,13 @@ package com.github.pqnelson.js;
 
 public class AssignmentStatement extends Statement {
     private RefinementExpr lval;
-    private Expr rhs;
+    private JsExpr rhs;
 
-    public AssignmentStatement(RefinementExpr variable, Expr rhs) {
+    public AssignmentStatement(Name variable, JsExpr rhs) {
+        this(new RefinementExpr(variable), rhs);
+    }
+    
+    public AssignmentStatement(RefinementExpr variable, JsExpr rhs) {
         this.lval = variable;
         this.rhs = rhs;
     }

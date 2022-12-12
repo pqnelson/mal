@@ -16,12 +16,12 @@ import java.util.List;
  * }
  * </blockquote>
  */
-public class LambdaExpr extends Expr {
+public class LambdaExpr extends JsExpr {
     private final ArrayList<Name> params;
-    private final Expr ebody;
+    private final JsExpr ebody;
     private final BlockStatement sbody;
 
-    public LambdaExpr(Name params[], Expr body) {
+    public LambdaExpr(Name params[], JsExpr body) {
         this.params = new ArrayList<>(Arrays.asList(params));
         this.ebody = body;
         this.sbody = null;
@@ -40,7 +40,7 @@ public class LambdaExpr extends Expr {
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitLambdaExpr(this);
     }
 

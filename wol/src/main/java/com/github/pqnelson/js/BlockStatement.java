@@ -2,9 +2,10 @@ package com.github.pqnelson.js;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-public class BlockStatement extends Statement {
+public class BlockStatement extends Statement implements Iterable<Statement> {
     private List<Statement> statements;
 
     public BlockStatement() {
@@ -34,5 +35,10 @@ public class BlockStatement extends Statement {
         }
         buf.append("\n}");
         return buf.toString();
+    }
+
+    @Override
+    public Iterator<Statement> iterator() {
+        return this.statements.iterator();
     }
 }

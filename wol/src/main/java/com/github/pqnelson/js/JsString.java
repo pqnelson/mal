@@ -1,6 +1,6 @@
 package com.github.pqnelson.js;
 
-class JsString extends Expr implements PrimitiveValue {
+class JsString extends JsExpr implements PrimitiveValue {
     private String contents;
     private boolean isDoubleQuoted;
 
@@ -13,7 +13,7 @@ class JsString extends Expr implements PrimitiveValue {
         this.isDoubleQuoted = isDoubleQuoted;
     }
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitString(this);
     }
 

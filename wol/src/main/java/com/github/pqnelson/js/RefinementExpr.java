@@ -11,7 +11,7 @@ import java.util.List;
  * and dollar sign {@code $}. Althought the ECMA standard allows Unicode
  * letters, we restrict attention to the Latin alphabet {@code a-zA-Z}.</p>
  */
-class RefinementExpr extends Expr {
+public class RefinementExpr extends JsExpr {
     public final Name identifier;
     public List<Name> components;
 
@@ -57,7 +57,7 @@ class RefinementExpr extends Expr {
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitRefinement(this);
     }
 }

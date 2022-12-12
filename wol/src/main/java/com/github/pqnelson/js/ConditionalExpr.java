@@ -1,15 +1,15 @@
 package com.github.pqnelson.js;
 
-public class ConditionalExpr extends Expr {
-    private Expr test, trueBranch, falseBranch;
+public class ConditionalExpr extends JsExpr {
+    private JsExpr test, trueBranch, falseBranch;
 
-    public ConditionalExpr(Expr test, Expr trueBranch, Expr falseBranch) {
+    public ConditionalExpr(JsExpr test, JsExpr trueBranch, JsExpr falseBranch) {
         this.test = test;
         this.trueBranch = trueBranch;
         this.falseBranch = falseBranch;
     }
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitConditionalExpr(this);
     }
 

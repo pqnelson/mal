@@ -7,7 +7,7 @@ package com.github.pqnelson.js;
  * and dollar sign {@code $}. Althought the ECMA standard allows Unicode
  * letters, we restrict attention to the Latin alphabet {@code a-zA-Z}.</p>
  */
-class Name extends Expr {
+public class Name extends JsExpr {
     public final String value;
 
     public Name(String identifier) {
@@ -34,7 +34,7 @@ class Name extends Expr {
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitName(this);
     }
 }

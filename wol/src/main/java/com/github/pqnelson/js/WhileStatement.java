@@ -1,12 +1,12 @@
 package com.github.pqnelson.js;
 
 public class WhileStatement extends Statement {
-    private Expr test;
+    private JsExpr test;
     private Statement body;
 
     private WhileStatement() { }
 
-    public WhileStatement(Expr condition, Statement statement) {
+    public WhileStatement(JsExpr condition, Statement statement) {
         this.test = condition;
         this.body = statement;
     }

@@ -1,6 +1,6 @@
 package com.github.pqnelson.js;
 
-class JsNumber extends Expr implements PrimitiveValue {
+class JsNumber extends JsExpr implements PrimitiveValue {
     private final double value;
     public static final JsNumber NaN = new JsNumber(Double.NaN);
 
@@ -9,7 +9,7 @@ class JsNumber extends Expr implements PrimitiveValue {
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitNumber(this);
     }
 

@@ -4,7 +4,7 @@ package com.github.pqnelson.js;
 /**
  * Visitor pattern to both expressions and statements.
  */
-public interface Visitor<T> {
+public interface Visitor<T> extends ExprVisitor<T> {
     T visitBlock(BlockStatement s);
     T visitIf(IfStatement s);
     T visitDeclaration(VarDeclarationStatement s);
@@ -14,16 +14,34 @@ public interface Visitor<T> {
     T visitAssignment(AssignmentStatement s);
     T visitFunctionCallStatement(FunctionCallStatement funcall);
 
-    T visitName(Name name);
-    T visitRefinement(RefinementExpr expr);
+    /*
+    default T visitName(Name name) {
+        name.accept((ExprVisitor<T>) this);
+    }
+    default T visitRefinement(RefinementExpr expr) {
+        expr.accept((ExprVisitor<T>) this);
+    }
     T visitFunctionCallExpr(FunctionCallExpr funcall);
     T visitString(JsString string);
     T visitBool(JsBool string);
     T visitNumber(JsNumber number);
-    T visitBinaryOpExpr(BinaryOpExpr expr);
-    T visitPrefixOpExpr(PrefixOpExpr expr);
-    T visitNull(Null e);
-    T visitUndefined(Undefined e);
-    T visitLambdaExpr(LambdaExpr e);
-    T visitConditionalExpr(ConditionalExpr e);
+    default T visitBinaryOpExpr(BinaryOpExpr expr) {
+        expr.accept((ExprVisitor<T>) this);
+    }
+    default T visitPrefixOpExpr(PrefixOpExpr expr) {
+        expr.accept((ExprVisitor<T>) this);
+    }
+    default T visitNull(Null e) {
+        e.accept((ExprVisitor<T>) this);
+    }
+    default T visitUndefined(Undefined e) {
+        e.accept((ExprVisitor<T>) this);
+    }
+    default T visitLambdaExpr(LambdaExpr e) {
+        e.accept((ExprVisitor<T>) this);
+    }
+    default T visitConditionalExpr(ConditionalExpr e) {
+        e.accept((ExprVisitor<T>) this);
+    }
+    */
 }

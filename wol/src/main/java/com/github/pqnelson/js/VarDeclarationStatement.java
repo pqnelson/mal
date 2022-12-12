@@ -17,8 +17,8 @@ public class VarDeclarationStatement extends Statement {
     };
     class Binding {
         public final Name name;
-        public final Expr definiens;
-        public Binding(Name n, Expr e) {
+        public final JsExpr definiens;
+        public Binding(Name n, JsExpr e) {
             this.name = n;
             this.definiens = e;
         }
@@ -31,11 +31,11 @@ public class VarDeclarationStatement extends Statement {
         bindings = new ArrayList<>();
     }
 
-    public VarDeclarationStatement(Name name, Expr definiens) {
+    public VarDeclarationStatement(Name name, JsExpr definiens) {
         this(Scope.LET, name, definiens);
     }
 
-    public VarDeclarationStatement(Scope scope, Name name, Expr definiens) {
+    public VarDeclarationStatement(Scope scope, Name name, JsExpr definiens) {
         this.scope = scope;
         this.bindings = new ArrayList<>();
         this.bindings.add(new Binding(name, definiens));
@@ -45,7 +45,7 @@ public class VarDeclarationStatement extends Statement {
         return this.scope;
     }
 
-    public void addBinding(Name name, Expr definiens) {
+    public void addBinding(Name name, JsExpr definiens) {
         bindings.add(new Binding(name, definiens));
     }
 

@@ -1,7 +1,20 @@
+- [ ] Add an `Emit` class to emit Javascript for some Lisp code.
+- [ ] Support functions with different signatures, things like
+      `(fn* ([] body0) ([arg1] (body1 arg1)) ([arg1 arg2] (body2 arg1 arg2)) ...)`
+  - Clojure calls each signature a `FnMethod`, and tracks the variadic
+    one in particular.
+  - I think the basic idea is to have a `HashMap` of different
+    `FnMethod` whose keys are arities, then we lookup the `FnMethod`
+    upon function call. If there is no `FnMethod` associated with the
+    arity, check if the arguments provided is at least as much as the
+    default variadic version --- if so, then invoke it; if not, throw an
+    exception.
+  - Basically, my `Fun` corresponds to a Clojure `FnMethod`, and
+    I need to have a function be either a `Fun` instance, or a variadic
+    version sketched in the previous note.
 - [ ] Add more documentation
 - [ ] Implement `Atom`
-- [ ] Add an `Emit` class to emit Javascript for some Lisp code.
-- [ ] The reader should convert tokens to expressions in a better
+- [X] The reader should convert tokens to expressions in a better
       manner, specifically without being forced to carry around tokens
       forever. We should stick the position information in the metadata.
 - [X] Write up some core functions...like `with-meta`...

@@ -7,7 +7,7 @@ import java.util.List;
 public class FunctionCallStatement extends Statement {
     private FunctionCallExpr expr;
 
-    public FunctionCallStatement(RefinementExpr functionName, Expr... arguments) {
+    public FunctionCallStatement(RefinementExpr functionName, JsExpr... arguments) {
         this(new FunctionCallExpr(functionName, arguments));
     }
 

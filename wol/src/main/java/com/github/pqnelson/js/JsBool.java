@@ -1,6 +1,6 @@
 package com.github.pqnelson.js;
 
-class JsBool extends Expr implements PrimitiveValue {
+class JsBool extends JsExpr implements PrimitiveValue {
     private final boolean value;
     public static final JsBool TRUE = new JsBool(true);
     public static final JsBool FALSE = new JsBool(false);
@@ -10,7 +10,7 @@ class JsBool extends Expr implements PrimitiveValue {
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitBool(this);
     }
 

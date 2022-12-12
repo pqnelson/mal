@@ -11,20 +11,20 @@ import java.util.List;
  * <p>For a function identifier, it produces a result of the form
  * {@code 'function_name(arg1, ..., argN)'}.</p>
  */
-public class FunctionCallExpr extends Expr {
-    private Expr function;
-    private List<Expr> args;
-    public FunctionCallExpr(RefinementExpr functionName, Expr... arguments) {
+public class FunctionCallExpr extends JsExpr {
+    private JsExpr function;
+    private List<JsExpr> args;
+    public FunctionCallExpr(RefinementExpr functionName, JsExpr... arguments) {
         this.function = functionName;
         this.args = new ArrayList<>(Arrays.asList(arguments));
     }
-    public FunctionCallExpr(LambdaExpr functionExpr, Expr... arguments) {
+    public FunctionCallExpr(LambdaExpr functionExpr, JsExpr... arguments) {
         this.function = functionExpr;
         this.args = new ArrayList<>(Arrays.asList(arguments));
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitFunctionCallExpr(this);
     }
 

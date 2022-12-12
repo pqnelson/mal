@@ -2,13 +2,15 @@ package com.github.pqnelson.js;
 
 public class IfStatement extends Statement {
     private Statement trueBranch, falseBranch;
-    private Expr test;
+    private JsExpr test;
 
-    public IfStatement(Expr test, Statement trueBranch) {
+    public IfStatement(JsExpr test, Statement trueBranch) {
         this(test, trueBranch, null);
     }
 
-    public IfStatement(Expr test, Statement trueBranch, Statement falseBranch) {
+    public IfStatement(JsExpr test,
+                       Statement trueBranch,
+                       Statement falseBranch) {
         this.test = test;
         this.trueBranch = trueBranch;
         this.falseBranch = falseBranch;

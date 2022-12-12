@@ -12,7 +12,7 @@ package com.github.pqnelson.js;
  * <dd>{@code 'typeof'}</dd>
  * </dl>
  */
-public class PrefixOpExpr extends Expr {
+public class PrefixOpExpr extends JsExpr {
     public enum PrefixOp {
         PLUS("+", 0),
         NEGATE("-", 1),
@@ -30,15 +30,15 @@ public class PrefixOpExpr extends Expr {
         }
     };
     private PrefixOp op;
-    private Expr expr;
+    private JsExpr expr;
 
-    public PrefixOpExpr(PrefixOp operator, Expr operand) {
+    public PrefixOpExpr(PrefixOp operator, JsExpr operand) {
         this.op = operator;
         this.expr = operand;
     }
 
     @Override
-    public <T> T accept(final Visitor<T> visitor) {
+    public <T> T accept(final ExprVisitor<T> visitor) {
         return visitor.visitPrefixOpExpr(this);
     }
 
