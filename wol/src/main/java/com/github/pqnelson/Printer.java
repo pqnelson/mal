@@ -30,6 +30,7 @@ public class Printer implements Visitor<String> {
 
     @Override
     public String visitFun(final Fun f) {
+        /*
         if (f.isInterpreted()) {
             StringBuffer buf = new StringBuffer("(fn* ");
             if(!f.name().equals("")) {
@@ -42,8 +43,11 @@ public class Printer implements Visitor<String> {
             buf.append(")");
             return buf.toString();
         } else {
-            return f.toObfuscatedString();
+        */
+        return f.toObfuscatedString();
+        /*
         }
+        */
     }
 
     @Override

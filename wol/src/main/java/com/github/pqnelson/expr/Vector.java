@@ -162,4 +162,11 @@ public class Vector extends Expr implements Iterable<Expr>, IObj<Vector>, ICount
     public String type() {
         return "Vector";
     }
+
+    public boolean contains(final Expr e) {
+        for (int i = this.size() - 1; i >= 0; i--) {
+            if (this.get(i).equals(e)) return true;
+        }
+        return false;
+    }
 }

@@ -1,6 +1,7 @@
 package com.github.pqnelson.expr;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -14,6 +15,9 @@ public class Seq extends Expr implements Iterable<Expr>, IObj<Seq>, ICountable {
 
     public Seq() {
         this(new ArrayList<>());
+    }
+    public Seq(final Collection<Expr> seqContents) {
+        this.contents = new ArrayList<Expr>(seqContents);
     }
     public Seq(final List<Expr> seqContents) {
         this.contents = seqContents;

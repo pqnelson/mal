@@ -232,10 +232,10 @@ public class Evaluator {
                 Env current = env;
                 Fun fn;
                 if (null != name) { // recursive functions use their own name
-                    fn = new Fun (null, params, body, name);
+                    fn = new Fun (name);
                     current.set(name, fn);
                     IFn f = (args) -> eval(body, new Env(current, params, args));
-                    fn.setIFn(f);
+                    fn.addMethod(f, params, body);
                 } else { // no name? no recursion!
                     IFn f = (args) -> eval(body, new Env(current, params, args));
                     fn = new Fun (f, params, body, name);
@@ -312,10 +312,10 @@ public class Evaluator {
             default: {
                 Seq args = (Seq) evalLiteral(ast, env);
                 Fun f = (Fun) (eval(rator, env));
-                if (!f.isInterpreted()) { // "compiled" function
+                if (!f.isInterpreted(args.size())) { // "compiled" function
                     return f.invoke(args);
                 } else { // interpreted function
-                    expr = f.getBody();
+                    expr = f.getBody(args.size());
                     env = f.genEnv(env, args);
                 }
             }
@@ -326,54 +326,54 @@ public class Evaluator {
 
     public static Env initialEnv() {
         Env env = new Env();
-        env.set(new Symbol("+"), new Fun(Core::add));
-        env.set(new Symbol("-"), new Fun(Core::subtract));
-        env.set(new Symbol("*"), new Fun(Core::multiply));
-        env.set(new Symbol("/"), new Fun(Core::divide));
-        env.set(new Symbol("count"), new Fun(Core::count));
-        env.set(new Symbol("list"), new Fun((Seq args) -> args));
-        env.set(new Symbol("list?"), new Fun(Core.list_QMARK_));
-        env.set(new Symbol("empty?"), new Fun(Core::empty_QMARK_));
-        env.set(new Symbol("seq"), new Fun(Core::seq));
-        env.set(new Symbol("first"), new Fun(Core::first));
-        env.set(new Symbol("nth"), new Fun(Core::nth));
-        env.set(new Symbol("rest"), new Fun(Core::rest));
-        env.set(concat, new Fun(Core::concat));
-        env.set(cons, new Fun(Core::cons));
-        env.set(new Symbol("="), new Fun(Core::equality));
-        env.set(new Symbol("<"), new Fun(Core::LT));
-        env.set(new Symbol("<="), new Fun(Core::LEQ));
-        env.set(new Symbol(">"), new Fun(Core::GT));
-        env.set(new Symbol(">="), new Fun(Core::GEQ));
-        env.set(new Symbol("nil?"), new Fun(Core.nil_QMARK_));
-        env.set(new Symbol("true?"), new Fun(Core.true_QMARK_));
-        env.set(new Symbol("false?"), new Fun(Core.false_QMARK_));
-        env.set(new Symbol("symbol?"), new Fun(Core.symbol_QMARK_));
-        env.set(new Symbol("symbol"), new Fun(Core::symbol));
-        env.set(new Symbol("keyword?"), new Fun(Core.keyword_QMARK_));
-        env.set(new Symbol("keyword"), new Fun(Core::keyword));
-        env.set(new Symbol("vector?"), new Fun(Core.vector_QMARK_));
-        env.set(new Symbol("vector"), new Fun(Core::vector));
-        env.set(new Symbol("map?"), new Fun(Core.map_QMARK_));
-        env.set(new Symbol("string?"), new Fun(Core.string_QMARK_));
-        env.set(new Symbol("fn?"), new Fun(Core.fn_QMARK_));
-        env.set(new Symbol("println"), new Fun(Core::println));
-        env.set(new Symbol("pr-str"), new Fun(Core::pr_str));
-        env.set(new Symbol("prn"), new Fun(Core::prn));
-        env.set(new Symbol("str"), new Fun(Core::str));
-        env.set(new Symbol("hash-map"), new Fun(Core::hash_map));
-        env.set(new Symbol("get"), new Fun(Core::get));
-        env.set(new Symbol("assoc"), new Fun(Core::assoc));
-        env.set(new Symbol("assoc!"), new Fun(Core::assoc_BANG_));
-        env.set(new Symbol("dissoc"), new Fun(Core::dissoc));
-        env.set(new Symbol("dissoc!"), new Fun(Core::dissoc_BANG_));
-        env.set(new Symbol("contains?"), new Fun(Core::contains_QMARK_));
-        env.set(new Symbol("keys"), new Fun(Core::keys));
-        env.set(new Symbol("vals"), new Fun(Core::vals));
-        env.set(new Symbol("read-string"), new Fun(Core::read_string));
-        env.set(new Symbol("slurp"), new Fun(Core::slurp));
-        env.set(new Symbol("list"), new Fun(Core::list));
-        env.set(new Symbol("throw"), new Fun(Core::_throw));
+        env.set(new Symbol("+"), new Fun(Core::add, 0, true));
+        env.set(new Symbol("-"), new Fun(Core::subtract, 1, true));
+        env.set(new Symbol("*"), new Fun(Core::multiply, 0, true));
+        env.set(new Symbol("/"), new Fun(Core::divide, 1, true));
+        env.set(new Symbol("count"), new Fun(Core::count, 1, false));
+        env.set(new Symbol("list"), new Fun((Seq args) -> args, 0, true));
+        env.set(new Symbol("list?"), new Fun(Core.list_QMARK_, 1, false));
+        env.set(new Symbol("empty?"), new Fun(Core::empty_QMARK_, 1, false));
+        env.set(new Symbol("seq"), new Fun(Core::seq, 1, false));
+        env.set(new Symbol("first"), new Fun(Core::first, 1, false));
+        env.set(new Symbol("nth"), new Fun(Core::nth, 2, false));
+        env.set(new Symbol("rest"), new Fun(Core::rest, 1, false));
+        env.set(concat, new Fun(Core::concat, 0, true));
+        env.set(cons, new Fun(Core::cons, 2, false));
+        env.set(new Symbol("="), new Fun(Core::equality, 0, true));
+        env.set(new Symbol("<"), new Fun(Core::LT, 0, true));
+        env.set(new Symbol("<="), new Fun(Core::LEQ, 0, true));
+        env.set(new Symbol(">"), new Fun(Core::GT, 0, true));
+        env.set(new Symbol(">="), new Fun(Core::GEQ, 0, true));
+        env.set(new Symbol("nil?"), new Fun(Core.nil_QMARK_, 1, false));
+        env.set(new Symbol("true?"), new Fun(Core.true_QMARK_, 1, false));
+        env.set(new Symbol("false?"), new Fun(Core.false_QMARK_, 1, false));
+        env.set(new Symbol("symbol?"), new Fun(Core.symbol_QMARK_, 1, false));
+        env.set(new Symbol("symbol"), new Fun(Core::symbol, 1, false));
+        env.set(new Symbol("keyword?"), new Fun(Core.keyword_QMARK_, 1, false));
+        env.set(new Symbol("keyword"), new Fun(Core::keyword, 1, false));
+        env.set(new Symbol("vector?"), new Fun(Core.vector_QMARK_, 1, false));
+        env.set(new Symbol("vector"), new Fun(Core::vector, 0, true));
+        env.set(new Symbol("map?"), new Fun(Core.map_QMARK_, 1, false));
+        env.set(new Symbol("string?"), new Fun(Core.string_QMARK_, 1, false));
+        env.set(new Symbol("fn?"), new Fun(Core.fn_QMARK_, 1, false));
+        env.set(new Symbol("println"), new Fun(Core::println, 0, true));
+        env.set(new Symbol("pr-str"), new Fun(Core::pr_str, 0, true));
+        env.set(new Symbol("prn"), new Fun(Core::prn, 0, true));
+        env.set(new Symbol("str"), new Fun(Core::str, 0, true));
+        env.set(new Symbol("hash-map"), new Fun(Core::hash_map, 0, true));
+        env.set(new Symbol("get"), new Fun(Core::get, 2, false));
+        env.set(new Symbol("assoc"), new Fun(Core::assoc, 3, true));
+        env.set(new Symbol("assoc!"), new Fun(Core::assoc_BANG_, 3, true));
+        env.set(new Symbol("dissoc"), new Fun(Core::dissoc, 1, true));
+        env.set(new Symbol("dissoc!"), new Fun(Core::dissoc_BANG_, 1, true));
+        env.set(new Symbol("contains?"), new Fun(Core::contains_QMARK_, 1, false));
+        env.set(new Symbol("keys"), new Fun(Core::keys, 1, false));
+        env.set(new Symbol("vals"), new Fun(Core::vals, 1, false));
+        env.set(new Symbol("read-string"), new Fun(Core::read_string, 1, false));
+        env.set(new Symbol("slurp"), new Fun(Core::slurp, 1, false));
+        env.set(new Symbol("list"), new Fun(Core::list, 0, true));
+        env.set(new Symbol("throw"), new Fun(Core::_throw, 0, true));
 
         return env;
     }
