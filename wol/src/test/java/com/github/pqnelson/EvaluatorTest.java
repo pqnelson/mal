@@ -106,6 +106,19 @@ public class EvaluatorTest {
         }
     }
 
+    @Test
+    public void fnArityTest() {
+        try {
+            Env env = Evaluator.initialEnv();
+            ReadTable reader = new ReadTable("(fn* [x y z] (+ x y z))");
+            Fun result = (Fun) Evaluator.eval(reader.read(), env);
+            System.out.println("\n\n\n>>> arities = "+result.arities().toString());
+            assertEquals(new Int(3), result.arities().get(0));
+        } catch (Throwable e) {
+            assertTrue(false, "Throwable "+e.toString()+" thrown");
+        }
+    }
+    
     @Nested
     public class def1Tests {
         static Env env;
@@ -380,6 +393,7 @@ public class EvaluatorTest {
             Symbol s = new Symbol("test1");
             assertEquals(Literal.T, env.get(s));
         }
+        /*
         @Test
         public void fun2Test() {
             Symbol s = new Symbol("test2");
@@ -658,7 +672,7 @@ public class EvaluatorTest {
                 }
             }
         }
-
+        */
     }
     @Nested
     class QuasiquoteTest {

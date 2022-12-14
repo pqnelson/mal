@@ -1,7 +1,7 @@
 (def test1 (= (+ 3 4)
-              ((fn* [a b] (+ a b)) 3 4)))
-(def test2 ((fn* [a] (+ a 1) (- a 1)) 1))
-(def test3 ((fn* [a & more] (list? more)) 1))
+              ((fn* test1 [a b] (+ a b)) 3 4)))
+(def test2 ((fn* test2 [a] (+ a 1) (- a 1)) 1))
+(def test3 ((fn* test3 [a & more] (list? more)) 1))
 ;; recursive anonymous functions work!
 (def test4 ((fn* factorial [x]
               (if (> x 0)

@@ -21,4 +21,22 @@ public class VectorTest
         Vector v = new Vector();
         assertEquals("[]", v.toString());
     }
+
+    @Test
+    public void contains1Test() {
+        Vector v = new Vector();
+        v.conj(new Symbol("x"));
+        v.conj(new Symbol("y"));
+        v.conj(new Symbol("z"));
+        assertFalse(v.contains(new Symbol("&")));
+    }
+
+    @Test
+    public void contains2Test() {
+        Vector v = new Vector();
+        v.conj(new Symbol("x"));
+        v.conj(new Symbol("&"));
+        v.conj(new Symbol("rest"));
+        assertTrue(v.contains(new Symbol("&")));
+    }
 }

@@ -49,7 +49,22 @@ public class Fun extends Expr implements IObj<Fun> {
             this.body = body;
             this.params = params;
             this.isVariadic = params.contains(new Symbol("&"));
-            this.arity = params.size() + (this.isVariadic ? 0 : -2);
+            this.arity = params.size() + (this.isVariadic ? -2 : 0);
+        }
+        
+
+        String toString(boolean parenthesize) {
+            StringBuffer buf = new StringBuffer((parenthesize ? "(" : ""));
+            if (null == this.body) {
+                buf.append("#function");
+                buf.append(this.f.hashCode());
+            } else {
+                buf.append(this.params.toString());
+                buf.append(" ");
+                buf.append(this.body.toString());
+            }
+            buf.append((parenthesize ? ")" : ""));
+            return buf.toString();
         }
         
         int arity() {
@@ -101,6 +116,11 @@ public class Fun extends Expr implements IObj<Fun> {
     public Fun(final IFn f, final int arity, final boolean isVariadic) {
         if (isVariadic) this.defaultFn = new FnMethod(f, arity, isVariadic);
         else methods.put(arity, new FnMethod(f, arity, isVariadic));
+    }
+    public Fun(final IFn f, final int arity, final boolean isVariadic,
+               final Symbol name) {
+        this(f, arity, isVariadic);
+        this.name = name;
     }
 
     
@@ -266,6 +286,16 @@ public class Fun extends Expr implements IObj<Fun> {
     }
     */
 
+    public Vector arities() {
+        Vector result = new Vector();
+        if (null != this.defaultFn) {
+            result.conj(new Int(this.defaultFn.arity()));
+        }
+        for (int arity : this.methods.keySet()) {
+            result.conj(new Int(arity));
+        }
+        return result;
+    }
 
     FnMethod getMethodWithArity(int arity) {
         FnMethod f = this.methods.get(arity);
@@ -276,7 +306,7 @@ public class Fun extends Expr implements IObj<Fun> {
                                            + (null == this.name
                                               ? ""
                                               : " passed to "+this.name.toString()));
-            } else if (this.defaultFn.arity() < arity) {
+            } else if (this.defaultFn.arity() > arity) {
                 throw new RuntimeException("Wrong number of args (" + arity
                                            + ")"
                                            + (null == this.name
@@ -350,9 +380,42 @@ public class Fun extends Expr implements IObj<Fun> {
         }
     }
 
+    private String printSingletonMethod(FnMethod f) {
+        StringBuffer buf = new StringBuffer("(fn* ");
+        if (null != this.name) {
+            buf.append(this.name.toString());
+            buf.append(" ");
+        }
+        buf.append(f.toString(false));
+        buf.append(")");
+        return buf.toString();
+    }
+
     @Override
     public String toString() {
-        return Printer.print(this);
+        if (null != this.defaultFn && this.methods.isEmpty()) {
+            return printSingletonMethod(this.defaultFn);
+        }
+        if (null == this.defaultFn && 1 == this.methods.size()) {
+            for (FnMethod f : this.methods.values()) {
+                return printSingletonMethod(f);
+            }
+        }
+        
+        StringBuffer buf = new StringBuffer("(fn* ");
+        if (null != this.name) {
+            buf.append(this.name.toString());
+            buf.append(" ");
+        }
+        if (null != this.defaultFn) {
+            buf.append(this.defaultFn.toString(true));
+        }
+        for (FnMethod f : this.methods.values()) {
+            buf.append(" ");
+            buf.append(f.toString(true));
+        }
+        buf.append(")");
+        return buf.toString();
     }
 
     public String name() {

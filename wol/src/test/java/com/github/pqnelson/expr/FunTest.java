@@ -21,6 +21,43 @@ import com.github.pqnelson.expr.Vector;
 public class FunTest
 {
     @Test
+    public void arities1Test() {
+        IFn dummy = null;
+        Vector params = new Vector();
+        params.conj(new Symbol("x"));
+        Fun f = new Fun(dummy,  params);
+        assertEquals(new Int(1), f.arities().get(0));
+    }
+    @Test
+    public void arities2Test() {
+        IFn dummy = null;
+        Vector params = new Vector();
+        params.conj(new Symbol("x"));
+        params.conj(new Symbol("y"));
+        Fun f = new Fun(dummy,  params);
+        assertEquals(new Int(2), f.arities().get(0));
+    }
+    @Test
+    public void arities3Test() {
+        IFn dummy = null;
+        Vector params = new Vector();
+        params.conj(new Symbol("x"));
+        params.conj(new Symbol("&"));
+        params.conj(new Symbol("y"));
+        Fun f = new Fun(dummy,  params);
+        assertEquals(new Int(1), f.arities().get(0));
+    }
+    @Test
+    public void arities4Test() {
+        IFn dummy = null;
+        Vector params = new Vector();
+        params.conj(new Symbol("x"));
+        params.conj(new Symbol("y"));
+        params.conj(new Symbol("z"));
+        Fun f = new Fun(dummy,  params);
+        assertEquals(new Int(3), f.arities().get(0));
+    }
+    @Test
     public void cloneTest1() {
         Seq body = new Seq();
         body.conj(Literal.T);
@@ -29,6 +66,7 @@ public class FunTest
         Fun clown = new Fun(constantlyTrue);
         assertTrue(clown.equals(constantlyTrue));
     }
+    /*
     @Test
     public void cloneTest2() {
         Seq body = new Seq();
@@ -47,6 +85,7 @@ public class FunTest
         Fun clown = new Fun(constantlyTrue.f, constantlyTrue.params, body);
         assertTrue(clown.hasSameImplementation(constantlyTrue));
     }
+    */
 
     @Test
     public void toStringTest1() {
