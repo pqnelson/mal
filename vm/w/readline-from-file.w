@@ -35,18 +35,26 @@ should be zero.
 char* readline_from_stream(FILE *fp, int *err) {
   size_t len = 0; /* amount of |line| currently used */
   size_t cap = 16; /* current capacity of the |line| */
-  char *line = malloc(cap * sizeof(char)); /* return value */
+  char *line = NULL; /* return value */
   if (err != NULL) *err = 0; /* reset the |err| flag */
+  @<Exit early when |fp| is null@>@;
+  line = malloc(cap * sizeof(char)); /* initialize buffer */
   @<Check for allocation failure in |readline|...@>@;
-
-
   while(true) {
     @<Ensure capacity of |line| buffer is big enough...@> @; @|
     assert(len < cap);
     int c = fgetc(fp);
     @<Insert character into |line|...@> @;
   }
+  return line; /* We shouldn't get here, but still... */
 }
+
+@ @<Exit early when |fp| is null@>=
+  if (fp == NULL) {
+      if (err != NULL) *err = 1;
+      return NULL;
+  }
+  assert(fp != NULL);
 
 @ The |line| buffer has already been initialized to be 16 characters long.
 When we have used up all characters, we double the |line|'s capacity using
@@ -101,6 +109,7 @@ array value.
     if (err != NULL) *err = 1;
     return NULL;
   }
+  assert(line != NULL);
 
 @ Care must be taken: most modern operating systems use |'\n'| to end
 a line (Windows uses |"\r\n"|), but this is by no means universal. For
