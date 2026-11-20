@@ -1,0 +1,7 @@
+\catcode `\@=11\relax 
+\ZZ {Introduction}{0}{1}{1}{}
+\ZZ {Contracts for C Standard Library}{1}{14}{7}{}
+\ZZ {Read a line from an input stream}{1}{20}{9}{}
+\ZZ {Index}{1}{26}{12}{}
+
+\catcode `\@=12\relax 

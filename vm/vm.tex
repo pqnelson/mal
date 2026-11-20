@@ -1,0 +1,954 @@
+\input cwebmac
+
+
+\def\topofcontents{
+  \leftline{\sc\today\ at \hours}\bigskip\bigskip
+  \centerline{\titlefont\title}}
+
+\def\title{Lisp Virtual Machine}
+
+\font\sixrm=cmr6
+\def\registeredtrademark{\ooalign {\hfil \raise .07ex\hbox {\sixrm R}\hfil %
+\crcr \Orb }}
+
+\def\define#1{{\bf``#1''}}
+
+\def\bull{\smallskip\textindent{$\bullet$}}
+% organizations
+\def\GNU/{{\mc GNU\spacefactor1000}} % ltugboat.cls
+\def\IEEE/{{\mc IEEE\spacefactor1000}} % ltugboat.cls
+\def\POSIX/{{\mc POSIX\spacefactor1000}} % s-tugboat.mkiv
+
+% computer programs
+\def\BSD/{{\mc BSD\spacefactor1000}} % ltugboat.cls
+\def\SOLARIS/{{\rm\textsc{Solaris}\spacefactor1000}}
+\def\UNIX/{{\mc U\kern-.05emNIX\spacefactor1000}}
+\def\ULTRIX/{{\mc U\kern-.05emLTRIX\spacefactor1000}}
+\def\macOS/{{\rm mac{\mc OS\spacefactor1000}}} % classic mac
+\def\MacOSX/{{\rm Mac\,{\mc OS\,X\spacefactor1000}}} % OS X
+
+% tools
+\def\ACSL/{{\mc ACSL\spacefactor1000}}
+
+% patch the typesetting macros for prettyprinting C code
+\def\E{=} % equivalence
+\let\K=\leftarrow % assignment
+
+
+
+
+
+\N{0}{1}Introduction.
+The Symbolics Lisp Machine has garnered a mystique over the years.
+But after the first AI Winter, Symbolics lost its revenue streams, and
+their Lisp Machines have become artifacts. This has only added to
+their lustre. Peter Kogge's {\it The Architecture of Symbolic Computers}
+(McGraw--Hill, 1991) reviews some aspects of Lisp Machines, explaining
+it is little more than an SECD Machine with some optimizations.
+
+Kogge's description guides our endeavour. We will implement a virtual
+machine based on the SECD Machine, and add optimizations based on the
+Symbolics Lisp Machines.
+
+Since we will be implementing a \POSIX/-compliant program, we define
+the \PB{\.{\_POSIX\_C\_SOURCE}} macro (see \POSIX/ vol~2 ``System Interfaces'',
+Ch~2, \S2.2.1.2). We will use the 2008~\POSIX/ standard, since that's
+what Frama-C uses.
+
+
+\Y\B\8\#\&{define} \.{\_POSIX\_C\_SOURCE}\5\T{200809\$L}\C{ for 2008; 200112L
+for 2001; for 2024: \PB{\T{202405\$L}} }\6
+\X11:Preprocessor macros\X\6
+\X20:Read a line from an input stream\X\par
+\fi
+
+\M{2}The SECD Machine is a stack machine with 4 ``registers'' (stacks):
+\itemitem{(1)} \.{s} (stack) holds intermediate results (it's a list of
+expressions);
+\itemitem{(2)} \.{e} (environment) holds values bound to variables;
+\itemitem{(3)} \.{c} (control) holds the code being executed;
+\itemitem{(4)} \.{d} (dump) stores the contents of other registers
+temporarily when a function-call occurs (and restores them upon return).
+
+There are other virtual machines, which could be viewed as variants of
+the SECD Machine. For example, the CEK machine removes the dump \.{d}
+from SECD and replaces it with continuations (and places parameters in
+the environment \.{e} stack). The CESK machine uses a ``store'' [heap]
+and pointers instead of copying objects into the environment \.{e}.
+
+Peter Henderson's book {\sl Functional Programming: Application and
+Implementation}
+(Prentice Hall, 1980)
+implements an SECD machine with about 15 opcodes in the book, and the
+LispKit Lisp uses about 28 opcodes for their SECD virtual machine.
+
+\fi
+
+\M{3}The basic values in Lisp can be one of several types: characters,
+fixed-width and arbitrary precision integers (``fixnum'' and
+``bignum'', respectively), rational numbers, floating-point numbers (both
+single and double
+precision), lists and \.{cons} cells, symbols, closures. Common Lisp also
+includes arrays (including strings and vectors), hash tables,
+readtables, packages, streams, structures.
+
+Our virtual machine will need to determine some set of
+primitives. What is a common set of primitive types for virtual machines?
+{\it The Java\registeredtrademark{} Virtual Machine Specification: Java SE 8
+Edition} (\S2.2) distinguishes
+between primitive types
+(\.{byte}, \.{short}, \.{int}, \.{long}, \.{char}, \.{float}, \.{double},
+\.{boolean}, and \.{returnAddress} types) and reference types.
+
+A first stab might be: integers, lists.
+
+\fi
+
+\M{4}{\bf Remark: Note to self.}\enspace\ignorespaces%
+The Symbolics I-Machine had \.{nil} stored at the address 1011000
+and \.{t} stored at the address 1011005.
+
+\fi
+
+\M{5}{\bf Lisp dialect: syntax.}\enspace\ignorespaces%
+We will use a modified version of LispKit Lisp as our ``base
+Lisp''. Following Chapter~4 of Henderson's book {\sl Functional Programming:
+Application and Implementation}
+(Prentice Hall, 1980), the syntax looks like:
+
+$$\vbox{\offinterlineskip
+\halign{ \hfil# &\strut\quad#\hfil\cr
+$x$ & a variable\cr
+{\tt (quote $s$)} & a constant\cr
+%height2pt&\omit&\omit\cr
+\noalign{\hrule}
+%height2pt&\omit&\omit\cr
+{\tt (add $e_{1}$ $e_{2}$)} & \cr
+{\tt (sub $e_{1}$ $e_{2}$)} & \cr
+{\tt (mul $e_{1}$ $e_{2}$)} & arithmetic expressions \cr
+{\tt (div $e_{1}$ $e_{2}$)} & \cr
+{\tt (rem $e_{1}$ $e_{2}$)} & \cr
+%height2pt&\omit&\omit\cr
+\noalign{\hrule}
+%height2pt&\omit&\omit\cr
+{\tt (eq $e_{1}$ $e_{2}$)} & equality\cr
+{\tt (leq $e_{1}$ $e_{2}$)} & partial ordering $e_{1}\leq e_{2}$\cr
+%height2pt&\omit&\omit\cr
+\noalign{\hrule}
+%height2pt&\omit&\omit\cr
+{\tt (car $e$)} & get head of list\cr
+{\tt (cdr $e$)} & get tail of list\cr
+{\tt (cons $e_{1}$ $e_{2}$)} & form a list\cr
+{\tt (atom $e$)} & test if $e$ is atomic\cr
+%height2pt&\omit&\omit\cr
+\noalign{\hrule}
+%height2pt&\omit&\omit\cr
+{\tt (if $e_{1}$ $e_{2}$ $e_{3}$)} & conditional forms\cr
+{\tt (lambda ($x_{1}$ $\cdots$ $x_{k}$) $e$)} & lambda expression\cr
+{\tt ($e$ $e_{1}$ $\cdots$ $e_{k}$)} & function call\cr
+{\tt (let (($x_{1}$ $e_{1}$) $\cdots$ ($x_{k}$ $e_{k}$)) $e$)} & simple block%
+\cr
+{\tt (letrec (($x_{1}$ $e_{1}$) $\cdots$ ($x_{k}$ $e_{k}$)) $e$)} & recursive
+block\cr}}$$
+
+\fi
+
+\M{6}{\bf Lisp semantics.}\enspace\ignorespaces%
+The semantics for this Lisp dialect may be described using
+an \\{eval}(\\{expr}, $n$, $v$) function, where $n$ is a ``name list''
+(a linked list of lists of identifiers)
+and $v$ is a ``value list'' (a linked list of lists of values). We
+need a few helper functions first:
+
+{
+\&{function} \\{assoc}($x$, $n$, $v$) := \1\6
+\&{if} \\{member}($x$, \\{car}($n$))\6
+\&{then} \\{locate}($x$, \\{car}($n$), \\{car}($v$))\6
+\&{else} \\{assoc}($x$, \\{cdr}($n$), \\{cdr}($v$))\2\7
+\&{function} \\{locate}($x$, $\ell$, $m$) :=\1\6
+\&{if} \\{eq}($x$, \\{car}($\ell$))\6
+\&{then} \\{car}($m$)\6
+\&{else} \\{locate}($x$, \\{cdr}($\ell$), \\{cdr}($m$))\2\7
+\&{function} \\{member}($x$, $\ell$) :=\1\6
+\&{if} \\{eq}($\ell$, \.{nil})\6
+\&{then} \&{false}\6
+\&{else} \&{if} \\{eq}($x$, \\{car}($\ell$))\6
+\&{else} \\{member}($x$, \\{cdr}($\ell$))\2
+\par}
+
+\fi
+
+\M{7}Now, the basic rules look like (we freely rely on informal functions
+in the metalanguage like \\{cons}, \\{head}, \\{tail}, etc.):
+
+\bull
+\\{eval}($e$, $n$, $v$) = \\{assoc}($e$, $n$, $v$) when $e$ is an atom.
+
+\bull
+\\{eval}({\tt (car $e$)}, $n$, $v$) = \\{head}(\\{eval}($e$, $n$, $v$))
+
+\bull
+\\{eval}({\tt (cdr $e$)}, $n$, $v$) = \\{tail}(\\{eval}($e$, $n$, $v$))
+
+\bull
+\\{eval}({\tt (atom $e$)}, $n$, $v$) = \\{is\_atom}(\\{eval}($e$, $n$, $v$))
+
+\bull
+\\{eval}({\tt (cons $e_{1}$ $e_{2}$)}, $n$, $v$) =
+\\{cons}(\\{eval}($e_{1}$, $n$, $v$), \\{eval}($e_{2}$, $n$, $v$))
+
+\bull
+\\{eval}({\tt (eq \\{lhs} \\{rhs})}, $n$, $v$) =
+\\{eq}(\\{eval}(\\{lhs}, $n$, $v$), \\{eval}(\\{rhs}, $n$, $v$))
+
+\bull
+\\{eval}({\tt (if $e$ $e_{1}$ $e_{2}$)}, $n$, $v$) =
+\&{if}(\\{eval}($e$, $n$, $v$)) \&{then} \\{eval}($e_{1}$, $n$, $v$)
+\&{else} \\{eval}($e_{2}$, $n$, $v$)
+
+\bull
+\\{eval}({\tt (lambda \\{args} $e$)}, $n$, $v$) = \&{let} \\{env} = %
+\\{cons}($n$, $v$)
+\&{and} \\{clos} = \\{cons}(\\{args}, $e$)
+\&{in} \\{cons}(\\{clos}, \\{env}) \&{end};
+
+It's important to note that this is how the LispKit semantically
+represents a closure.
+
+\bull
+\\{eval}({\tt (let \\{decls} $e$)}, $n$, $v$) =
+\\{eval}($e$, \\{cons}(\\{vars}, $n$), \\{cons}(\\{exprs}, $v$))
+
+\&{where} \\{vars} = \\{get\_vars}(\\{decls})
+
+\&{and}
+\\{exprs} = \\{evlist}(\\{get\_exprs}(\\{decls}), $n$, $v$)
+
+\&{and}
+\\{get\_vars}(d) = \&{if} $d$ = \.{nil} \&{then} \.{nil}
+\&{else} \\{cons}(\\{car}(\\{car}($d$)),\\{get\_vars}(\\{cdr}($d$)))
+
+\&{and} \\{get\_exprs}($d$) = \&{if} $d$ = \.{nil} \&{then} \.{nil}
+\&{else} \\{cons}(\\{cdr}(\\{car}($d$)),\\{get\_vars}(\\{cdr}($d$)))
+
+\&{and} \\{evlist}($\ell$, $n$, $v$) = \&{if} $\ell$ = \.{nil} \&{then}
+\.{nil} \&{else} \\{cons}(\\{eval}(\\{car}($\ell$), $n$, $v$), \\{evlist}(%
+\\{cdr}($\ell$),$n$,$v$)
+
+\bull
+\\{eval}({\tt (letrec \\{decls} $e$)}, $n$, $v$) =
+\\{eval}($e$, $n'$, \\{replaca}($v'$, \\{exprs}))
+
+\&{where} $v'$ = \\{cons}(\&{pending}, $v$) \&{and} $n'$ = \\{cons}(\\{vars},
+$n$)
+
+\&{and}
+\\{vars} = \\{get\_vars}(\\{decls})
+
+\&{and}
+\\{exprs} = \\{evlist}(\\{get\_exprs}(\\{decls}), $n'$, $v'$)
+
+\&{and}
+\\{get\_vars}(d) = \&{if} $d$ = \.{nil} \&{then} \.{nil}
+\&{else} \\{cons}(\\{car}(\\{car}($d$)),\\{get\_vars}(\\{cdr}($d$)))
+
+\&{and} \\{get\_exprs}($d$) = \&{if} $d$ = \.{nil} \&{then} \.{nil}
+\&{else} \\{cons}(\\{cdr}(\\{car}($d$)),\\{get\_vars}(\\{cdr}($d$)))
+
+\&{and} \\{evlist}($\ell$, $n$, $v$) = \&{if} $\ell$ = \.{nil} \&{then}
+\.{nil} \&{else} \\{cons}(\\{eval}(\\{car}($\ell$), $n$, $v$), \\{evlist}(%
+\\{cdr}($\ell$),$n$,$v$)
+
+\&{and} \\{rplaca}($x$, $y$) = \&{setq}(\\{car}($x$), $y$) mutates
+the \\{car}($x$) to be $y$.
+
+\bull
+\\{eval}({\tt ($e_{1}$ {.\spacefactor1000} $e_{2}$)}, $n$, $v$) =
+\\{eval}(\\{cdr}(\\{clos}), $n'$, $v'$), (``applying a function'')
+
+\&{where} $n'$ = \\{cons}(\\{car}(\\{clos}), \\{car}(\\{env})) \&{and}
+$v'$ = \\{cons}($z$, \\{cdr}(\\{env}))
+
+\&{and} (\\{clos}, \\{env}) = \\{eval}($e_{1}$, $n$, $v$)
+
+\&{and} $z$ = \\{evlist}($e_{2}$, $n$, $v$)
+
+\&{and} \\{evlist}($\ell$, $n$, $v$) = \&{if} $\ell$ = \.{nil} \&{then}
+\.{nil} \&{else} \\{cons}(\\{eval}(\\{car}($\ell$), $n$, $v$), \\{evlist}(%
+\\{cdr}($\ell$),$n$,$v$)
+
+
+\bigskip
+\noindent We can also define an \\{apply} function (as is classic in Lisp):
+\bull
+\\{apply}($f$, $x$) = \\{eval}(\\{cdr}(\\{clos}), $n$, $v$)
+
+\&{where} $n$ = \\{cons}(\\{car}(\\{clos}), \\{car}(\\{env}))
+\&{and} $v$ = \\{cons}($x$, \\{cdr}(\\{env}))
+
+\&{and} (\\{clos}, \\{env}) = \\{eval}($f$, \.{nil}, \.{nil})
+
+\bigskip
+\noindent Finally, we can extend the definition of \\{eval} with more
+primitives (like extending the LispKit Lisp with a \.{null} primitive
+predicate, and then adding a rule in the definition of \\{eval}({\tt
+(null $e$)}, $n$, $v$)); we can also give rules for arithmetic, but
+that is tedious.
+
+\fi
+
+\M{8}{\bf SECD Machine.}\enspace\ignorespaces%
+We can now offer a formal specification of the SECD Machine by
+describing the transition rules $(s,e,c,d)\to(s',e',c',d')$ and how it
+changes the state of the four ``registers''. There are only three
+types of values (numbers, symbols, lists).
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt ADD}, c), d)\to(((a+b)~%
+\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt SUB}, c), d)\to(((a-b)~%
+\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt MUL}, c), d)\to(((a\times
+b)~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt DIV}, c), d)\to(((a\div
+b)~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt REM}, c), d)\to(((a%
+\mathbin{\bf rem} b)~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt EQ}, c), d)\to(((a=b)~%
+\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt LEQ}, c), d)\to(((a\leq
+b)~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$((a~b~\hbox{\tt .\spacefactor1000}~s), e, (\hbox{\tt CONS}, c), d)\to(((a~%
+\hbox{\tt .\spacefactor1000}~b)~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$(((a~\hbox{\tt .\spacefactor1000}~b)~\hbox{\tt .\spacefactor1000}~s), e, (%
+\hbox{\tt CAR}, c), d)\to((a~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$(((a~\hbox{\tt .\spacefactor1000}~b)~\hbox{\tt .\spacefactor1000}~s), e, (%
+\hbox{\tt CDR}, c), d)\to((b~\hbox{\tt .\spacefactor1000}~s), e, c, d)$
+
+\bull
+$(s,e,({\tt LD}~i,c),d)\to((x~\hbox{\tt .\spacefactor1000}~s),e,c,d)$
+
+\&{where} $x$ = \\{locate}($i$, $e$)
+
+\&{and} \\{locate}(($b$, $n$), $e$) = \\{index}($n$, \\{index}($b$, $e$))
+
+\&{and} \\{index}($n$, $s$) = \&{if} \\{eq}($n$, $0$) \&{then} \\{car}($s$) %
+\&{else}
+\\{index}($n-1$, \\{cdr}($s$))
+
+\bull
+$(s,e,({\tt LDC}~n,c),d)\to((n~\hbox{\tt .\spacefactor1000}~s),e,c,d)$
+--- push a constant onto the S stack
+
+\bull
+$((x~\hbox{\tt .\spacefactor1000}~s),e,({\tt SEL}~c_{T}~c_{F}, c), d)%
+\to(s,e,c_{x},(c~\hbox{\tt .\spacefactor1000}~d))$
+--- where $x$ is either \.{T} or \.{F} [true or false]
+
+\bull
+$(s,e,({\tt JOIN},\dots),(c~\hbox{\tt .\spacefactor1000}~d))\to(s,e,c,d)$
+
+\bull
+$(s,e,({\tt LDF}~c',c),d)\to((c'~\hbox{\tt .\spacefactor1000}~e)~\hbox{\tt .%
+\spacefactor1000}~s,e,c,d)$
+--- Pushes a closure $(c',e)$ onto the top of the stack.
+
+\bull
+$(((c'~\hbox{\tt .\spacefactor1000}~e'), v, s),e,({\tt AP}, c),d)\to({\tt
+NIL},(v~\hbox{\tt .\spacefactor1000}~e'),c',((s,e,c)~\hbox{\tt .%
+\spacefactor1000}~d))$
+
+\noindent%
+This describes function application where $((c',e'),v,s)$ the initial
+S register holds the closure $(c',e')$ and then the arguments
+$v$. Note: this is call-by-value semantics.
+
+\bull $((x,\dots),e',({\tt RTN},\dots),((s,e,c)~\hbox{\tt .%
+\spacefactor1000}~d))\to((x,s),e,c,d)$
+
+\bull $(s,e,({\tt DUM},c),d)\to(s,(\Omega,e),c,d)$
+where $\Omega$ was called \&{pending} in the definition of
+the \\{eval} function for LispKit Lisp
+
+\bull $(((c'~\hbox{\tt .\spacefactor1000}~e'),v,s),(\Omega,e),({\tt RAP},c),d)%
+\to({\tt NIL}, \\{rplaca}(e',v),c',((s,e,c),d))$
+where \\{rplaca}($e'$, $v$) replaces the \\{car} of $e'$ by $v$.
+
+\bull $(s,e,({\tt STOP},c),d)\to\bot$ halts the machine.
+
+\fi
+
+\M{9}{\bf Specification for compiler.}\enspace\ignorespaces%
+We can give the specification for a compile function \\{comp}($e$, $n$, $c$)
+where $e$ is a Lisp expression, $n$ is a namelist, and $c$ is the
+accumulated compiled output so far. This summarizes Henderson's
+{\sl Functional Programming: Application and Implementation} (1980), Ch~6.
+
+\bull $\\{comp}(e,n,c)=({\tt LD},\\{location}(e,n),c)$ when $e$ is an atom,
+
+\bull $\\{comp}(({\tt quote}~e),n,c) = ({\tt LDC}, e, c)$
+
+\bull $\\{comp}(({\tt add}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt ADD}, c)))$
+
+\bull $\\{comp}(({\tt sub}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt SUB}, c)))$
+
+\bull $\\{comp}(({\tt mul}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt MUL}, c)))$
+
+\bull $\\{comp}(({\tt div}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt DIV}, c)))$
+
+\bull $\\{comp}(({\tt rem}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt REM}, c)))$
+
+\bull $\\{comp}(({\tt eq}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt EQ}, c)))$
+
+\bull $\\{comp}(({\tt leq}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt LEQ}, c)))$
+
+\bull $\\{comp}(({\tt cons}~e_{1}~e_{2}),n,c) = \\{comp}(e_{1},n,%
+\\{comp}(e_{2},n,({\tt CONS}, c)))$
+
+\bull $\\{comp}(({\tt car}~e),n,c) = \\{comp}(e,n,({\tt CAR}, c))$
+
+\bull $\\{comp}(({\tt cdr}~e),n,c) = \\{comp}(e,n,({\tt CDR}, c))$
+
+\bull $\\{comp}(({\tt atom}~e),n,c) = \\{comp}(e,n,({\tt ATOM}, c))$
+
+\bull $\\{comp}(({\tt if}~e~e_{1}~e_{2}),n,c) = \\{comp}(e,n,({\tt SEL},%
+\\{thenpt},\\{elsept},c))$
+
+\&{where} \\{thenpt} = \\{comp}($e_{1}$, $n$, ({\tt JOIN}))
+
+\&{and} \\{elsept} = \\{comp}($e_{2}$, $n$, ({\tt JOIN}))
+
+\bull $\\{comp}(({\tt lambda}~\\{args}~e),n,c) = ({\tt LDF}, \\{body}, c)$
+
+\&{where} \\{body} = \\{comp}($e$, (\\{args}, $n$), ({\tt RTN}))
+
+\bull $\\{comp}(({\tt let}~\\{decls}~\\{body}),n,c) = \\{complis}(\\{args},m,({%
+\tt LDF}, \\{body}, {\tt AP}, c))$
+
+\&{where} $m$ = \\{cons}(\\{vars}(\\{decls}), $n$)
+
+\&{and} \\{args} = \\{exprs}(\\{decls})
+
+\vbox{\+\indent\&{and} \\{complis}($e$, $n$, $c$) = \cleartabs & \&{if} %
+\\{eq}($e$, \.{nil}) \&{then} \\{cons}(\.{LDC}, \\{cons}(\.{NIL}, $c$))\cr
+\+& \&{else} \\{complis}(\\{cdr}($e$), $n$, \\{comp}(\\{car}($e$), $n$, %
+\\{cons}(\.{CONS},$c$)))\cr}
+
+\&{and} \\{vars}($d$) = \\{if} \\{eq}($d$, \.{nil}) \&{then} \.{nil}
+\&{else} \\{cons}(\\{caar}($d$, \\{vars}(\\{cdr}($d$))))
+
+\&{and} \\{exprs}($d$) = \\{if} \\{eq}($d$, \.{nil}) \&{then} \.{nil}
+\&{else} \\{cons}(\\{cdar}($d$, \\{exprs}(\\{cdr}($d$))))
+
+\&{and} \\{caar}($d$) = \\{car}(\\{car}($d$)) \&{and} \\{cdar}($d$)=\\{cdr}(%
+\\{car}($d$))
+
+\bull \\{comp}(({\tt letrec}~\\{decls}~\\{body}), $n$, $c$)
+= \\{cons}(\.{DUM}, \\{complis}(\\{args}, $m$, $c'$))
+
+\&{where} $c'$ = \\{cons}(\.{LDF}, \\{cons}($b$, \\{cons}(\.{RAP}, $c$)))
+
+\&{and} $b$ = \\{comp}(\\{body}, $m$, (\.{RTN}))
+
+\&{and} $m$ = \\{cons}(\\{vars}(\\{decls}), $n$)
+
+\&{and} \\{args} = \\{exprs}(\\{decls})
+
+\bull (Generic applications)
+\\{comp}(($e_{1}$ $e_{2}$), $n$, $c$) =
+\\{complis}($e_{2}$, $n$, \\{comp}($e_{1}$, $n$, \\{cons}(\.{AP}, $c$)))
+
+\bull Then generically we have a compile function:
+
+\\{compile}($e$) = \\{comp}($e$, \.{NIL}, (\.{AP}, \.{STOP}))
+
+\fi
+
+\M{10}If we wanted to extend the SECD machine with a heap, then we would
+probably need to modify the following opcodes:
+
+\bull
+{\tt ldf} allocates a new closure object on the heap containing the
+function's code pointer and the current environment pointer E, the
+resulting heap address is loaded onto the top of S.
+
+\bull
+{\tt cons}, {\tt car}, {\tt cdr} --- {\tt cons} pops the top two items
+from S, allocates a new pair cell in the heap, initializes its
+contents with the items popped from S, then pushes the address of the
+pair cell onto the top of S. The {\tt car} and {\tt cdr} pops the top
+of S, treats it as a heap address, looks up the contents, then returns
+either the head or tail.
+
+\bull
+{\tt ap} pops a closure pointer and argument from S, looks up the
+closure in the heap, extends its captured environment on the heap with
+the new argument, and shifts control to the closure's code. (It also
+stores the current state [i.e., the S, E, C registers] on the top of
+the D stack; updates E as before; and resets ${\rm S}\gets\Lambda$ the S stack
+to be empty.)
+
+\medskip
+Really, it seems like the E and D registers reflects the call stack
+(``activation records'', I guess they're called nowadays). We could
+probably use a more optimized implementation than a linked list of
+linked lists.
+
+\fi
+
+\M{11}We need the basic \CEE/ libraries.
+
+\Y\B\4\X11:Preprocessor macros\X${}\E{}$\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<assert.h>}\par
+\As12\ET13.
+\U1.\fi
+
+\M{12}Following Knuth (see, e.g., his \.{mmix-sim} program), we are
+concerned about portability, and so we want to support even \CEE/89
+compilers. We will be following Henry Rabinowitz and Chaim Schaap's
+{\it Portable C} (Prentice Hall, 1990)
+
+This requires the following hack to make function
+declarations work even on \CEE/89 compilers.
+
+\Y\B\4\X11:Preprocessor macros\X${}\mathrel+\E{}$\6
+\8\#\&{if} \&{defined} (\.{\_\_STDC\_\_})${}\W\.{\_\_STDC\_\_}{}$\6
+\8\#\&{define} \.{ARGS}(\\{list})\5\\{list}\6
+\8\#\&{else}\6
+\8\#\&{define} \.{ARGS}(\\{list})\5(\,)\6
+\8\#\&{endif}\par
+\fi
+
+\M{13}If the user has a \CEE/89 compiler, then we need to provide
+the \&{bool} type, \\{false} is zero, \\{true} is one.
+
+% https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/stdbool.h.html
+
+\Y\B\4\X11:Preprocessor macros\X${}\mathrel+\E{}$\6
+\8\#\&{if} \&{defined} (\.{\_\_STDC\_\_})${}\W\.{\_\_STDC\_\_}{}$\6
+\8\#\&{include} \.{<stdbool.h>}\6
+\8\#\&{else}\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{false},\39\\{true}{}$\2\6
+${}\}{}$\5
+\&{bool};\6
+\8\#\&{endif}\par
+\fi
+
+\N{1}{14}Contracts for C Standard Library.
+The Frame-\CEE/ compiler is an effort to use the
+ANSI~\CEE/~Specification Language to formalize the behaviour of C
+programs. It's worth consulting to try to express the contracts for
+functions appearing in the \CEE/ Standard Library.
+For example, the \pdfURL{annotations for {\tt stdlib.h}}%
+{https://github.com/Frama-C/Frama-C-snapshot/blob/master/share/libc/stdlib.h}
+are worth consulting.
+
+Frame-C strives to conform to the \POSIX/.1-2008 standard, whenever
+possible (e.g., there's no hope with Micosoft Visual \CEE/), according
+to their \.{\_\_fc\_machdep\_linux\_shared.h} file's definition of
+\.{\_\_FC\_POSIX\_VERSION} macro.
+
+\fi
+
+\M{15}{\bf Ambiguities of C89 Standard.}\enspace\ignorespaces%
+So, the \CEE/89 standard has some flaws and ambiguities. For example,
+it specifies (\S7.1.6) that \PB{\&{size\_t}} ``is the unsigned integral type
+of the result of the \PB{\&{sizeof}} operator.'' But it does not specify what
+its maximum value is (i.e., \PB{\.{SIZE\_MAX}} is not defined in either the %
+\CEE/89
+standard nor in the \CEE/95 standard as the maximum value of a \PB{\&{size\_t}}
+object).
+The charitable reading of the \CEE/89 and \CEE/95 standards is that
+\PB{\&{size\_t}} has \PB{$\.{UINT\_MAX}\G\T{65535}\E\T{2}\hbox{$^{16}$}-\T{1}$}
+as its limit.
+
+\fi
+
+\M{16}{\bf Definition.}\enspace\ignorespaces%
+Let $p$ be a pointer.
+
+\itemitem{(1)}
+We say that $p$ is \define{Allocatable} iff the
+pointer $p$ refers to the base address of an unallocated memory block.
+
+\itemitem{(2)}
+We say that $p$ is \define{Freeable} if and only if the pointer $p$
+refers to the base address of an allocated memory block that can be
+safely released using the \CEE/ function \\{free}.
+
+\itemitem{(3)}
+Let $n$ be an integer.
+We say that $(p,n)$ is \define{Fresh} [or, that $p$ is ``fresh'' if
+$n$ is clear from context] if and only if $p$ refers to the base
+address of an allocated memory block, and that the length (in bytes)
+of the block allocated dynamically is $n$. Further, that the memory
+block allocated is disjoint from previously allocated memory blocks
+which have not yet been freed (i.e., we don't overwrite an allocated
+memory block still in use).
+
+\medskip
+See also \S2.7 of the \ACSL/ reference manual for more about a
+formalization of \CEE/'s pointers and physical addressing.
+
+\fi
+
+\M{17}The \CEE/89 standard (\S7.10.3.3) gives the following specification
+for \PB{\\{malloc}(\&{size\_t} \\{size})}: \\{malloc} returns either a null
+pointer or
+to the allocated space, and the return value is indeterminate (with no
+guarantees about the contents of the region being initialized to zero
+or anything else).
+
+The \CEE/89 standard (\S7.10.3) and the \CEE/90 standard (\S7.20.3)
+specifies upon success, \\{malloc}
+returns a pointer to the start of the block of memory allocated. If
+space cannot be allocated, then a null pointer is returned. If
+the \\{size} requested is zero, then this is undefined behaviour.
+
+\bull Bahavior when there is allocation: Assuming we can allocate \\{size}
+bytes,
+\\{malloc} will assign \\{size} bytes on the heap, and the \.{result}
+will point to the start of the allocated memory.
+
+\bull Behavior when there is no allocation: Assuming \\{size} bytes is
+not allocatable, then the \.{result} is the \.{NULL} pointer.
+
+\medskip
+These two behaviors completely describe \\{malloc} and they are disjoint.
+
+\fi
+
+\M{18}The \CEE/89 standard (\S7.10.3.4) gives the following specification
+for \PB{\\{realloc}(\&{void} ${}{*}\\{ptr},{}$\&{size\_t} \\{size})}:
+
+
+\bull
+The size of the object pointed to by the \\{ptr} will be changed to
+the size specified by the \\{size}.
+
+\bull
+The contents of the object shall be unchanged up to the lesser of the
+new and old sizes.
+
+\bull
+If the new size is larger than the old size, the value of the newly
+allocated portion of the object is indeterminate.
+
+\bull
+If \\{ptr} is a null pointer, then \\{realloc} behaves
+like \\{malloc}.
+
+\bull
+If \\{ptr} does not match a pointer earlier returned
+by \\{calloc}, \\{malloc}, or \\{realloc}, or if the space has been
+deallocated by a call to \\{free} or \\{realloc}, then the behaviour
+is undefined.
+
+\bull
+If the space cannot be allocated, the object pointed to by \\{ptr} is
+unchanged.
+
+\bull
+If \\{size} is zero and \\{ptr} is not a null pointer, the object it
+points to is free. (This behaviour has changed in later \CEE/
+standards to be undefined behaviour, permitting the \CEE/ compiler to
+do this or not.)
+
+\medskip
+The contract for \PB{\\{realloc}(\&{void} ${}{*}\\{ptr},{}$\&{size\_t} %
+\\{size})}:
+assuming \\{ptr} is either null or freeable.
+
+\itemitem{(1)} Behavior when there is allocation: assuming we can
+allocate \\{size} bytes, then the computer will allocate the space,
+and the \.{result} returned is the address of the start of the region
+allocated. In this situation, it is ensured that the region allocated
+is ``fresh''.
+
+\itemitem{(2)} Behavior when there is deallocation: assuming
+the \\{ptr} is not null, and assuming we can allocate \\{size} bytes,
+then \\{realloc} will free \\{ptr}. If \\{size} is nonzero,
+then (i) \\{realloc} allocates \\{size} bytes, (ii) copies over the
+contents of the first \\{size} bytes of the region \\{ptr} points to,
+and (iii) returns the address of the start of the region allocated
+When allocation occurs, the region allocated is ``fresh''.
+
+\itemitem{(3)} Behavior when there is failure: assuming the computer
+cannot allocate \\{size} bytes, then nothing is allocated or freed,
+and the result returned is the \.{NULL} pointer.
+
+\medskip
+
+Importantly, this means that \\{realloc} returns either (1) a null
+pointer, or (2) a pointer to the possibly moved allocated space.
+
+One ambiguity with the \CEE/89 specification, which the \CEE/99
+standard fixed, is that \\{realloc} deallocates the old object when it
+can allocate the space.
+
+{\bf Caution}: if \\{ptr} is null or if \\{size} is zero, then
+non-ANSI versions of \\{realloc} causes undefined behaviour.
+A.~Dolenc, A.~Lemmke, D.~Keppel, and G.V.~Reilly's
+``Notes on Portable \CEE/'' (Nov 1990, 8th revision, \S8.2.5)
+recommends avoiding \\{realloc} when either \\{ptr} is null
+or \\{size} is zero.
+
+\fi
+
+\M{19}The \CEE/89 standard (\S7.9.7.1) specifies the
+\PB{\&{int} \\{fgetc}(\&{FILE} ${}{*}\\{stream})$} function gets the next
+character (if
+present) as an \&{unsigned char} converted to an \&{int} from the
+input stream pointed to by \\{stream} and advances the associated file
+position indicator for the stream (if defined).
+
+Assume the \\{stream} is valid
+
+\bull Behavior when error:
+If an error is encountered (e.g., the \\{stream} is invalid),
+then \\{fgetc} sets the \\{errno} and returns \PB{\.{EOF}}.
+
+\bull Behavior when stream has been exhausted:
+If the \\{stream} is valid and the \\{stream} has its end-of-file indicator
+set,
+then \\{fgetc} returns \PB{\.{EOF}}.
+
+\bull Behavior when we can read more:
+Assuming that \\{stream} is valid, \\{fgetc} mutates the \\{stream}
+(updating the file position indicator, possibly setting its
+end-of-file indicator) and returns the next character from the \\{stream}.
+
+
+\fi
+
+\N{1}{20}Read a line from an input stream.
+The \PB{\\{readline\_from\_stream}} routine obtains a string for a parser.
+It could be from the \PB{\\{stdin}} stream for REPLs, or it could be from a
+file/pipe.
+This is basically how GNU's readline and BSD's libedit (and other
+similar libraries) works under the hood. But I did not want to get
+bogged down on figuring out what library to use, which library is
+bloated, and GNU readline developers do not believe valgrind is a
+legitimate tool (Valgrind raises a bunch of errors when working with
+readline). If we get into a situation where Terminal emulators are not
+synchronizing correctly with the program (and we are {\it forced} to
+use a library), then I suppose \.{linenoise} would be the minimal library
+to defer to.
+
+There are three main ``moments'' or ``actions'' in the
+loop: ensure there's space in the buffer to add a character, read a
+character from the stream, then update the buffer by adding the
+character to it (or exit the function when \PB{\.{'\\n'}} or \PB{\.{EOF}} has
+been
+encountered). It's not terribly complicated conceptually. But some of
+the acts require a bit of care in the details.
+
+The \PB{\\{readline\_from\_stream}} will allocate an array of characters, and
+return it to the caller. The caller will be responsible for
+\PB{\\{free}(\,)}-ing it. If an error occurs, then the \PB{\\{err}} parameter
+will be
+set to a nonzero value. If the function is successful, then \PB{\\{err}}
+should be zero.
+
+% https://pubs.opengroup.org/onlinepubs/9799919799/functions/fgetc.html
+% \S7.9.7.1 of the C89 standard
+% \S7.19.7.1 of the C99 standard
+
+% size_t C89 standard \S6.3.3.4, \S7.1.1
+
+\Y\B\4\X20:Read a line from an input stream\X${}\E{}$\6
+\1\1\&{char} ${}{*}{}$\\{readline\_from\_stream}(\&{FILE} ${}{*}\\{fp},\39{}$%
+\&{int} ${}{*}\\{err})\2\2{}$\6
+${}\{{}$\1\6
+\&{size\_t} \\{len}${}\K\T{0}{}$;\C{ amount of \PB{\\{line}} currently used }\6
+\&{size\_t} \\{cap}${}\K\T{16}{}$;\C{ current capacity of the \PB{\\{line}} }\6
+\&{char} ${}{*}\\{line}\K\\{malloc}(\\{cap}*\&{sizeof}(\&{char})){}$;\C{ return
+value }\7
+\&{if} ${}(\\{err}\I\NULL){}$\1\5
+${}{*}\\{err}\K\T{0}{}$;\C{ reset the \PB{\\{err}} flag }\2\6
+\X23:Check for allocation failure in \PB{\\{readline}}, exit if failed\X\6
+\&{while} (\\{true})\5
+${}\{{}$\1\6
+\X21:Ensure capacity of \PB{\\{line}} buffer is big enough, and exit if it
+needs to grow but cannot\X\3{-1}\6
+${}\\{assert}(\\{len}<\\{cap});{}$\7
+\&{int} \|c${}\K\\{fgetc}(\\{fp});{}$\7
+\X24:Insert character into \PB{\\{line}}, but exit if \PB{\|c} is \PB{\.{EOF}}
+or \PB{\.{'\\n'}}\X\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{21}The \PB{\\{line}} buffer has already been initialized to be 16 characters
+long.
+When we have used up all characters, we double the \PB{\\{line}}'s capacity
+using
+\PB{\\{realloc}(\,)}. If there's no memory left (i.e., \PB{\\{line}} is null),
+then we
+should free the old contents of the \PB{\\{line}} and propagate the error
+onwards. Otherwise, \PB{\\{realloc}(\,)} succeeded, so we should just update
+the capacity parameter.
+
+Note that \PB{$\\{newcap}\Z\\{cap}$} happens if \PB{$\\{cap}*\T{2}$} overflows
+(which should
+happen in the situation where \PB{$\\{cap}\E\.{SIZE\_MAX}$}---recall the %
+\POSIX/
+standard requires \PB{$\.{SIZE\_MAX}\G\T{65535}\E\T{2}\hbox{$^{16}$}-\T{1}$}
+according to its specification
+for \.{stdint.h}; see also the \CEE/99 Standard \S7.18.3). So any line with
+more than \PB{\.{SIZE\_MAX}} bytes may
+possibly fail.
+
+If this succeeds, then \PB{$\\{len}<\\{cap}$}. If this fails, then the \PB{%
+\\{line}}
+buffer is freed, \PB{\\{err}} is set to a nonzero value, and \PB{$\NULL$} is
+returned.
+When \PB{\\{realloc}} fails, the \PB{\\{errno}} global variable (which \POSIX/
+provides) is automatically set to \PB{\.{ENOMEM}}. Importantly, if \PB{%
+\\{readline}}
+fails or encounters exceptions (e.g., out of memory), then it will be
+due to this chunk of code.
+
+% https://pubs.opengroup.org/onlinepubs/9799919799/functions/realloc.html
+% https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/errno.h.html
+% \S7.10.3.4 of the C89 standard for \PB{\\{realloc}(\,)}
+
+\Y\B\4\X21:Ensure capacity of \PB{\\{line}} buffer is big enough, and exit if
+it needs to grow but cannot\X${}\E{}$\6
+\&{if} ${}(\\{len}+\T{1}\G\\{cap}){}$\5
+${}\{{}$\1\6
+\&{size\_t} \\{newcap}${}\K\\{cap}*\T{2};{}$\6
+\&{char} ${}{*}\\{oldval}\K\\{line};{}$\7
+\&{if} ${}(\\{newcap}\Z\\{cap}){}$\1\5
+\X22:Whoops! \PB{\\{line}} buffer capacity overflowed, cleaning up, returning %
+\PB{$\NULL$}\X\2\6
+${}\\{line}\K\\{realloc}(\\{line},\39\\{newcap}*\&{sizeof}(\&{char}));{}$\6
+\X23:Check for allocation failure in \PB{\\{readline}}, exit if failed\X\6
+${}\\{cap}\K\\{newcap};{}$\6
+\4${}\}{}$\2\par
+\U20.\fi
+
+\M{22}Using \POSIX/'s \.{errno.h}, specifically the \.{ENOMEM} error
+value. Update the error flag to this value, and return \PB{$\NULL$} as the
+array value.
+% https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/errno.h.html
+
+\Y\B\4\X22:Whoops! \PB{\\{line}} buffer capacity overflowed, cleaning up,
+returning \PB{$\NULL$}\X${}\E{}$\6
+${}\{{}$\1\6
+\\{free}(\\{line});\6
+\&{if} ${}(\\{err}\I\NULL){}$\1\5
+${}{*}\\{err}\K\T{1};{}$\2\6
+${}\\{errno}\K\.{ENOMEM};{}$\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}\B\X23:Check for allocation failure in \PB{\\{readline}}, exit if failed%
+\X${}\E{}$\6
+\&{if} ${}(\\{line}\E\NULL){}$\5
+${}\{{}$\C{ \PB{\\{realloc}(\,)} or \PB{\\{malloc}(\,)} failed to allocate new
+space }\1\6
+\&{if} ${}(\\{oldval}\I\NULL){}$\1\5
+\\{free}(\\{oldval});\2\6
+\&{if} ${}(\\{err}\I\NULL){}$\1\5
+${}{*}\\{err}\K\T{1};{}$\2\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\par
+\Us20\ET21.\fi
+
+\M{24}Care must be taken: most modern operating systems use \PB{\.{'\\n'}} to
+end
+a line (Windows uses \PB{\.{"\\r\\n"}}), but this is by no means universal. For
+some examples:
+
+\bull
+\PB{\.{'\\r'}} ends the line for Commodore 64, Commodore 128, Acorn BBC, ZX
+Spectrum, TRS-80, Apple II, Oberon, classic Mac OS, HP Series 80, MIT
+Lisp Machine, and OS-9
+
+\bull
+\PB{\.{"\\n\\r"}} ends the line for Acorn BBC and RISC~OS
+
+\bull
+\PB{\.{"\\r\\n"}} ends the line for Windows, MS-DOS compatibles, Atari TOS, DEC
+TOPS-10, RT-11, CP/M, MP/M, OS/2, Symbian~OS, Palm~OS, Amstrad~CPC,
+and most other early non-\UNIX/ and non-IBM operating systems
+
+\bull
+\PB{\.{'\\x1E'}} ends the line for QNX pre-\POSIX/ implementation (pre-4
+version).
+This character is \PB{\.{RS}} [record separator] in ASCII.
+
+\bigskip
+For Windows (and Acorn BBC and RISC~OS), I think the trailing \PB{\.{"\\r\\n"}}
+(resp.,
+\PB{\.{"\\n\\r"}}) suffix should be omitted from the \\{line} buffer.
+
+\Y\B\4\X24:Insert character into \PB{\\{line}}, but exit if \PB{\|c} is \PB{%
+\.{EOF}} or \PB{\.{'\\n'}}\X${}\E{}$\6
+\&{if} ${}(\|c\E\.{EOF}\V\|c\E\.{'\\n'}){}$\1\5
+\X25:Exit \PB{\\{readline\_from\_stream}} since we've found an \PB{\.{EOF}} or
+newline\X\2\6
+\&{else}\5
+${}\{{}$\5
+\1${}\\{line}[\\{len}]\K\|c{}$;\5
+${}\\{len}\PP{}$;\5
+${}\}{}$\C{ accumulate character }\2\par
+\U20.\fi
+
+\M{25}This is the ``successful'' exit of \PB{\\{readline\_from\_stream}}
+because we
+have ended the line. It seems like we've come a long way just for
+success, but isn't that life?
+
+\Y\B\4\X25:Exit \PB{\\{readline\_from\_stream}} since we've found an \PB{%
+\.{EOF}} or newline\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|c\E\.{EOF}\W\\{len}\E\T{0}){}$\5
+${}\{{}$\1\6
+\\{free}(\\{line});\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{line}[\\{len}]\K\.{'\\0'};{}$\6
+\&{return} \\{line};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\N{1}{26}Index.
+\fi
+
+\inx
+\fin
+\con
