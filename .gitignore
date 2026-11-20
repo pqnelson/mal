@@ -4,6 +4,15 @@ a.out
 refs/
 
 
+# Literate programming generated stuff
+*.idx
+*.log
+*.dvi
+*.pdf
+*.scn
+*.toc
+*.tex
+
 # Maven ignore stuff
 target/
 pom.xml.tag
